@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Push-up",
+    "equipment": ["Bodyweight"],
+    "muscle_group": "Chest"
+  },
+  {
+    "name": "Squat",
+    "equipment": ["Bodyweight", "Barbell", "Dumbbells"],
+    "muscle_group": "Legs"
+  },
+  {
+    "name": "Bench Press",
+    "equipment": ["Barbell", "Bench", "Dumbbells"],
+    "muscle_group": "Chest"
+  },
+  {
+    "name": "Deadlift",
+    "equipment": ["Barbell", "Dumbbells"],
+    "muscle_group": "Back"
+  },
+  {
+    "name": "Pull-up",
+    "equipment": ["Pull-up Bar"],
+    "muscle_group": "Back"
+  },
+  {
+    "name": "Kettlebell Swing",
+    "equipment": ["Kettlebell"],
+    "muscle_group": "Legs"
+  },
+  {
+    "name": "Banded Row",
+    "equipment": ["Resistance Bands"],
+    "muscle_group": "Back"
+  },
+  {
+    "name": "Running",
+    "equipment": ["Treadmill"],
+    "muscle_group": "Legs"
+  },
+  {
+    "name": "Cycling",
+    "equipment": ["Stationary Bike"],
+    "muscle_group": "Legs"
+  }
+]

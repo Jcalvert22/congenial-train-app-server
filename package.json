@@ -1,0 +1,44 @@
+{
+  "name": "bug-free-rotary-phone-devops",
+  "version": "2.0.0",
+  "description": "All-Around Athlete SPA rebuilt as a full-stack MVC project for CIS 486.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "test": "node --test",
+    "lint": "node --version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jcalvert22/bug-free-rotary-phone-devops.git"
+  },
+  "keywords": [
+    "spa",
+    "mvc",
+    "express",
+    "mongodb",
+    "cis486"
+  ],
+  "author": "Jace Calvert",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jcalvert22/bug-free-rotary-phone-devops/issues"
+  },
+  "homepage": "https://github.com/Jcalvert22/bug-free-rotary-phone-devops#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.2.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}

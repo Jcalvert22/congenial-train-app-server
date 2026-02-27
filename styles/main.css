@@ -1,0 +1,82 @@
+:root {
+  --bg: radial-gradient(circle at top, rgba(79, 140, 255, 0.25), rgba(13, 17, 31, 0.9));
+  --panel: #161c33;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #f5f7ff;
+  --muted: #a9b5df;
+}
+
+body {
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg, rgba(7, 11, 27, 0.95), rgba(12, 17, 37, 0.98)), var(--bg);
+  color: var(--text);
+}
+
+.site-header {
+  background: rgba(13, 17, 31, 0.9);
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text);
+}
+
+.card {
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.card .card-body {
+  color: var(--text);
+}
+
+.table-dark {
+  --bs-table-bg: rgba(14, 19, 38, 0.85);
+  --bs-table-striped-bg: rgba(36, 46, 82, 0.6);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-dark th {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.table-dark td {
+  color: var(--text);
+}
+
+footer {
+  border-top: 1px solid var(--panel-border);
+  background: rgba(13, 17, 31, 0.85);
+}
+
+.badge {
+  letter-spacing: 0.08em;
+}
+
+#notes-dialog {
+  background: #0f152c;
+  color: var(--text);
+}
+
+#notes-dialog .ui-dialog-titlebar {
+  background: #1f2750;
+  border: none;
+  color: var(--text);
+}
+
+#notes-dialog .ui-dialog-buttonpane {
+  background: transparent;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .site-header .container {
+    text-align: center;
+  }
+  .card {
+    border-radius: 18px;
+  }
+}
