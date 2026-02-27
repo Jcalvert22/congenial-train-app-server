@@ -1,5 +1,7 @@
 import express from 'express';
 
+console.log("app.mjs loaded");
+console.log(document.getElementById("app"));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
