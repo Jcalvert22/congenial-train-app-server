@@ -25,6 +25,7 @@ import {
   normalizeSelection,
   clamp
 } from '../utils/helpers.js';
+import { renderWorkoutSummary } from './workoutSummary.js';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -1600,6 +1601,7 @@ function attachPlannerEvents(root) {
       const muscles = data.getAll('muscle');
       const plan = createPlannerPlan({ equipment, muscles });
       storePlannerResult(plan);
+      renderWorkoutSummary();
     });
   }
 
