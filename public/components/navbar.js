@@ -1,86 +1,108 @@
-const FEATURE_LINKS = [
-  { label: 'All Features', route: 'features' },
-  { label: 'Workout Program Generator', route: 'program-generator' },
-  { label: 'Exercise Library', route: 'exercise-library' },
-  { label: 'Workout Summary', route: 'workout-summary' },
-  { label: 'Timer', route: 'timer' },
-  { label: 'Progress Tracking', route: 'progress-tracking' },
-  { label: 'Beginner Onboarding', route: 'beginner-onboarding' },
-  { label: 'Relaxed Training Philosophy', route: 'relaxed-training' }
+import { getAuth, logout } from '../auth/state.js';
+
+const NAVBAR_CONTAINER_ID = 'navbar';
+
+const PUBLIC_LINKS = [
+  { label: 'Home', href: '#/' },
+  { label: 'Features', href: '#/features' },
+  { label: 'Pricing', href: '#/pricing' },
+  { label: 'About', href: '#/about' },
+  { label: 'Contact', href: '#/contact' }
 ];
 
-const APP_NAV_LINKS = [
-  { label: 'Generate', route: 'planner' },
-  { label: 'Library', route: 'plan-generator' },
-  { label: 'History', route: 'dashboard' },
-  { label: 'Profile', route: 'profile' }
+const APP_LINKS = [
+  { label: 'Dashboard', href: '#/dashboard' },
+  { label: 'Generate', href: '#/generate' },
+  { label: 'Library', href: '#/library' },
+  { label: 'History', href: '#/history' },
+  { label: 'Profile', href: '#/profile' }
 ];
 
-const PUBLIC_BASE_LINKS = [
-  { label: 'Home', route: 'home' },
-  { label: 'Pricing', route: 'pricing' }
-];
-
-const PUBLIC_SECONDARY_LINKS = [
-  { label: 'About', route: 'about' },
-  { label: 'Contact', route: 'contact' }
-];
-
-export const FEATURE_ROUTES = FEATURE_LINKS.map(link => link.route);
-export const PUBLIC_NAV_ROUTES = new Set([
-  ...FEATURE_ROUTES,
-  'home',
-  'pricing',
-  'about',
-  'contact',
-  'start-trial',
-  'create-account',
-  'welcome'
-]);
-
-function anchorHtml(label, routeKey, currentRoute, routeMap, extraClass = '') {
-  const href = routeMap[routeKey] || '#/';
-  const classes = [extraClass, routeKey === currentRoute ? 'active-link' : '']
-    .filter(Boolean)
-    .join(' ');
-  return `<a href="${href}" class="${classes}">${label}</a>`;
+function ensureNavbarContainer() {
+  let container = document.getElementById(NAVBAR_CONTAINER_ID);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = NAVBAR_CONTAINER_ID;
+    const appRoot = document.getElementById('app');
+    if (appRoot?.parentNode) {
+      appRoot.parentNode.insertBefore(container, appRoot);
+    } else {
+      document.body.prepend(container);
+    }
+  }
+  return container;
 }
 
-function renderFeaturesDropdown(currentRoute, routeMap) {
-  const isOpen = FEATURE_ROUTES.includes(currentRoute) ? ' open' : '';
-  const links = FEATURE_LINKS.map(link =>
-    anchorHtml(link.label, link.route, currentRoute, routeMap, 'nav-feature-link')
-  ).join('');
-  return `
-    <details class="nav-item nav-features"${isOpen}>
-      <summary>Features</summary>
-      <div class="nav-feature-panel">
-        ${links}
+function createLink(label, href, isPrimary = false) {
+  if (isPrimary) {
+    return `<a class="landing-button" href="${href}">${label}</a>`;
+  }
+  return `<a class="landing-pill" href="${href}">${label}</a>`;
+}
+
+function mountNavbar(html, afterMount) {
+  const container = ensureNavbarContainer();
+  container.innerHTML = html;
+  if (typeof afterMount === 'function') {
+    afterMount(container);
+  }
+}
+
+export function renderPublicNavbar() {
+  const navLinks = PUBLIC_LINKS.map(link => createLink(link.label, link.href)).join('');
+  const startTrial = createLink('Start Trial', '#/start-trial', true);
+  mountNavbar(`
+    <nav class="landing-section" aria-label="Public navigation">
+      <div class="landing-container" style="gap: 12px;">
+        <div>
+          <span class="landing-label">AllAroundAthlete</span>
+          <h2>Structure without stress.</h2>
+        </div>
+        <div class="landing-pill-list" role="list">
+          ${navLinks}
+        </div>
+        <div class="landing-actions">
+          ${startTrial}
+        </div>
       </div>
-    </details>
-  `;
-}
-
-export function renderPublicNavbar(currentRoute, routeMap) {
-  const [homeLink, pricingLink] = PUBLIC_BASE_LINKS.map(link =>
-    anchorHtml(link.label, link.route, currentRoute, routeMap)
-  );
-  const secondaryLinks = PUBLIC_SECONDARY_LINKS.map(link =>
-    anchorHtml(link.label, link.route, currentRoute, routeMap)
-  ).join('');
-  const trialHref = routeMap['start-trial'] || routeMap.subscribe || '#/start-trial';
-  return `
-    <nav class="nav-links nav-public">
-      ${homeLink}
-      ${renderFeaturesDropdown(currentRoute, routeMap)}
-      ${secondaryLinks}
-      ${pricingLink}
-      <a href="${trialHref}" class="cta-btn nav-trial">Start Trial</a>
     </nav>
-  `;
+  `);
 }
 
-export function renderAppNavbar(currentRoute, routeMap) {
-  const links = APP_NAV_LINKS.map(link => anchorHtml(link.label, link.route, currentRoute, routeMap)).join('');
-  return `<nav class="nav-links nav-app">${links}</nav>`;
+export function renderAppNavbar() {
+  const navLinks = APP_LINKS.map(link => createLink(link.label, link.href)).join('');
+  mountNavbar(`
+    <nav class="landing-section" aria-label="App navigation">
+      <div class="landing-container" style="gap: 12px;">
+        <div>
+          <span class="landing-label">AllAroundAthlete</span>
+          <h2>Your calm coaching hub.</h2>
+        </div>
+        <div class="landing-pill-list" role="list">
+          ${navLinks}
+        </div>
+        <div class="landing-actions">
+          <button class="landing-button secondary" type="button" data-nav-logout>Logout</button>
+        </div>
+      </div>
+    </nav>
+  `, container => {
+    const logoutBtn = container.querySelector('[data-nav-logout]');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', event => {
+        event.preventDefault();
+        logout();
+        window.location.hash = '#/';
+      });
+    }
+  });
+}
+
+export function updateNavbar() {
+  const auth = getAuth();
+  if (auth?.loggedIn) {
+    renderAppNavbar();
+  } else {
+    renderPublicNavbar();
+  }
 }

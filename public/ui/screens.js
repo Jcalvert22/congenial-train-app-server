@@ -38,7 +38,7 @@ import { renderWelcome } from './landingWelcome.js';
 import { renderFooter } from './footer.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
 import { getAuth } from '../auth/state.js';
-import { renderPublicNavbar, renderAppNavbar } from '../components/navbar.js';
+import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
@@ -807,20 +807,18 @@ export function startApp() {
   const renderer = initRenderer('#app');
 
   const renderCurrentRoute = () => {
+    updateNavbar();
     const state = getState();
     const hash = normalizeHash(window.location.hash);
     const routeKey = parseRoute(hash);
     const auth = getAuth();
-    const navbar = auth.loggedIn
-      ? renderAppNavbar(routeKey, ROUTE_HASHES)
-      : renderPublicNavbar(routeKey, ROUTE_HASHES);
 
     const routeResult = resolveRoute(hash, state, auth);
     if (!routeResult || !routeResult.html) {
       return;
     }
 
-    const shellHtml = renderShell(navbar, routeResult.html);
+    const shellHtml = renderShell(routeResult.html);
     renderer.render(shellHtml, root => {
       if (typeof routeResult.afterRender === 'function') {
         routeResult.afterRender(root, state, routeKey);
@@ -869,17 +867,8 @@ function navigateTo(route) {
   window.location.hash = targetHash;
 }
 
-function renderShell(nav, content) {
+function renderShell(content) {
   return `
-    <header class="site-header">
-      <div class="header-inner">
-        <div class="brand">
-          <img src="/images/allaround-athlete-logo.png" alt="AllAroundAthlete Logo">
-          <h1>All-Around Athlete</h1>
-        </div>
-        ${nav}
-      </div>
-    </header>
     <main class="page-shell">${content}</main>
     ${renderFooter()}
   `;
