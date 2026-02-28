@@ -29,6 +29,7 @@ import { renderWorkoutSummary } from './workoutSummary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderWorkoutSummaryLanding } from './landingWorkoutSummary.js';
+import { renderNavbar, FEATURE_ROUTES } from './navbar.js';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -47,62 +48,6 @@ const ROUTE_HASHES = {
   'beginner-onboarding': '#/beginner-onboarding',
   'relaxed-training': '#/relaxed-training'
 };
-
-const FEATURE_LINKS = [
-  { label: 'Workout Program Generator', route: 'program-generator' },
-  { label: 'Exercise Library', route: 'exercise-library' },
-  { label: 'Workout Summary', route: 'workout-summary' },
-  { label: 'Timer', route: 'timer' },
-  { label: 'Progress Tracking', route: 'progress-tracking' },
-  { label: 'Beginner Onboarding', route: 'beginner-onboarding' },
-  { label: 'Relaxed Training Philosophy', route: 'relaxed-training' }
-];
-
-const FEATURE_ROUTE_SET = new Set(FEATURE_LINKS.map(link => link.route));
-
-const APP_NAV_LINKS = [
-  { label: 'Generate', route: 'planner' },
-  { label: 'Library', route: 'plan-generator' },
-  { label: 'History', route: 'dashboard' },
-  { label: 'Profile', route: 'profile' }
-];
-
-function isAppMode(state) {
-  return Boolean(state?.isSubscribed && state?.profile?.onboardingComplete);
-}
-
-function navAnchor(label, route, currentRoute, extraClass = '') {
-  const href = ROUTE_HASHES[route] || '#/';
-  const classes = [extraClass, route === currentRoute ? 'active-link' : ''].filter(Boolean).join(' ');
-  return `<a href="${href}" class="${classes}">${label}</a>`;
-}
-
-function renderPublicNav(route) {
-  const featureLinks = FEATURE_LINKS.map(link => navAnchor(link.label, link.route, route, 'nav-feature-link')).join('');
-  const featuresOpen = FEATURE_ROUTE_SET.has(route) ? ' open' : '';
-  return `
-    <nav class="nav-links nav-public">
-      ${navAnchor('Home', 'home', route)}
-      <details class="nav-features"${featuresOpen}>
-        <summary>Features</summary>
-        <div class="nav-feature-panel">
-          ${featureLinks}
-        </div>
-      </details>
-      ${navAnchor('Pricing', 'pricing', route)}
-      <a href="${ROUTE_HASHES.subscribe}" class="cta-btn nav-trial">Start Trial</a>
-    </nav>
-  `;
-}
-
-function renderAppNav(route) {
-  const links = APP_NAV_LINKS.map(link => navAnchor(link.label, link.route, route)).join('');
-  return `<nav class="nav-links nav-app">${links}</nav>`;
-}
-
-function renderNav(route, state) {
-  return isAppMode(state) ? renderAppNav(route) : renderPublicNav(route);
-}
 
 const BASE_STYLES = `
 :root {
@@ -956,13 +901,7 @@ const PUBLIC_ROUTES = new Set([
   'home',
   'subscribe',
   'pricing',
-  'program-generator',
-  'exercise-library',
-  'workout-summary',
-  'timer',
-  'progress-tracking',
-  'beginner-onboarding',
-  'relaxed-training'
+  ...FEATURE_ROUTES
 ]);
 
 export function startApp() {
@@ -1038,7 +977,7 @@ function guardRoute(route, state) {
 }
 
 function renderShell(route, state, content) {
-  const nav = renderNav(route, state);
+  const nav = renderNavbar(route, ROUTE_HASHES, state);
   const footerYear = new Date().getFullYear();
 
   return `
