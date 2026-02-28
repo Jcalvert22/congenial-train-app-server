@@ -340,6 +340,35 @@
   border: 1px solid var(--color-accent);
 }
 
+.landing-button.success {
+  background: #059669;
+  border: 1px solid #059669;
+  color: #ffffff;
+}
+
+.landing-button.success:hover {
+  background: #047857;
+}
+
+.landing-actions-stack {
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.landing-actions-stack .landing-button {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .landing-actions-stack {
+    flex-direction: column;
+  }
+
+  .landing-actions-stack .landing-button {
+    width: 100%;
+  }
+}
+
 .landing-cta {
   text-align: center;
   background: var(--color-bg);

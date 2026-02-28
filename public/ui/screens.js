@@ -25,36 +25,45 @@ import {
   normalizeSelection,
   clamp
 } from '../utils/helpers.js';
-import { renderWorkoutSummary } from './workoutSummary.js';
+import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from './workoutSummary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
-import { renderWorkoutSummaryLanding } from './landingWorkoutSummary.js';
 import { renderAboutLanding } from './landingAbout.js';
 import { renderContactLanding } from './landingContact.js';
 import { renderPricingLanding } from './landingPricing.js';
 import { renderStartTrial } from './landingStartTrial.js';
 import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
+import { renderWorkoutExecution, attachWorkoutExecutionEvents } from '../pages/workout-execution.js';
+import { renderHistoryDetails } from '../pages/history-details.js';
+import { renderProfileEdit, attachProfileEditEvents } from '../pages/profile-edit.js';
+import { getHistory } from '../data/history.js';
 import { renderFooter } from './footer.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
-import { getAuth } from '../auth/state.js';
+import { getAuth, logout } from '../auth/state.js';
 import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
+import { EXERCISES } from '../data/exercises.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
 
 const ROUTE_HASHES = {
   home: '#/',
+  generate: '#/generate',
   planner: '#/planner',
   'plan-generator': '#/plan-generator',
   dashboard: '#/dashboard',
+  history: '#/history',
   profile: '#/profile',
+  'profile-edit': '#/profile-edit',
+  library: '#/library',
   subscribe: '#/subscribe',
   onboarding: '#/onboarding',
   features: '#/features',
   'program-generator': '#/program-generator',
   'exercise-library': '#/exercise-library',
   'workout-summary': '#/workout-summary',
+  workout: '#/workout',
   about: '#/about',
   contact: '#/contact',
   'start-trial': '#/start-trial',
@@ -874,12 +883,32 @@ function renderShell(content) {
   `;
 }
 
+function renderAppPage(sections, options = {}) {
+  const { includeFooter = false } = options;
+  return `
+    <section class="landing-page">
+      <div class="landing-container">
+        ${sections}
+      </div>
+      ${includeFooter ? renderFooter() : ''}
+    </section>
+  `;
+}
+
 function landingResult(factory) {
   const page = factory({ standalone: false, includeFooter: false });
   return { html: page.html, afterRender: page.afterRender };
 }
 
 function resolveRoute(hash, state, auth) {
+  if (hash.startsWith('#/history/')) {
+    const id = decodeURIComponent(hash.replace('#/history/', '')).trim();
+    if (!id) {
+      navigateTo('history');
+      return null;
+    }
+    return protectRoute(() => ({ html: renderHistoryDetails(id) }));
+  }
   switch (hash) {
     case '#/':
     case '#/home':
@@ -897,7 +926,9 @@ function resolveRoute(hash, state, auth) {
     case '#/exercise-library':
       return landingResult(renderExerciseLibraryLanding);
     case '#/workout-summary':
-      return landingResult(renderWorkoutSummaryLanding);
+      return protectRoute(() => ({ html: renderWorkoutSummaryPage(state), afterRender: attachWorkoutSummaryEvents }));
+    case '#/workout':
+      return protectRoute(() => ({ html: renderWorkoutExecution(state), afterRender: attachWorkoutExecutionEvents }));
     case '#/start-trial':
       if (redirectIfLoggedIn()) {
         return null;
@@ -916,15 +947,18 @@ function resolveRoute(hash, state, auth) {
     case '#/dashboard':
       return protectRoute(() => ({ html: renderDashboard(state) }));
     case '#/history':
-      return protectRoute(() => ({ html: renderDashboard(state) }));
+      return protectRoute(() => ({ html: renderHistory(state) }));
     case '#/generate':
     case '#/planner':
       return protectRoute(() => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }));
     case '#/library':
+      return protectRoute(() => ({ html: renderLibrary(state) }));
     case '#/plan-generator':
       return protectRoute(() => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }));
     case '#/profile':
       return protectRoute(() => ({ html: renderProfile(state), afterRender: attachProfileEvents }));
+    case '#/profile-edit':
+      return protectRoute(() => ({ html: renderProfileEdit(), afterRender: attachProfileEditEvents }));
     case '#/subscribe':
       return { html: renderSubscribe(state), afterRender: attachSubscribeEvents };
     case '#/onboarding':
@@ -1135,87 +1169,58 @@ function renderHome(state, auth) {
 
 function renderPlanner(state) {
   const equipmentOptions = getEquipmentList().map(eq => `
-    <label class="option" data-equip="${escapeHTML(eq)}">
+    <label class="landing-chip">
       <input type="checkbox" name="equipment" value="${escapeHTML(eq)}">
-      ${escapeHTML(eq)}
+      <span>${escapeHTML(eq)}</span>
     </label>
   `).join('');
 
   const muscleOptions = getMuscleGroups().map(mg => `
-    <label class="option" data-muscle="${escapeHTML(mg)}">
+    <label class="landing-chip">
       <input type="checkbox" name="muscle" value="${escapeHTML(mg)}">
-      ${escapeHTML(mg)}
+      <span>${escapeHTML(mg)}</span>
     </label>
   `).join('');
 
   const plannerResult = state.ui?.plannerResult || null;
 
-  return `
-    <section class="panel" style="margin-bottom:28px;">
-      <div class="hero-copy">
-        <span class="badge">Why another planner?</span>
-        <h2 style="margin:12px 0 12px;">Most "beginner" apps assume you already speak gym fluently.</h2>
-        <p style="color:var(--muted);line-height:1.6;max-width:820px;">
-          They throw strange words at you, hand over long plans, and never explain what to do after you walk past the front desk. AllAroundAthlete keeps each screen calm, limits you to a few useful moves, and turns your goal into plain rep, set, and manners tips so you never feel out of place.
-        </p>
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Generate</span>
+        <h1>Build a calm session in under a minute.</h1>
+        <p class="landing-subtext lead">Pick the gear you have and the muscles you want to nudge. We will handle the rest.</p>
       </div>
-    </section>
-    <section class="hero-grid">
-      <div class="panel hero-copy">
-        <span class="badge">Starter program</span>
-        <h2>Build a realistic session with the gear you actually have.</h2>
-        <p>AllAroundAthlete designs beginner-friendly workouts that respect limited equipment, short time windows, and fresh motivation. No fluff—just three to five purposeful movements with dialed-in rep and set targets.</p>
-        <div class="info-grid">
-          <div class="info-card">
-            <small style="color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Goal Support</small>
-            <h3 style="margin:6px 0 0;">Dieting & Bulking tracks</h3>
-          </div>
-          <div class="info-card">
-            <small style="color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Smart Equipment</small>
-            <h3 style="margin:6px 0 0;">Auto filters for beginners</h3>
-          </div>
-          <div class="info-card">
-            <small style="color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Subscription ready</small>
-            <h3 style="margin:6px 0 0;">Stripe + Cloudflare stack</h3>
-          </div>
-        </div>
+      <div class="landing-card" aria-hidden="true">
+        <p class="landing-subtext">Tip</p>
+        <p>Keep it to 3–5 moves. Consistency beats complexity.</p>
       </div>
-      <div class="panel">
-        <h3 style="margin-top:0;">Plan your next lift</h3>
-        <p style="color:var(--muted);margin-bottom:18px;">Choose the tools on hand and the muscle groups you want to prioritize today.</p>
-        <form data-form="planner">
-          <p style="margin-bottom:6px;font-weight:600;">Equipment</p>
-          <button type="button" data-toggle-target="#equip-section" class="toggle-btn">Select equipment</button>
-          <div id="equip-section" data-collapsible style="display:none;margin:12px 0 20px;">
+    </header>
+    <section class="landing-section">
+      <p class="landing-subtext">Step 1</p>
+      <h2>Tell us what you have today.</h2>
+      <form class="landing-grid" data-form="planner">
+        <article class="landing-card landing-grid-span">
+          <p class="landing-subtext">Equipment</p>
+          <p>Check the tools within reach.</p>
+          <div class="landing-chip-row">
             ${equipmentOptions}
           </div>
-          <p style="margin-bottom:6px;font-weight:600;">Muscle Groups</p>
-          <button type="button" data-toggle-target="#muscle-section" class="toggle-btn">Select muscle focus</button>
-          <div id="muscle-section" data-collapsible style="display:none;margin:12px 0 20px;">
+        </article>
+        <article class="landing-card landing-grid-span">
+          <p class="landing-subtext">Muscle focus</p>
+          <p>Pick one or two body areas.</p>
+          <div class="landing-chip-row">
             ${muscleOptions}
           </div>
-          <button type="submit" class="primary-btn">Generate plan</button>
-        </form>
-      </div>
-    </section>
-    <section class="hero-grid" style="margin-top:32px;" id="gymxiety">
-      <div class="panel">
-        <span class="badge">Gymxiety Mode</span>
-        <h3 style="margin:12px 0 8px;">Confidence coaching built into the basic membership.</h3>
-        <p style="color:var(--muted);line-height:1.6;">Automatic reminders, polite prompts, and gym-etiquette walk-throughs show up inside every plan once you subscribe. You will know how to approach equipment, share the space, and avoid those awkward “am I doing this right?” moments.</p>
-        <p style="color:var(--muted);margin-top:18px;">Turn it on from your dashboard and Gymxiety Mode travels with you—whether it’s a commercial gym, apartment setup, or hotel fitness room.</p>
-      </div>
-      <div class="panel">
-        <h3 style="margin-top:0;">Subscription ready</h3>
-        <p style="color:var(--muted);line-height:1.6;">Hosted on Cloudflare for instant global performance and connected to Stripe for secure billing. When you upgrade, Gymxiety Mode unlocks set check-ins, etiquette micro-lessons, and equipment walkthroughs.</p>
-        <div class="info-card" style="margin-top:18px;">
-          <small style="color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Coming soon</small>
-          <h3 style="margin:8px 0 0;">Add-on packs for commercial gyms, apartment gyms, and hotel gyms.</h3>
-        </div>
-      </div>
+        </article>
+        <button class="landing-button landing-grid-span" type="submit">Generate calm workout</button>
+      </form>
     </section>
     ${renderPlannerResult(plannerResult)}
   `;
+
+  return renderAppPage(sections);
 }
 
 function renderPlannerResult(result) {
@@ -1224,93 +1229,80 @@ function renderPlannerResult(result) {
   }
   const planRows = result.planRows || [];
   const summary = result.summary || { movementCount: 0, focus: [], repRange: '', setsPerExercise: '', mode: '' };
-  const planTable = planRows.length ? `
-    <div style="overflow-x:auto;width:100%;">
-      <table class="plan-table" style="min-width:960px;margin:auto;">
-        <thead>
-          <tr>
-            <th>Exercise</th>
-            <th>Equipment</th>
-            <th>Muscle Group</th>
-            <th>Rep Range</th>
-            <th>Sets</th>
-            <th>Recommended Weight</th>
-            <th>Description</th>
-            <th>Demo</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${planRows.map(row => `
-            <tr>
-              <td>${escapeHTML(row.exercise)}</td>
-              <td>${escapeHTML(row.equipment)}</td>
-              <td>${escapeHTML(row.muscle)}</td>
-              <td>${escapeHTML(row.repRange)}</td>
-              <td>${escapeHTML(row.sets)}</td>
-              <td>${escapeHTML(row.recommendedWeight)}</td>
-              <td style="max-width:320px;">${escapeHTML(row.description)}</td>
-              <td>${row.video ? `<iframe width="160" height="90" src="${escapeHTML(row.video)}" title="${escapeHTML(row.exercise)} demo" frameborder="0" allowfullscreen style="border-radius:6px;"></iframe>` : ''}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  ` : '<p>No workouts available for selected equipment and muscle group.</p>';
+
+  const summaryCards = [
+    { label: 'Movements', value: summary.movementCount || 0 },
+    { label: 'Focus', value: summary.focus?.slice(0, 2).map(escapeHTML).join(', ') || 'General' },
+    { label: 'Intensity', value: `${escapeHTML(summary.repRange || '')} · ${escapeHTML(summary.setsPerExercise || '')}` },
+    { label: 'Mode', value: summary.mode || 'Calm builder' }
+  ].map(card => `
+    <article class="landing-card">
+      <p class="landing-subtext">${escapeHTML(card.label)}</p>
+      <h3>${escapeHTML(card.value)}</h3>
+    </article>
+  `).join('');
+
+  const exerciseCards = planRows.length
+    ? planRows.map(row => `
+        <article class="landing-card">
+          <h3>${escapeHTML(row.exercise)}</h3>
+          <p class="landing-subtext">${escapeHTML(row.muscle)} · ${escapeHTML(row.equipment)}</p>
+          <ul class="landing-list">
+            <li>Reps: ${escapeHTML(row.repRange)}</li>
+            <li>Sets: ${escapeHTML(row.sets)}</li>
+            <li>${escapeHTML(row.description)}</li>
+          </ul>
+        </article>
+      `).join('')
+    : '<article class="landing-card"><p>No workouts available for the selected filters.</p></article>';
 
   const feedbackPanel = planRows.length ? `
-    <section class="panel plan-feedback-card">
-      <h3 style="margin-top:0;">Did any set feel off?</h3>
-      <p style="color:var(--muted);margin:6px 0 18px;">Select how each lift felt so we can gently adjust weight or reps next time.</p>
-      <form data-form="plan-feedback" class="plan-feedback-form">
+    <section class="landing-section">
+      <p class="landing-subtext">Dial it in</p>
+      <h2>Let us know how it felt.</h2>
+      <form data-form="plan-feedback" class="landing-grid">
         ${planRows.map(row => `
-          <div class="feedback-row" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--border);">
-            <div>
-              <strong>${escapeHTML(row.exercise)}</strong>
-              <p class="feedback-subtext">${row.usesWeight ? 'Weight calibration' : 'Rep calibration'}</p>
+          <article class="landing-card">
+            <p class="landing-subtext">${escapeHTML(row.exercise)}</p>
+            <div class="landing-chip-row">
+              <label class="landing-chip">
+                <input type="radio" name="feedback_${row.id}" value="too_easy" required>
+                <span>Too easy</span>
+              </label>
+              <label class="landing-chip">
+                <input type="radio" name="feedback_${row.id}" value="perfect">
+                <span>Perfect</span>
+              </label>
+              <label class="landing-chip">
+                <input type="radio" name="feedback_${row.id}" value="too_hard">
+                <span>Too hard</span>
+              </label>
             </div>
-            <div class="feedback-options" style="display:flex;flex-wrap:wrap;gap:10px;">
-              <label><input type="radio" name="feedback_${row.id}" value="too_easy" required> Too easy</label>
-              <label><input type="radio" name="feedback_${row.id}" value="perfect"> Perfect</label>
-              <label><input type="radio" name="feedback_${row.id}" value="too_hard"> Too hard</label>
-            </div>
-          </div>
+          </article>
         `).join('')}
-        <button type="submit" class="primary-btn" style="margin-top:12px;">Save adjustments</button>
+        <button class="landing-button landing-grid-span" type="submit">Save adjustments</button>
       </form>
     </section>
   ` : '';
 
   return `
-    <section class="panel" style="margin-top:32px;">
-      <h2 style="margin-top:0;">Session overview</h2>
-      <div class="summary-grid">
-        <div class="summary-card">
-          <small style="color:var(--muted);">Movements</small>
-          <h3 style="margin:6px 0 0;">${summary.movementCount || 0}</h3>
+    <section class="landing-section">
+      <div class="landing-actions">
+        <div>
+          <p class="landing-subtext">Session overview</p>
+          <h2>Here is your calm plan.</h2>
         </div>
-        <div class="summary-card">
-          <small style="color:var(--muted);">Focus</small>
-          <h3 style="margin:6px 0 0;">${summary.focus?.slice(0, 2).map(escapeHTML).join(', ') || 'General'}</h3>
-        </div>
-        <div class="summary-card">
-          <small style="color:var(--muted);">Intensity</small>
-          <h3 style="margin:6px 0 0;">${escapeHTML(summary.repRange || '')} · ${escapeHTML(summary.setsPerExercise || '')}</h3>
-        </div>
-        <div class="summary-card">
-          <small style="color:var(--muted);">Mode</small>
-          <h3 style="margin:6px 0 0;">${escapeHTML(summary.mode || 'Dieting')}</h3>
-        </div>
+        <a class="landing-button secondary" href="${ROUTE_HASHES.generate || ROUTE_HASHES.planner}">Start over</a>
+      </div>
+      <div class="landing-grid landing-grid-two">
+        ${summaryCards}
       </div>
     </section>
-    <section class="panel" style="margin-top:24px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
-        <div>
-          <h2 style="margin:0;">Your custom gym plan</h2>
-          <p style="color:var(--muted);margin:6px 0 0;">Purposeful lifts matched to your selected equipment.</p>
-        </div>
-        <a href="${ROUTE_HASHES.planner}" class="cta-btn" style="text-decoration:none;">Start over</a>
+    <section class="landing-section">
+      <p class="landing-subtext">Movements</p>
+      <div class="landing-grid">
+        ${exerciseCards}
       </div>
-      ${planTable}
     </section>
     ${feedbackPanel}
   `;
@@ -1405,59 +1397,194 @@ function renderPlanGenerator(state) {
   `;
 }
 
-function renderDashboard() {
-  const userDuration = '3 weeks';
-  const savedWorkouts = ['Push/Pull/Legs', 'Full Body Beginner', 'Upper Body Blast'];
-  const deadliftMax = 315;
-  const benchMax = 225;
-  const squatMax = 275;
-  const userWeight = 180;
-  const userHeight = 70;
+function renderLibrary() {
+  const topExercises = EXERCISES.slice(0, 18);
+  const cards = topExercises.map(exercise => `
+    <article class="landing-card">
+      <p class="landing-subtext">${escapeHTML(exercise.muscle_group)}</p>
+      <h3>${escapeHTML(exercise.name)}</h3>
+      <p>${escapeHTML(exercise.howto)}</p>
+    </article>
+  `).join('');
 
-  return `
-    <section class="panel" style="margin-bottom:28px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
-        <div>
-          <span class="badge">Member since</span>
-          <h2 style="margin:10px 0 6px;">${userDuration} of consistent work</h2>
-          <p style="color:var(--muted);max-width:520px;">Keep logging sessions to unlock premium periodization templates. Your subscription syncs automatically with Stripe, so upgrades are instant.</p>
-        </div>
-        <button class="cta-btn">Manage Subscription</button>
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Library</span>
+        <h1>Plain-language cues for every move.</h1>
+        <p class="landing-subtext lead">Skim a card, keep anxiety low, and walk into the gym with a script.</p>
       </div>
-      <div class="summary-grid" style="margin-top:24px;">
-        <div class="summary-card">
-          <small style="color:var(--muted);">Current Weight</small>
-          <h3 style="margin:6px 0 0;">${userWeight} lbs</h3>
-        </div>
-        <div class="summary-card">
-          <small style="color:var(--muted);">Height</small>
-          <h3 style="margin:6px 0 0;">${userHeight} in</h3>
-        </div>
-        <div class="summary-card">
-          <small style="color:var(--muted);">Bench / Squat / Dead</small>
-          <h3 style="margin:6px 0 0;">${benchMax}/${squatMax}/${deadliftMax} lbs</h3>
-        </div>
+      <div class="landing-card" aria-hidden="true">
+        <p class="landing-subtext">How to use it</p>
+        <p>Scan before you lift. Each card keeps instructions simple and kind.</p>
       </div>
-    </section>
-    <section class="hero-grid" style="gap:24px;">
-      <div class="panel">
-        <h3 style="margin-top:0;">Saved workouts</h3>
-        <p style="color:var(--muted);margin-top:4px;">Recently generated plans you bookmarked.</p>
-        <ul style="margin:18px 0 0;padding-left:20px;line-height:1.8;">
-          ${savedWorkouts.map(w => `<li>${escapeHTML(w)}</li>`).join('')}
-        </ul>
-      </div>
-      <div class="panel">
-        <h3 style="margin-top:0;">Next focus</h3>
-        <p style="color:var(--muted);margin-top:4px;">Dial in your training priorities for the week.</p>
-        <ul style="margin:18px 0 0;padding-left:20px;line-height:1.8;">
-          <li>Update rep targets after next PR attempt</li>
-          <li>Log cardio minutes in the mobile app</li>
-          <li>Enable Cloudflare Gateway for faster loads</li>
-        </ul>
+    </header>
+    <section class="landing-section">
+      <p class="landing-subtext">Exercises</p>
+      <div class="landing-grid landing-grid-two">
+        ${cards}
       </div>
     </section>
   `;
+
+  return renderAppPage(sections);
+}
+
+function renderHistory(state) {
+  const entries = getHistory().slice().reverse();
+  const sessions = entries.slice(0, 8).map(entry => ({
+    id: entry.id,
+    dateLabel: formatHistoryDate(entry.date),
+    durationLabel: entry.durationMinutes ? `${entry.durationMinutes} min` : 'Duration pending',
+    notesPreview: formatHistoryNotesPreview(entry.notes),
+    description: entry.goal || 'Calm strength session',
+    href: `#/history/${encodeURIComponent(entry.id)}`
+  }));
+
+  const cards = sessions.length
+    ? sessions.map(session => `
+        <article class="landing-card">
+          <p class="landing-subtext">${escapeHTML(`${session.dateLabel} · ${session.durationLabel}`)}</p>
+          <h3>${escapeHTML(session.description)}</h3>
+          <p>${escapeHTML(session.notesPreview)}</p>
+          <div class="landing-actions landing-space-top-sm">
+            <a class="landing-button secondary" href="${session.href}">View Details</a>
+          </div>
+        </article>
+      `).join('')
+    : '<article class="landing-card"><p>No sessions logged yet. Generate a workout to start your streak.</p></article>';
+
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">History</span>
+        <h1>Your calm streak in one place.</h1>
+        <p class="landing-subtext lead">Each card is a finished session. Tap through for cues and notes.</p>
+      </div>
+      <div class="landing-card" aria-hidden="true">
+        <p class="landing-subtext">Tip</p>
+        <p>Logging finishes instantly updates your streak and dashboard.</p>
+      </div>
+    </header>
+    <section class="landing-section">
+      <p class="landing-subtext">Recent workouts</p>
+      <div class="landing-grid">
+        ${cards}
+      </div>
+    </section>
+  `;
+
+  return renderAppPage(sections);
+}
+
+function formatHistoryDate(value) {
+  if (!value) {
+    return 'Recently';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Recently';
+  }
+  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function formatHistoryNotesPreview(notes) {
+  if (typeof notes !== 'string') {
+    return 'No notes saved yet. Tap details to add context next time.';
+  }
+  const trimmed = notes.trim();
+  if (!trimmed) {
+    return 'No notes saved yet. Tap details to add context next time.';
+  }
+  if (trimmed.length > 140) {
+    return `${trimmed.slice(0, 137)}…`;
+  }
+  return trimmed;
+}
+
+function renderDashboard(state) {
+  const auth = getAuth();
+  const displayName = auth.user?.name?.trim() || state.profile?.name || 'Friend';
+  const firstName = displayName.split(' ')[0];
+  const stats = calculateWorkoutStats();
+  const nextWorkout = state.program?.nextWorkout || 'Pick your next focus';
+  const quickStats = [
+    { label: 'Workout streak', value: `${stats.streak || 0} days` },
+    { label: 'Sessions logged', value: `${stats.total || 0}` },
+    { label: 'Next workout', value: nextWorkout }
+  ];
+  const recentSessions = (state.workouts || []).slice(0, 4).map((iso, index) => {
+    const date = new Date(iso);
+    const friendly = Number.isNaN(date.getTime()) ? 'Recently' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return {
+      id: `${iso}-${index}`,
+      date: friendly,
+      title: index === 0 ? 'Most recent lift' : `Session ${index + 1}`,
+      summary: 'Calm strength practice'
+    };
+  });
+  const quickLinks = [
+    { label: 'Library', href: ROUTE_HASHES.library || '#/library' },
+    { label: 'History', href: ROUTE_HASHES.history || '#/history' },
+    { label: 'Profile', href: ROUTE_HASHES.profile }
+  ];
+
+  const statsGrid = quickStats.map(stat => `
+    <article class="landing-card">
+      <p class="landing-subtext">${escapeHTML(stat.label)}</p>
+      <h3>${escapeHTML(stat.value)}</h3>
+    </article>
+  `).join('');
+
+  const recentGrid = recentSessions.length
+    ? recentSessions.map(session => `
+        <article class="landing-card">
+          <p class="landing-subtext">${escapeHTML(session.date)}</p>
+          <h3>${escapeHTML(session.title)}</h3>
+          <p>${escapeHTML(session.summary)}</p>
+          <div class="landing-actions landing-space-top-sm">
+            <a class="landing-button secondary" href="${ROUTE_HASHES.history}">View log</a>
+          </div>
+        </article>
+      `).join('')
+    : `<article class="landing-card"><p>No workouts logged yet. Generate your first calm session to see it here.</p></article>`;
+
+  const linkRow = quickLinks.map(link => `<a class="landing-chip" href="${link.href}">${escapeHTML(link.label)}</a>`).join('');
+
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Dashboard</span>
+        <h1>Hi ${escapeHTML(firstName)}, ready for a calm check-in?</h1>
+        <p class="landing-subtext lead">Your planner, progress, and next focus live here.</p>
+        <div class="landing-actions">
+          <a class="landing-button" href="${ROUTE_HASHES.generate || '#/generate'}">Generate Workout</a>
+        </div>
+        <div class="landing-chip-row">
+          ${linkRow}
+        </div>
+      </div>
+      <div class="landing-card" aria-hidden="true">
+        <p class="landing-subtext">Next focus</p>
+        <h3>${escapeHTML(nextWorkout)}</h3>
+        <p>Keep it short, calm, and confident.</p>
+      </div>
+    </header>
+    <section class="landing-section">
+      <p class="landing-subtext">At a glance</p>
+      <div class="landing-grid landing-grid-two">
+        ${statsGrid}
+      </div>
+    </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Recent sessions</p>
+      <div class="landing-grid">
+        ${recentGrid}
+      </div>
+    </section>
+  `;
+
+  return renderAppPage(sections);
 }
 
 function renderSubscribe(state) {
@@ -1543,173 +1670,180 @@ function renderProfile(state) {
   const programInfo = state.program;
   const stats = calculateWorkoutStats();
   const weeklyHeights = getWeeklyChartHeights();
-  const programProgress = Math.min(100, Math.round((programInfo.currentWeek / programInfo.totalWeeks) * 100));
-  const weightDisplay = profileUser.weight ? `${escapeHTML(profileUser.weight)} lbs` : 'Not set';
-  const heightDisplay = profileUser.height ? `${escapeHTML(profileUser.height)} in` : 'Not set';
-  const locationDisplay = profileUser.location ? escapeHTML(profileUser.location) : 'Not set';
-  const ageSexParts = [];
-  if (profileUser.age) {
-    ageSexParts.push(`${escapeHTML(profileUser.age)} yrs`);
-  }
-  if (profileUser.sex) {
-    ageSexParts.push(escapeHTML(profileUser.sex));
-  }
-  const ageSexDisplay = ageSexParts.length ? ageSexParts.join(' · ') : 'Not set';
+  const auth = getAuth();
+  const email = auth.user?.email?.trim() || 'Not set';
+  const displayName = auth.user?.name?.trim() || profileUser.name;
+  const userAccount = auth.user || {};
+  const accountName = userAccount.name?.trim() || displayName;
+  const accountEmail = email;
+  const accountExperience = userAccount.experienceLevel || profileUser.experience || 'Not set';
+  const accountGoal = userAccount.goal || profileUser.goal || 'Not set';
   const profileSexChips = renderSexOptions('sex', profileUser.sex, true);
 
-  return `
-    <section class="profile-shell">
-      <div class="profile-summary-card">
-        <div class="profile-summary-top">
+  const snapshotCards = [
+    { label: 'Goal', value: profileUser.goal },
+    { label: 'Experience', value: profileUser.experience },
+    { label: 'Equipment', value: profileUser.equipment },
+    { label: 'Next workout', value: programInfo.nextWorkout }
+  ].map(card => `
+    <article class="landing-card">
+      <p class="landing-subtext">${escapeHTML(card.label)}</p>
+      <h3>${escapeHTML(card.value)}</h3>
+    </article>
+  `).join('');
+
+  const progressCards = `
+    <article class="landing-card">
+      <p class="landing-subtext">Workout streak</p>
+      <h3>${escapeHTML(String(stats.streak || 0))} days</h3>
+    </article>
+    <article class="landing-card">
+      <p class="landing-subtext">Sessions logged</p>
+      <h3>${escapeHTML(String(stats.total || 0))}</h3>
+    </article>
+    <article class="landing-card landing-grid-span">
+      <p class="landing-subtext">This week</p>
+      <div class="progress-mini-chart">
+        ${weeklyHeights.map(val => `<span style="height:${val}%"></span>`).join('')}
+      </div>
+    </article>
+  `;
+
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Profile</span>
+        <h1>${escapeHTML(displayName)}</h1>
+        <p class="landing-subtext">${escapeHTML(email)}</p>
+        <p>${escapeHTML(profileUser.subtitle)}</p>
+        <form data-form="profile-start-workout" class="landing-actions">
+          <button class="landing-button" type="submit">Start today's workout</button>
+          <button class="landing-button secondary" type="button" data-profile-logout>Logout</button>
+        </form>
+        <div class="landing-actions landing-space-top-sm">
+          <a class="landing-button secondary" href="${ROUTE_HASHES['profile-edit'] || '#/profile-edit'}">Edit Profile</a>
+        </div>
+      </div>
+      <div class="landing-card" aria-hidden="true">
+        <p class="landing-subtext">Program</p>
+        <h3>Week ${programInfo.currentWeek} of ${programInfo.totalWeeks}</h3>
+        <p>Next: ${escapeHTML(programInfo.nextWorkout)}</p>
+      </div>
+    </header>
+    <section class="landing-section">
+      <p class="landing-subtext">Account basics</p>
+      <article class="landing-card">
+        <div class="landing-grid landing-grid-two">
           <div>
-            <p class="profile-eyebrow">Profile</p>
-            <h2>${escapeHTML(profileUser.name)}</h2>
-            <p class="profile-summary-subtitle">${escapeHTML(profileUser.subtitle)}</p>
+            <p class="landing-subtext">Name</p>
+            <h3>${escapeHTML(accountName)}</h3>
           </div>
-          <div class="profile-pill">Beginner Mode</div>
-        </div>
-        <div class="profile-meta">
-          <div class="profile-meta-item">
-            <span>Goal</span>
-            <strong>${escapeHTML(profileUser.goal)}</strong>
+          <div>
+            <p class="landing-subtext">Email</p>
+            <h3>${escapeHTML(accountEmail)}</h3>
           </div>
-          <div class="profile-meta-item">
-            <span>Experience Level</span>
-            <strong>${escapeHTML(profileUser.experience)}</strong>
+          <div>
+            <p class="landing-subtext">Experience level</p>
+            <h3>${escapeHTML(accountExperience)}</h3>
           </div>
-          <div class="profile-meta-item">
-            <span>Equipment</span>
-            <strong>${escapeHTML(profileUser.equipment)}</strong>
-          </div>
-          <div class="profile-meta-item">
-            <span>Weight</span>
-            <strong>${weightDisplay}</strong>
-          </div>
-          <div class="profile-meta-item">
-            <span>Height</span>
-            <strong>${heightDisplay}</strong>
-          </div>
-          <div class="profile-meta-item">
-            <span>Age · Sex</span>
-            <strong>${ageSexDisplay}</strong>
-          </div>
-          <div class="profile-meta-item">
-            <span>Location</span>
-            <strong>${locationDisplay}</strong>
+          <div>
+            <p class="landing-subtext">Goal</p>
+            <h3>${escapeHTML(accountGoal)}</h3>
           </div>
         </div>
-      </div>
-      <div class="profile-program-card">
-        <div>
-          <p class="program-label">Program</p>
-          <div class="program-week-row" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-            <h3>Week ${programInfo.currentWeek} of ${programInfo.totalWeeks}</h3>
-          </div>
-          <p class="program-subtitle">Next Workout: <span>${escapeHTML(programInfo.nextWorkout)}</span></p>
-          <div class="program-progress">
-            <div class="program-progress-fill" style="width:${programProgress}%;"></div>
-          </div>
-        </div>
-        <form data-form="profile-start-workout">
-          <button class="program-start-btn" type="submit">Start Today's Workout</button>
-        </form>
-      </div>
-      <div class="profile-progress-card">
-        <div>
-          <p class="progress-eyebrow">Progress</p>
-          <h3>Keeping it gentle and steady</h3>
-          <p>Micro wins add up. Nothing fancy—just a calm snapshot.</p>
-        </div>
-        <div class="progress-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:18px;">
-          <div class="progress-metric">
-            <span>Workout Streak</span>
-            <strong>${stats.streak} days</strong>
-          </div>
-          <div class="progress-metric">
-            <span>Total Sessions</span>
-            <strong>${stats.total}</strong>
-          </div>
-        </div>
-        <div class="progress-mini-chart">
-          ${weeklyHeights.map(val => `<span style="height:${val}%"></span>`).join('')}
-        </div>
-      </div>
-      <div class="profile-settings-card">
-        <h4>Tune the basics</h4>
-        <p>Quick adjustments keep the plan feeling yours.</p>
-        <div class="profile-settings-actions">
-          <a href="#edit-profile" class="settings-link">Edit Profile</a>
-          <a href="#change-goal" class="settings-link">Change Goal</a>
-          <a href="#change-equipment" class="settings-link">Change Equipment</a>
-        </div>
-      </div>
-      <div class="profile-settings-forms">
-        <form id="edit-profile" class="settings-inline-form" data-form="profile-main">
-          <label>
-            Display Name
-            <input type="text" name="name" value="${escapeHTML(profileUser.name)}" required>
-          </label>
-          <label>
-            Experience Note
-            <input type="text" name="experience" value="${escapeHTML(profileUser.experience)}" required>
-          </label>
-          <label>
-            Subtitle
-            <textarea name="subtitle" required>${escapeHTML(profileUser.subtitle)}</textarea>
-          </label>
-          <label>
-            Height (in)
-            <input type="number" name="height" min="36" max="96" value="${escapeHTML(profileUser.height || '')}" required>
-          </label>
-          <label>
-            Weight (lbs)
-            <input type="number" name="weight" min="70" max="600" value="${escapeHTML(profileUser.weight || '')}" required>
-          </label>
-          <fieldset class="option-chip-fieldset">
-            <legend>Sex</legend>
-            <div class="option-chip-group">
-              ${profileSexChips}
-            </div>
-          </fieldset>
-          <label>
-            Age
-            <input type="number" name="age" min="13" max="90" value="${escapeHTML(profileUser.age || '')}" required>
-          </label>
-          <label>
-            Location
-            <input type="text" name="location" value="${escapeHTML(profileUser.location || '')}" required>
-          </label>
-          <label>
-            Current Week
-            <input type="number" min="1" max="${programInfo.totalWeeks}" name="current_week" value="${programInfo.currentWeek}" required>
-          </label>
-          <label>
-            Total Weeks
-            <input type="number" min="1" name="total_weeks" value="${programInfo.totalWeeks}" required>
-          </label>
-          <label>
-            Next Workout Name
-            <input type="text" name="next_workout" value="${escapeHTML(programInfo.nextWorkout)}" required>
-          </label>
-          <button type="submit">Save Profile</button>
-        </form>
-        <form id="change-goal" class="settings-inline-form" data-form="profile-goal">
-          <label>
-            Goal statement
-            <textarea name="goal" required>${escapeHTML(profileUser.goal)}</textarea>
-          </label>
-          <button type="submit">Update Goal</button>
-        </form>
-        <form id="change-equipment" class="settings-inline-form" data-form="profile-equipment">
-          <label>
-            Equipment on hand
-            <textarea name="equipment" required>${escapeHTML(profileUser.equipment)}</textarea>
-          </label>
-          <button type="submit">Update Equipment</button>
-        </form>
+      </article>
+    </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Snapshot</p>
+      <div class="landing-grid landing-grid-two">
+        ${snapshotCards}
       </div>
     </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Progress</p>
+      <div class="landing-grid landing-grid-two">
+        ${progressCards}
+      </div>
+    </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Update basics</p>
+      <form class="landing-grid" data-form="profile-main">
+        <label class="landing-card">
+          <span class="landing-subtext">Display name</span>
+          <input type="text" name="name" value="${escapeHTML(profileUser.name)}" required>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Experience note</span>
+          <input type="text" name="experience" value="${escapeHTML(profileUser.experience)}" required>
+        </label>
+        <label class="landing-card landing-grid-span">
+          <span class="landing-subtext">Subtitle</span>
+          <textarea name="subtitle" required>${escapeHTML(profileUser.subtitle)}</textarea>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Height (in)</span>
+          <input type="number" name="height" min="36" max="96" value="${escapeHTML(profileUser.height || '')}" required>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Weight (lbs)</span>
+          <input type="number" name="weight" min="70" max="600" value="${escapeHTML(profileUser.weight || '')}" required>
+        </label>
+        <article class="landing-card landing-grid-span">
+          <p class="landing-subtext">Sex</p>
+          <div class="option-chip-group">
+            ${profileSexChips}
+          </div>
+        </article>
+        <label class="landing-card">
+          <span class="landing-subtext">Age</span>
+          <input type="number" name="age" min="13" max="90" value="${escapeHTML(profileUser.age || '')}" required>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Location</span>
+          <input type="text" name="location" value="${escapeHTML(profileUser.location || '')}" required>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Current week</span>
+          <input type="number" min="1" max="${programInfo.totalWeeks}" name="current_week" value="${programInfo.currentWeek}" required>
+        </label>
+        <label class="landing-card">
+          <span class="landing-subtext">Total weeks</span>
+          <input type="number" min="1" name="total_weeks" value="${programInfo.totalWeeks}" required>
+        </label>
+        <label class="landing-card landing-grid-span">
+          <span class="landing-subtext">Next workout name</span>
+          <input type="text" name="next_workout" value="${escapeHTML(programInfo.nextWorkout)}" required>
+        </label>
+        <button class="landing-button landing-grid-span" type="submit">Save profile</button>
+      </form>
+    </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Quick tweaks</p>
+      <form class="landing-card" data-form="profile-goal">
+        <label>
+          <span class="landing-subtext">Goal statement</span>
+          <textarea name="goal" required>${escapeHTML(profileUser.goal)}</textarea>
+        </label>
+        <button class="landing-button" type="submit">Update goal</button>
+      </form>
+      <form class="landing-card landing-space-top-sm" data-form="profile-equipment">
+        <label>
+          <span class="landing-subtext">Equipment on hand</span>
+          <textarea name="equipment" required>${escapeHTML(profileUser.equipment)}</textarea>
+        </label>
+        <button class="landing-button" type="submit">Update equipment</button>
+      </form>
+    </section>
+    <section class="landing-section">
+      <p class="landing-subtext">Subscription</p>
+      <article class="landing-card">
+        <h3>Calm membership</h3>
+        <p>Subscription details and payment history will live here soon.</p>
+      </article>
+    </section>
   `;
+
+  return renderAppPage(sections);
 }
 
 function renderSexOptions(fieldName, selectedValue, required = false) {
@@ -1743,7 +1877,7 @@ function attachPlannerEvents(root) {
       const muscles = data.getAll('muscle');
       const plan = createPlannerPlan({ equipment, muscles });
       storePlannerResult(plan);
-      renderWorkoutSummary();
+      navigateTo('workout-summary');
     });
   }
 
@@ -1910,6 +2044,14 @@ function attachProfileEvents(root) {
     startForm.addEventListener('submit', event => {
       event.preventDefault();
       recordWorkoutCompletion();
+    });
+  }
+
+  const logoutBtn = root.querySelector('[data-profile-logout]');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      logout();
+      navigateTo('home');
     });
   }
 
