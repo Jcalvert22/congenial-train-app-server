@@ -1,6 +1,7 @@
 import { getAuth, logout } from '../auth/state.js';
 
 const NAVBAR_CONTAINER_ID = 'navbar';
+const NAVBAR_MENU_ID = 'aaa-chrome-menu';
 
 const PUBLIC_LINKS = [
   { label: 'Home', href: '#/' },
@@ -33,60 +34,102 @@ function ensureNavbarContainer() {
   return container;
 }
 
-function createLink(label, href, isPrimary = false) {
-  if (isPrimary) {
-    return `<a class="landing-button" href="${href}">${label}</a>`;
-  }
-  return `<a class="landing-pill" href="${href}">${label}</a>`;
-}
-
 function mountNavbar(html, afterMount) {
   const container = ensureNavbarContainer();
   container.innerHTML = html;
+  attachChromeInteractions(container);
   if (typeof afterMount === 'function') {
     afterMount(container);
   }
 }
 
-export function renderPublicNavbar() {
-  const navLinks = PUBLIC_LINKS.map(link => createLink(link.label, link.href)).join('');
-  const startTrial = createLink('Start Trial', '#/start-trial', true);
-  mountNavbar(`
-    <nav class="landing-section" aria-label="Public navigation">
-      <div class="landing-container" style="gap: 12px;">
-        <div>
-          <span class="landing-label">AllAroundAthlete</span>
-          <h2>Structure without stress.</h2>
-        </div>
-        <div class="landing-pill-list" role="list">
-          ${navLinks}
-        </div>
-        <div class="landing-actions">
-          ${startTrial}
-        </div>
+function attachChromeInteractions(container) {
+  const toggle = container.querySelector('[data-chrome-toggle]');
+  const menu = container.querySelector(`#${NAVBAR_MENU_ID}`);
+  if (!toggle || !menu) {
+    return;
+  }
+
+  const setMenuState = isOpen => {
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    menu.classList.toggle('is-open', isOpen);
+  };
+
+  toggle.addEventListener('click', () => {
+    const nextState = toggle.getAttribute('aria-expanded') !== 'true';
+    setMenuState(nextState);
+  });
+
+  menu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => setMenuState(false));
+  });
+}
+
+function renderNavbarMarkup({ tagline, links, primaryAction, secondaryAction }) {
+  const currentHash = window.location.hash || '#/';
+  const navLinks = links
+    .map(link => createLinkMarkup(link, currentHash))
+    .join('');
+
+  return `
+    <header class="chrome-header">
+      <div class="chrome-inner">
+        <a class="chrome-brand" href="#/">
+          <span class="chrome-mark" aria-hidden="true">AA</span>
+          <span class="chrome-brand-text">
+            <strong>AllAroundAthlete</strong>
+            <span>${tagline}</span>
+          </span>
+        </a>
+        <button class="chrome-burger" type="button" aria-expanded="false" aria-controls="${NAVBAR_MENU_ID}" data-chrome-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span class="visually-hidden">Toggle navigation</span>
+        </button>
+        <nav class="chrome-menu" id="${NAVBAR_MENU_ID}" aria-label="Primary navigation">
+          <div class="chrome-links" role="list">
+            ${navLinks}
+          </div>
+          <div class="chrome-ctas">
+            ${secondaryAction || ''}
+            ${primaryAction || ''}
+          </div>
+        </nav>
       </div>
-    </nav>
-  `);
+    </header>
+  `;
+}
+
+function createLinkMarkup(link, currentHash) {
+  const activeHashes = new Set(['#/home', '#/']);
+  const isHome = link.href === '#/';
+  const isActive = isHome ? activeHashes.has(currentHash || '#/') : currentHash === link.href;
+  const classes = ['chrome-link'];
+  if (isActive) {
+    classes.push('is-active');
+  }
+  return `<a class="${classes.join(' ')}" href="${link.href}">${link.label}</a>`;
+}
+
+export function renderPublicNavbar() {
+  const html = renderNavbarMarkup({
+    tagline: 'Structure without stress',
+    links: PUBLIC_LINKS,
+    secondaryAction: `<a class="chrome-button ghost" href="#/pricing">View plans</a>`,
+    primaryAction: `<a class="chrome-button" href="#/start-trial">Start free trial</a>`
+  });
+  mountNavbar(html);
 }
 
 export function renderAppNavbar() {
-  const navLinks = APP_LINKS.map(link => createLink(link.label, link.href)).join('');
-  mountNavbar(`
-    <nav class="landing-section" aria-label="App navigation">
-      <div class="landing-container" style="gap: 12px;">
-        <div>
-          <span class="landing-label">AllAroundAthlete</span>
-          <h2>Your calm coaching hub.</h2>
-        </div>
-        <div class="landing-pill-list" role="list">
-          ${navLinks}
-        </div>
-        <div class="landing-actions">
-          <button class="landing-button secondary" type="button" data-nav-logout>Logout</button>
-        </div>
-      </div>
-    </nav>
-  `, container => {
+  const html = renderNavbarMarkup({
+    tagline: 'Calm guidance, every day',
+    links: APP_LINKS,
+    secondaryAction: `<a class="chrome-button ghost" href="#/generate">Create plan</a>`,
+    primaryAction: `<button class="chrome-button" type="button" data-nav-logout>Logout</button>`
+  });
+  mountNavbar(html, container => {
     const logoutBtn = container.querySelector('[data-nav-logout]');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', event => {

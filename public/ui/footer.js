@@ -21,14 +21,14 @@ const LEGAL_LINKS = [
 
 function renderLinkGroup(title, links) {
   return `
-    <div>
-      <p class="landing-footer-heading">${title}</p>
-      <ul class="landing-footer-list">
+    <div class="chrome-footer-group">
+      <p class="chrome-footer-heading">${title}</p>
+      <ul class="chrome-footer-links">
         ${links
           .map(
             link => `
               <li>
-                <a class="landing-footer-link" href="${link.href}">${link.label}</a>
+                <a class="chrome-footer-link" href="${link.href}">${link.label}</a>
               </li>
             `
           )
@@ -41,21 +41,20 @@ function renderLinkGroup(title, links) {
 export function renderFooter() {
   const year = new Date().getFullYear();
   return `
-    <footer class="landing-footer" aria-label="Site footer">
-      <div class="landing-container landing-footer-inner">
-        <div class="landing-footer-columns">
-          <div class="landing-footer-brand">
-            <p class="landing-footer-logo">AllAroundAthlete</p>
-            <p class="landing-subtext">Helping beginners build confidence, one workout at a time.</p>
-          </div>
-          <div class="landing-footer-grid">
-            ${renderLinkGroup('Explore', EXPLORE_LINKS)}
-            ${renderLinkGroup('Company', COMPANY_LINKS)}
-            ${renderLinkGroup('Legal', LEGAL_LINKS)}
-          </div>
+    <footer class="chrome-footer" aria-label="Site footer">
+      <div class="chrome-footer-inner">
+        <div class="chrome-footer-columns chrome-footer-columns-only">
+          ${renderLinkGroup('Explore', EXPLORE_LINKS)}
+          ${renderLinkGroup('Company', COMPANY_LINKS)}
+          ${renderLinkGroup('Legal', LEGAL_LINKS)}
         </div>
-        <div class="landing-footer-meta-row">
-          <p class="landing-footer-meta">© ${year} AllAroundAthlete · Built for everyday consistency.</p>
+        <div class="chrome-footer-bottom">
+          <p>© ${year} AllAroundAthlete. Built for everyday consistency.</p>
+          <div class="chrome-footer-meta-links">
+            <a class="chrome-footer-link" href="#/contact">Support</a>
+            <a class="chrome-footer-link" href="#/privacy">Privacy</a>
+            <a class="chrome-footer-link" href="#/terms">Terms</a>
+          </div>
         </div>
       </div>
     </footer>
