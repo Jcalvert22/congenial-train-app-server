@@ -22,8 +22,13 @@ const PUBLIC_BASE_LINKS = [
 	{ label: 'Pricing', route: 'pricing' }
 ];
 
+const PUBLIC_SECONDARY_LINKS = [
+	{ label: 'About', route: 'about' },
+	{ label: 'Contact', route: 'contact' }
+];
+
 export const FEATURE_ROUTES = FEATURE_LINKS.map(link => link.route);
-export const PUBLIC_NAV_ROUTES = new Set([...FEATURE_ROUTES, 'home', 'pricing']);
+export const PUBLIC_NAV_ROUTES = new Set([...FEATURE_ROUTES, 'home', 'pricing', 'about', 'contact', 'start-trial', 'create-account', 'welcome']);
 
 function isAppMode(state) {
 	return Boolean(state?.isSubscribed && state?.profile?.onboardingComplete);
@@ -49,13 +54,15 @@ function renderFeaturesDropdown(currentRoute, routeMap) {
 }
 
 function renderPublicNav(currentRoute, routeMap) {
-	const [home, pricing] = PUBLIC_BASE_LINKS.map(link => anchorHtml(link.label, link.route, currentRoute, routeMap));
-	const trialHref = routeMap.subscribe || '#/subscribe';
+	const [homeLink, pricingLink] = PUBLIC_BASE_LINKS.map(link => anchorHtml(link.label, link.route, currentRoute, routeMap));
+	const secondaryLinks = PUBLIC_SECONDARY_LINKS.map(link => anchorHtml(link.label, link.route, currentRoute, routeMap)).join('');
+	const trialHref = routeMap['start-trial'] || routeMap.subscribe || '#/start-trial';
 	return `
 		<nav class="nav-links nav-public">
-			${home}
+			${homeLink}
 			${renderFeaturesDropdown(currentRoute, routeMap)}
-			${pricing}
+			${secondaryLinks}
+			${pricingLink}
 			<a href="${trialHref}" class="cta-btn nav-trial">Start Trial</a>
 		</nav>
 	`;

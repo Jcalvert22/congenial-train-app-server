@@ -4,7 +4,7 @@ import { escapeHTML } from '../utils/helpers.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
-const CTA_HASH = '#/subscribe';
+const CTA_HASH = '#/start-trial';
 
 const HOW_IT_HELPS = [
   {

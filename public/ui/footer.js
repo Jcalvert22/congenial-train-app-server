@@ -5,7 +5,8 @@ const EXPLORE_LINKS = [
   { label: 'Timer', href: '#/timer' },
   { label: 'Progress Tracking', href: '#/progress-tracking' },
   { label: 'Beginner Onboarding', href: '#/beginner-onboarding' },
-  { label: 'Training Philosophy', href: '#/relaxed-training' }
+  { label: 'Training Philosophy', href: '#/relaxed-training' },
+  { label: 'Pricing', href: '#/pricing' }
 ];
 
 const COMPANY_LINKS = [

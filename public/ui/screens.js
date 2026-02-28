@@ -29,6 +29,12 @@ import { renderWorkoutSummary } from './workoutSummary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderWorkoutSummaryLanding } from './landingWorkoutSummary.js';
+import { renderAboutLanding } from './landingAbout.js';
+import { renderContactLanding } from './landingContact.js';
+import { renderPricingLanding } from './landingPricing.js';
+import { renderStartTrial } from './landingStartTrial.js';
+import { renderCreateAccount } from './landingCreateAccount.js';
+import { renderWelcome } from './landingWelcome.js';
 import { renderNavbar, FEATURE_ROUTES } from './navbar.js';
 import { renderFooter } from './footer.js';
 
@@ -43,6 +49,11 @@ const ROUTE_HASHES = {
   'program-generator': '#/program-generator',
   'exercise-library': '#/exercise-library',
   'workout-summary': '#/workout-summary',
+  about: '#/about',
+  contact: '#/contact',
+  'start-trial': '#/start-trial',
+  'create-account': '#/create-account',
+  welcome: '#/welcome',
   pricing: '#/pricing',
   timer: '#/timer',
   'progress-tracking': '#/progress-tracking',
@@ -767,6 +778,12 @@ const HOME_CALM_POINTS = [
 let latestProgramLanding = null;
 let latestExerciseLanding = null;
 let latestWorkoutLanding = null;
+let latestAboutLanding = null;
+let latestContactLanding = null;
+let latestPricingLanding = null;
+let latestStartTrialLanding = null;
+let latestCreateAccountLanding = null;
+let latestWelcomeLanding = null;
 
 const ROUTES = {
   home: { render: renderHome },
@@ -775,7 +792,17 @@ const ROUTES = {
   dashboard: { render: renderDashboard },
   profile: { render: renderProfile, afterRender: attachProfileEvents },
   subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
-  pricing: { render: renderSubscribe, afterRender: attachSubscribeEvents },
+  pricing: {
+    render: () => {
+      latestPricingLanding = renderPricingLanding({ standalone: false, includeFooter: false });
+      return latestPricingLanding.html;
+    },
+    afterRender: root => {
+      if (latestPricingLanding?.afterRender) {
+        latestPricingLanding.afterRender(root);
+      }
+    }
+  },
   onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents },
   'program-generator': {
     render: () => {
@@ -810,6 +837,61 @@ const ROUTES = {
       }
     }
   },
+  about: {
+    render: () => {
+      latestAboutLanding = renderAboutLanding({ standalone: false, includeFooter: false });
+      return latestAboutLanding.html;
+    },
+    afterRender: root => {
+      if (latestAboutLanding?.afterRender) {
+        latestAboutLanding.afterRender(root);
+      }
+    }
+  },
+  contact: {
+    render: () => {
+      latestContactLanding = renderContactLanding({ standalone: false, includeFooter: false });
+      return latestContactLanding.html;
+    },
+    afterRender: root => {
+      if (latestContactLanding?.afterRender) {
+        latestContactLanding.afterRender(root);
+      }
+    }
+  },
+  'start-trial': {
+    render: () => {
+      latestStartTrialLanding = renderStartTrial({ standalone: false, includeFooter: false });
+      return latestStartTrialLanding.html;
+    },
+    afterRender: root => {
+      if (latestStartTrialLanding?.afterRender) {
+        latestStartTrialLanding.afterRender(root);
+      }
+    }
+  },
+  'create-account': {
+    render: () => {
+      latestCreateAccountLanding = renderCreateAccount({ standalone: false, includeFooter: false });
+      return latestCreateAccountLanding.html;
+    },
+    afterRender: root => {
+      if (latestCreateAccountLanding?.afterRender) {
+        latestCreateAccountLanding.afterRender(root);
+      }
+    }
+  },
+  welcome: {
+    render: () => {
+      latestWelcomeLanding = renderWelcome({ standalone: false, includeFooter: false });
+      return latestWelcomeLanding.html;
+    },
+    afterRender: root => {
+      if (latestWelcomeLanding?.afterRender) {
+        latestWelcomeLanding.afterRender(root);
+      }
+    }
+  },
   timer: { render: () => renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') },
   'progress-tracking': { render: () => renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') },
   'beginner-onboarding': { render: () => renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') },
@@ -820,8 +902,15 @@ const PUBLIC_ROUTES = new Set([
   'home',
   'subscribe',
   'pricing',
+  'about',
+  'contact',
+  'start-trial',
+  'create-account',
+  'welcome',
   ...FEATURE_ROUTES
 ]);
+
+const LOGGED_OUT_ONLY_ROUTES = new Set(['about', 'contact', 'pricing', 'start-trial', 'create-account', 'welcome']);
 
 export function startApp() {
   initializeState();
@@ -886,6 +975,9 @@ function guardRoute(route, state) {
     }
     return 'subscribe';
   }
+  if (state.isSubscribed && LOGGED_OUT_ONLY_ROUTES.has(route)) {
+    return state.profile.onboardingComplete ? 'planner' : 'onboarding';
+  }
   if (!state.isSubscribed) {
     if (PUBLIC_ROUTES.has(route)) {
       return route;
@@ -935,7 +1027,7 @@ function renderFeaturePlaceholder(title, description) {
 
 function resolvePrimaryCta(state) {
   if (!state.isSubscribed) {
-    return { href: ROUTE_HASHES.subscribe, label: 'Start free trial' };
+    return { href: ROUTE_HASHES['start-trial'] || '#/start-trial', label: 'Start free trial' };
   }
   if (!state.profile.onboardingComplete) {
     return { href: ROUTE_HASHES.onboarding, label: 'Finish Setup' };
