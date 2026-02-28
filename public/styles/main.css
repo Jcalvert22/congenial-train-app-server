@@ -1,28 +1,30 @@
 :root {
-  --bg: radial-gradient(circle at top, rgba(79, 140, 255, 0.25), rgba(13, 17, 31, 0.9));
-  --panel: #161c33;
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --text: #f5f7ff;
-  --muted: #a9b5df;
+  --bg: radial-gradient(circle at top, rgba(140, 214, 179, 0.25), rgba(8, 18, 20, 0.92));
+  --panel: #132423;
+  --panel-border: rgba(170, 249, 210, 0.26);
+  --text: #f6fff9;
+  --muted: #a7cbbd;
+  --accent: #7fc6a2;
 }
 
 body {
   font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(180deg, rgba(7, 11, 27, 0.95), rgba(12, 17, 37, 0.98)), var(--bg);
+  background: linear-gradient(180deg, rgba(9, 18, 20, 0.95), rgba(7, 16, 18, 0.9)), var(--bg);
   color: var(--text);
 }
 
 .site-header {
-  background: rgba(13, 17, 31, 0.9);
+  background: rgba(10, 22, 22, 0.9);
   border-bottom: 1px solid var(--panel-border);
   color: var(--text);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.45);
 }
 
 .card {
   border: 1px solid var(--panel-border);
   background: var(--panel);
   color: var(--text);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.45);
 }
 
 .card .card-body {
@@ -30,8 +32,8 @@ body {
 }
 
 .table-dark {
-  --bs-table-bg: rgba(14, 19, 38, 0.85);
-  --bs-table-striped-bg: rgba(36, 46, 82, 0.6);
+  --bs-table-bg: rgba(12, 24, 24, 0.92);
+  --bs-table-striped-bg: rgba(33, 70, 60, 0.45);
   border-radius: 16px;
   overflow: hidden;
 }
@@ -49,7 +51,7 @@ body {
 
 footer {
   border-top: 1px solid var(--panel-border);
-  background: rgba(13, 17, 31, 0.85);
+  background: rgba(9, 20, 20, 0.85);
 }
 
 .badge {
@@ -57,12 +59,12 @@ footer {
 }
 
 #notes-dialog {
-  background: #0f152c;
+  background: #0f1f1c;
   color: var(--text);
 }
 
 #notes-dialog .ui-dialog-titlebar {
-  background: #1f2750;
+  background: #173129;
   border: none;
   color: var(--text);
 }

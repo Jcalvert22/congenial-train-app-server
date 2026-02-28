@@ -30,6 +30,7 @@ import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderWorkoutSummaryLanding } from './landingWorkoutSummary.js';
 import { renderNavbar, FEATURE_ROUTES } from './navbar.js';
+import { renderFooter } from './footer.js';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -51,21 +52,21 @@ const ROUTE_HASHES = {
 
 const BASE_STYLES = `
 :root {
-  --accent: #4f8cff;
-  --accent-dark: #325fdc;
-  --bg: #070b1b;
-  --panel: #101632;
-  --panel-light: #161d3f;
-  --text: #f5f7ff;
-  --muted: #aab4dc;
-  --border: rgba(255, 255, 255, 0.08);
-  --success: #3dd598;
+  --accent: #7fc6a2;
+  --accent-dark: #4f9c7a;
+  --bg: #0b1615;
+  --panel: #132423;
+  --panel-light: #152b29;
+  --text: #f4fff8;
+  --muted: #a3c6b6;
+  --border: rgba(176, 255, 221, 0.22);
+  --success: #8fe0b9;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: 'Segoe UI', 'Inter', sans-serif;
-  background: radial-gradient(circle at top, rgba(79,140,255,0.18), transparent 55%), var(--bg);
+  background: radial-gradient(circle at top, rgba(127,198,162,0.22), transparent 55%), var(--bg);
   color: var(--text);
 }
 a { color: inherit; text-decoration: none; }
@@ -74,8 +75,9 @@ a { color: inherit; text-decoration: none; }
   top: 0;
   z-index: 10;
   backdrop-filter: blur(16px);
-  background: rgba(7,11,27,0.8);
+  background: rgba(12,24,22,0.86);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.45);
 }
 .header-inner {
   max-width: 1100px;
@@ -135,23 +137,23 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  background: rgba(7,11,27,0.95);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(12,22,22,0.96);
+  border: 1px solid rgba(176,255,221,0.22);
   border-radius: 16px;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 240px;
-  box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+  box-shadow: 0 22px 50px rgba(0,0,0,0.55);
 }
 .nav-feature-panel a {
   padding: 6px 8px;
   border-radius: 8px;
-  color: #c7d3fb;
+  color: #f1fff8;
 }
 .nav-feature-panel a:hover {
-  background: rgba(255,255,255,0.05);
+  background: rgba(127,198,162,0.15);
 }
 .nav-trial {
   font-weight: 600;
@@ -168,108 +170,6 @@ a { color: inherit; text-decoration: none; }
   max-width: 1100px;
   margin: 0 auto;
   padding: 48px 24px 80px;
-}
-.landing-hero {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 32px;
-  padding: 48px 36px;
-  border-radius: 32px;
-  background: linear-gradient(135deg, #101937 0%, #152348 55%, #1f2f5f 100%);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 45px 80px rgba(0,0,0,0.45);
-  margin-bottom: 28px;
-}
-.hero-intro h1 {
-  font-size: clamp(2.6rem, 4vw, 3.3rem);
-  margin: 12px 0;
-}
-.hero-intro h2 {
-  font-size: clamp(1.2rem, 2.8vw, 1.6rem);
-  font-weight: 500;
-  color: #b8c5e8;
-  margin: 0 0 18px;
-}
-.hero-intro p {
-  color: #d6def6;
-  line-height: 1.65;
-  margin: 0 0 28px;
-  max-width: 540px;
-}
-.hero-tag {
-  display: inline-flex;
-  padding: 6px 16px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.12);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.78rem;
-  color: #c9d7ff;
-}
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-.hero-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 26px;
-  border-radius: 999px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hero-btn.primary {
-  background: linear-gradient(135deg, #7fc4ff, #4f8cff);
-  color: #0c1633;
-  box-shadow: 0 22px 40px rgba(79,140,255,0.35);
-}
-.hero-btn.secondary {
-  border: 1px solid rgba(255,255,255,0.3);
-  color: #f5f7ff;
-  background: transparent;
-}
-.hero-btn:hover { transform: translateY(-2px); }
-.hero-secondary-card {
-  background: rgba(255,255,255,0.04);
-  border-radius: 28px;
-  border: 1px solid rgba(255,255,255,0.08);
-  padding: 28px 30px;
-  box-shadow: 0 35px 60px rgba(7,11,27,0.55);
-}
-.hero-secondary-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  color: #d1dcfa;
-  line-height: 1.8;
-}
-.hero-secondary-card li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.hero-secondary-card li::before {
-  content: '•';
-  color: #7fc4ff;
-  font-size: 1.2rem;
-  line-height: 1;
-  margin-top: 2px;
-}
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 32px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-}
-.hero-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 24px;
-  align-items: stretch;
 }
 .plan-shell {
   display: flex;
@@ -300,7 +200,7 @@ a { color: inherit; text-decoration: none; }
   flex-wrap: wrap;
 }
 .plan-stats div {
-  background: rgba(255,255,255,0.04);
+  background: rgba(127,198,162,0.08);
   border-radius: 14px;
   padding: 12px 16px;
   min-width: 110px;
@@ -329,7 +229,7 @@ a { color: inherit; text-decoration: none; }
   gap: 18px;
 }
 .week-column {
-  background: rgba(255,255,255,0.02);
+  background: rgba(255,255,255,0.035);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 18px;
@@ -369,7 +269,7 @@ a { color: inherit; text-decoration: none; }
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(7,11,27,0.55);
+  background: rgba(10,18,20,0.55);
   border-radius: 18px;
   pointer-events: none;
 }
@@ -422,7 +322,7 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   bottom: 18px;
   align-self: flex-end;
-  background: rgba(7,11,27,0.85);
+  background: rgba(11,22,22,0.82);
   padding: 12px 18px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.1);
@@ -440,9 +340,9 @@ a { color: inherit; text-decoration: none; }
   margin-top: 36px;
   padding: 36px;
   border-radius: 24px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(176,255,221,0.18);
+  box-shadow: 0 28px 58px rgba(0,0,0,0.38);
 }
 .relaxed-header {
   text-align: center;
@@ -467,7 +367,7 @@ a { color: inherit; text-decoration: none; }
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -477,9 +377,9 @@ a { color: inherit; text-decoration: none; }
   margin-top: 32px;
   padding: 36px;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(16,25,55,0.95), rgba(21,35,72,0.95));
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.45);
+  background: linear-gradient(135deg, rgba(20,40,38,0.95), rgba(28,60,54,0.9));
+  border: 1px solid rgba(176,255,221,0.2);
+  box-shadow: 0 28px 58px rgba(0,0,0,0.42);
 }
 .subscription-grid {
   display: grid;
@@ -487,8 +387,8 @@ a { color: inherit; text-decoration: none; }
   gap: 16px;
 }
 .subscription-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(8,18,18,0.35);
+  border: 1px solid rgba(176,255,221,0.18);
   border-radius: 20px;
   padding: 22px;
   display: flex;
@@ -499,11 +399,11 @@ a { color: inherit; text-decoration: none; }
 .subscription-cta {
   padding: 14px 24px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #7fc4ff, #4f8cff);
-  color: #0c1633;
+  background: linear-gradient(135deg, #a5e8c7, #54a887);
+  color: #06251d;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 22px 40px rgba(79,140,255,0.3);
+  box-shadow: 0 22px 40px rgba(32,110,86,0.4);
 }
 .badge {
   display: inline-flex;
@@ -511,7 +411,7 @@ a { color: inherit; text-decoration: none; }
   gap: 8px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: rgba(79,140,255,0.15);
+  background: rgba(127,198,162,0.2);
   color: var(--accent);
   font-weight: 600;
   text-transform: uppercase;
@@ -582,7 +482,7 @@ form label.option {
   color: var(--muted);
 }
 .plan-table tbody tr:hover {
-  background: rgba(79,140,255,0.05);
+  background: rgba(127,198,162,0.08);
 }
 .summary-grid {
   display: grid;
@@ -642,7 +542,7 @@ form label.option {
 }
 .option-chip input:checked + span {
   border-color: var(--accent);
-  background: rgba(79,140,255,0.2);
+  background: rgba(127,198,162,0.2);
   color: var(--text);
   font-weight: 600;
 }
@@ -652,20 +552,20 @@ form label.option {
   gap: 24px;
 }
 .profile-summary-card {
-  background: linear-gradient(145deg, #ffffff, #f5f7ff);
-  color: #111531;
+  background: linear-gradient(145deg, #111f1c, #1c342f);
+  color: var(--text);
   border-radius: 24px;
   padding: 32px;
-  border: 1px solid rgba(14,23,53,0.08);
-  box-shadow: 0 25px 55px rgba(7,14,40,0.18);
+  border: 1px solid rgba(176,255,221,0.2);
+  box-shadow: 0 24px 52px rgba(0,0,0,0.45);
 }
 .profile-pill {
   padding: 8px 16px;
   border-radius: 999px;
-  background: rgba(79,140,255,0.15);
-  color: #325fdc;
+  background: rgba(127,198,162,0.2);
+  color: var(--accent);
   font-weight: 600;
-  border: 1px solid rgba(79,140,255,0.35);
+  border: 1px solid rgba(176,255,221,0.32);
 }
 .profile-meta {
   margin-top: 28px;
@@ -681,11 +581,11 @@ form label.option {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
 }
 .profile-program-card {
-  background: linear-gradient(135deg, #1d274a, #325fdc 50%, #4f8cff 90%);
+  background: linear-gradient(135deg, #0f221f, #1f3d35 55%, #3c8f6b 95%);
   border-radius: 28px;
   padding: 34px 32px;
-  color: #f6f8ff;
-  box-shadow: 0 35px 75px rgba(27,37,79,0.55);
+  color: var(--text);
+  box-shadow: 0 35px 70px rgba(0,0,0,0.52);
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -694,13 +594,13 @@ form label.option {
   width: 100%;
   height: 10px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.2);
   overflow: hidden;
 }
 .program-progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: #3dd598;
+  background: var(--success);
 }
 .program-start-btn {
   border: none;
@@ -814,9 +714,6 @@ footer {
   .header-inner { flex-direction: column; gap: 12px; }
   .nav-links { justify-content: center; }
   .page-shell { padding: 36px 18px 64px; }
-  .landing-hero { padding: 40px 24px; grid-template-columns: 1fr; }
-  .hero-actions { flex-direction: column; }
-  .hero-btn { width: 100%; }
   .relaxed-section { padding: 32px 22px; }
   .subscription-section { padding: 32px 22px; }
   .plan-overview { grid-template-columns: 1fr; }
@@ -828,13 +725,10 @@ footer {
 @media (max-width: 640px) {
   form label.option { width: 100%; justify-content: flex-start; }
   .plan-table { font-size: 0.85rem; }
-  .hero-secondary-card { order: -1; }
   .plan-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
   .page-shell { padding: 28px 14px 56px; }
-  .hero-intro h1 { font-size: 2.1rem; }
-  .hero-intro h2 { font-size: 1.1rem; }
   .plan-card { padding: 20px; }
   .plan-upcoming-list li { flex-direction: column; align-items: flex-start; }
   .exercise-row { flex-direction: column; align-items: flex-start; }
@@ -844,6 +738,31 @@ footer {
   .pricing-amounts { width: 100%; justify-content: space-between; }
 }
 `;
+
+const HOME_PILLARS = [
+  'Short, confidence-building workouts',
+  'Plain-language cues and etiquette tips',
+  'Progress gentle enough for nervous starters'
+];
+
+const HOME_STATS = [
+  { label: 'Average session', value: '~28 min' },
+  { label: 'Experience needed', value: 'Day-one' },
+  { label: 'Tone', value: 'Soft + encouraging' }
+];
+
+const HOME_BENEFITS = [
+  'Tiny tutorials teach etiquette, pacing, and breathing.',
+  'Planner and landings share the same calm layout.',
+  'Soft reminders keep you consistent without shouting.'
+];
+
+const HOME_CALM_POINTS = [
+  'Made for beginners who want a plan without stress.',
+  'Eases gym nerves with short, clear workouts.',
+  'No complicated numbers, no confusing talk, no overload.',
+  'Every screen keeps things obvious, calm, and easy.'
+];
 
 let latestProgramLanding = null;
 let latestExerciseLanding = null;
@@ -860,7 +779,7 @@ const ROUTES = {
   onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents },
   'program-generator': {
     render: () => {
-      latestProgramLanding = renderProgramGeneratorLanding({ standalone: false });
+      latestProgramLanding = renderProgramGeneratorLanding({ standalone: false, includeFooter: false });
       return latestProgramLanding.html;
     },
     afterRender: root => {
@@ -871,7 +790,7 @@ const ROUTES = {
   },
   'exercise-library': {
     render: () => {
-      latestExerciseLanding = renderExerciseLibraryLanding({ standalone: false });
+      latestExerciseLanding = renderExerciseLibraryLanding({ standalone: false, includeFooter: false });
       return latestExerciseLanding.html;
     },
     afterRender: root => {
@@ -882,7 +801,7 @@ const ROUTES = {
   },
   'workout-summary': {
     render: () => {
-      latestWorkoutLanding = renderWorkoutSummaryLanding({ standalone: false });
+      latestWorkoutLanding = renderWorkoutSummaryLanding({ standalone: false, includeFooter: false });
       return latestWorkoutLanding.html;
     },
     afterRender: root => {
@@ -958,6 +877,15 @@ function navigateTo(route) {
 }
 
 function guardRoute(route, state) {
+  if (route === 'subscribe') {
+    if (!state.isSubscribed) {
+      return 'subscribe';
+    }
+    if (!state.profile.onboardingComplete) {
+      return 'onboarding';
+    }
+    return 'subscribe';
+  }
   if (!state.isSubscribed) {
     if (PUBLIC_ROUTES.has(route)) {
       return route;
@@ -968,9 +896,9 @@ function guardRoute(route, state) {
     if (route === 'home') {
       return 'home';
     }
-    return route === 'subscribe' ? 'onboarding' : 'onboarding';
+    return 'onboarding';
   }
-  if (route === 'subscribe' || route === 'onboarding') {
+  if (route === 'onboarding') {
     return 'planner';
   }
   return route;
@@ -978,7 +906,6 @@ function guardRoute(route, state) {
 
 function renderShell(route, state, content) {
   const nav = renderNavbar(route, ROUTE_HASHES, state);
-  const footerYear = new Date().getFullYear();
 
   return `
     <header class="site-header">
@@ -991,7 +918,7 @@ function renderShell(route, state, content) {
       </div>
     </header>
     <main class="page-shell">${content}</main>
-    <footer>© ${footerYear} AllAroundAthlete · Built for everyday consistency</footer>
+    ${renderFooter()}
   `;
 }
 
@@ -1008,7 +935,7 @@ function renderFeaturePlaceholder(title, description) {
 
 function resolvePrimaryCta(state) {
   if (!state.isSubscribed) {
-    return { href: ROUTE_HASHES.subscribe, label: 'Start My Plan' };
+    return { href: ROUTE_HASHES.subscribe, label: 'Start free trial' };
   }
   if (!state.profile.onboardingComplete) {
     return { href: ROUTE_HASHES.onboarding, label: 'Finish Setup' };
@@ -1020,23 +947,40 @@ function renderHome(state) {
   const cta = resolvePrimaryCta(state);
   return `
     <section class="landing-hero">
-      <div class="hero-intro">
-        <span class="hero-tag">Beginner Friendly</span>
+      <div class="landing-hero-content">
+        <span class="landing-tag">Beginner friendly</span>
         <h1>Structure without stress for brand-new lifters.</h1>
-        <h2>The only beginner app that swaps loud, crowded advice for calm, plain steps.</h2>
+        <p class="landing-subtext lead">The only beginner app that swaps loud, crowded advice for calm, plain steps.</p>
         <p>Other starter tools assume you already speak gym; we slow everything down. You get short workouts, soft words, and zero pressure—plus tiny etiquette nudges so walking in feels natural.</p>
-        <div class="hero-actions">
-          <a class="hero-btn primary" href="${cta.href}">${cta.label}</a>
-          <a class="hero-btn secondary" href="#relaxed">Learn More</a>
+        <ul class="landing-list landing-list-check">
+          ${HOME_BENEFITS.map(item => `<li>${escapeHTML(item)}</li>`).join('')}
+        </ul>
+        <div class="landing-pill-list">
+          ${HOME_PILLARS.map(point => `<span class="landing-pill">${escapeHTML(point)}</span>`).join('')}
+        </div>
+        <div class="landing-actions">
+          <a class="landing-button" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button secondary" href="#relaxed">Learn More</a>
         </div>
       </div>
-      <div class="hero-secondary-card">
-        <ul>
-          <li>Made for beginners who want a plan without stress.</li>
-          <li>Eases gym nerves with short, clear workouts.</li>
-          <li>No complicated numbers, no confusing talk, no overload.</li>
-          <li>Every screen keeps things obvious, calm, and easy.</li>
-        </ul>
+      <div class="landing-hero-aside">
+        <div class="landing-card emphasis">
+          <div class="landing-label">Why it stays calm</div>
+          <ul class="landing-list landing-list-check">
+            ${HOME_CALM_POINTS.map(point => `<li>${escapeHTML(point)}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="landing-card landing-card-compact">
+          <div class="landing-label">What to expect</div>
+          <div class="landing-stat-list">
+            ${HOME_STATS.map(stat => `
+              <div class="landing-stat">
+                <strong>${escapeHTML(stat.value)}</strong>
+                <span>${escapeHTML(stat.label)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
       </div>
     </section>
     <section class="relaxed-section" id="relaxed">
@@ -1109,6 +1053,15 @@ function renderHome(state) {
           <span>$49.99/yr</span>
         </div>
         <a class="subscription-cta" href="${cta.href}">${cta.label}</a>
+      </div>
+    </section>
+    <section class="landing-section landing-cta">
+      <p class="landing-subtext">Ready when you are</p>
+      <h2>Start your calm routine today</h2>
+      <p>Tap in for the beginner-friendly planner, exercise walk-throughs, and Gymxiety Mode support—all wrapped in one gentle membership.</p>
+      <div class="landing-actions">
+        <a class="landing-button" href="${ROUTE_HASHES.subscribe}">Start free trial</a>
+        <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
       </div>
     </section>
   `;
@@ -1442,15 +1395,36 @@ function renderDashboard() {
 }
 
 function renderSubscribe(state) {
+  if (!state.isSubscribed) {
+    return `
+      <section class="panel onboarding-panel">
+        <span class="badge">Membership</span>
+        <h2>Unlock the calm planner.</h2>
+        <p class="onboarding-lede">We are not processing real payments inside this demo—tap the button below to simulate a subscription and move into onboarding.</p>
+        <form data-form="subscribe" class="onboarding-form">
+          <button class="primary-btn" type="submit">Confirm subscription</button>
+        </form>
+        <p style="color:var(--muted);margin-top:12px;font-size:0.9rem;">Need more info first? <a href="${ROUTE_HASHES.pricing}" style="color:var(--text);">Visit pricing.</a></p>
+      </section>
+    `;
+  }
+
+  const onboardingComplete = Boolean(state.profile?.onboardingComplete);
+  const nextHref = onboardingComplete ? ROUTE_HASHES.planner : ROUTE_HASHES.onboarding;
+  const nextLabel = onboardingComplete ? 'Go to planner' : 'Resume onboarding';
+  const message = onboardingComplete
+    ? 'You already unlocked every calm tool. Jump back into the planner or reset the demo to experience the subscription flow again.'
+    : 'Subscription is active—finish onboarding to start building calm workouts, or reset the demo if you want to re-run the process.';
+
   return `
     <section class="panel onboarding-panel">
       <span class="badge">Membership</span>
-      <h2>Unlock the calm planner.</h2>
-      <p class="onboarding-lede">We are not processing real payments inside this demo—tap the button below to simulate a subscription and move into onboarding.</p>
-      <form data-form="subscribe" class="onboarding-form">
-        <button class="primary-btn" type="submit">Confirm subscription</button>
-      </form>
-      <p style="color:var(--muted);margin-top:12px;font-size:0.9rem;">Already subscribed? <a href="${ROUTE_HASHES.planner}" style="color:var(--text);">Head to your planner.</a></p>
+      <h2>${onboardingComplete ? 'Membership active' : 'Almost there—complete setup'}</h2>
+      <p class="onboarding-lede">${message}</p>
+      <div class="onboarding-form" style="gap:12px;">
+        <a class="primary-btn" href="${nextHref}" style="text-align:center;">${nextLabel}</a>
+        <button type="button" class="toggle-btn" data-action="reset-membership">Reset demo state</button>
+      </div>
     </section>
   `;
 }
@@ -1805,18 +1779,29 @@ function attachPlanGeneratorEvents(root) {
 
 function attachSubscribeEvents(root) {
   const form = root.querySelector('[data-form="subscribe"]');
-  if (!form) {
-    return;
-  }
-  form.addEventListener('submit', event => {
-    event.preventDefault();
-    setState(prev => {
-      prev.isSubscribed = true;
-      prev.profile.onboardingComplete = false;
-      return prev;
+  if (form) {
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      setState(prev => {
+        prev.isSubscribed = true;
+        prev.profile.onboardingComplete = false;
+        return prev;
+      });
+      navigateTo('onboarding');
     });
-    navigateTo('onboarding');
-  });
+  }
+
+  const resetBtn = root.querySelector('[data-action="reset-membership"]');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      setState(prev => {
+        prev.isSubscribed = false;
+        prev.profile.onboardingComplete = false;
+        return prev;
+      });
+      navigateTo('home');
+    });
+  }
 }
 
 function attachOnboardingEvents(root) {
