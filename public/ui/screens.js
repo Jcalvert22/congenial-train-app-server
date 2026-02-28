@@ -28,6 +28,7 @@ import {
 import { renderWorkoutSummary } from './workoutSummary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
+import { renderWorkoutSummaryLanding } from './landingWorkoutSummary.js';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -38,7 +39,8 @@ const ROUTE_HASHES = {
   subscribe: '#/subscribe',
   onboarding: '#/onboarding',
   'program-generator': '#/program-generator',
-  'exercise-library': '#/exercise-library'
+  'exercise-library': '#/exercise-library',
+  'workout-summary': '#/workout-summary'
 };
 
 const NAV_LINKS = [
@@ -48,7 +50,8 @@ const NAV_LINKS = [
   { label: 'Dashboard', route: 'dashboard' },
   { label: 'Profile', route: 'profile' },
   { label: 'Program Generator', route: 'program-generator' },
-  { label: 'Exercise Library', route: 'exercise-library' }
+  { label: 'Exercise Library', route: 'exercise-library' },
+  { label: 'Workout Summary', route: 'workout-summary' }
 ];
 
 const BASE_STYLES = `
@@ -803,6 +806,7 @@ footer {
 
 let latestProgramLanding = null;
 let latestExerciseLanding = null;
+let latestWorkoutLanding = null;
 
 const ROUTES = {
   home: { render: renderHome },
@@ -833,10 +837,21 @@ const ROUTES = {
         latestExerciseLanding.afterRender(root);
       }
     }
+  },
+  'workout-summary': {
+    render: () => {
+      latestWorkoutLanding = renderWorkoutSummaryLanding({ standalone: false });
+      return latestWorkoutLanding.html;
+    },
+    afterRender: root => {
+      if (latestWorkoutLanding?.afterRender) {
+        latestWorkoutLanding.afterRender(root);
+      }
+    }
   }
 };
 
-const PUBLIC_ROUTES = new Set(['home', 'subscribe', 'program-generator', 'exercise-library']);
+const PUBLIC_ROUTES = new Set(['home', 'subscribe', 'program-generator', 'exercise-library', 'workout-summary']);
 
 export function startApp() {
   initializeState();
