@@ -1,16 +1,11 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { getHistory } from '../data/history.js';
 import { getAuth } from '../auth/state.js';
-
-function wrapLandingPage(sections) {
-  return `
-    <section class="landing-page">
-      <div class="landing-container">
-        ${sections}
-      </div>
-    </section>
-  `;
-}
+import {
+  renderErrorStateCard,
+  wrapWithPageLoading,
+  revealPageContent
+} from '../components/stateCards.js';
 
 function formatDateLabel(dateValue) {
   if (!dateValue) {
@@ -120,28 +115,32 @@ function renderNavigation() {
   `;
 }
 
-function renderMissingEntry() {
-  return `
-    <section class="landing-section">
-      <article class="landing-card">
-        <p class="landing-subtext">No workout found</p>
-        <p>We could not load that log. It may have been cleared from storage.</p>
-        <div class="landing-actions landing-space-top-sm">
-          <a class="landing-button" href="#/history">Back to History</a>
-        </div>
-      </article>
-    </section>
-  `;
-}
-
 export function renderHistoryDetails(id) {
-  const entry = getHistory().find(item => String(item.id) === String(id));
+  const history = getHistory();
+  if (!Array.isArray(history)) {
+    const sections = `
+      ${renderHeader('Unknown date')}
+      ${renderErrorStateCard({
+        title: 'History is unavailable',
+        message: 'We could not read your saved workouts. Try refreshing or log a new session to rebuild history.',
+        actionLabel: 'Back to Dashboard',
+        actionHref: '#/dashboard'
+      })}
+    `;
+    return wrapWithPageLoading(sections, 'Loading workout details...');
+  }
+  const entry = history.find(item => String(item.id) === String(id));
   if (!entry) {
     const sections = `
       ${renderHeader('Unknown date')}
-      ${renderMissingEntry()}
+      ${renderErrorStateCard({
+        title: 'No workout found',
+        message: 'That log may have been cleared from storage. Head back to history to pick another session.',
+        actionLabel: 'Back to History',
+        actionHref: '#/history'
+      })}
     `;
-    return wrapLandingPage(sections);
+    return wrapWithPageLoading(sections, 'Loading workout details...');
   }
   const dateLabel = formatDateLabel(entry.date);
   const sections = `
@@ -151,5 +150,12 @@ export function renderHistoryDetails(id) {
     ${renderExercises(entry.exercises)}
     ${renderNavigation()}
   `;
-  return wrapLandingPage(sections);
+  return wrapWithPageLoading(sections, 'Loading workout details...');
+}
+
+export function attachHistoryDetailsEvents(root) {
+  revealPageContent(root);
+  if (typeof window !== 'undefined') {
+    window.scrollTo(0, 0);
+  }
 }

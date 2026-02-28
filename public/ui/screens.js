@@ -36,17 +36,19 @@ import { renderStartTrial } from './landingStartTrial.js';
 import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
 import { renderWorkoutExecution, attachWorkoutExecutionEvents } from '../pages/workout-execution.js';
-import { renderHistoryDetails } from '../pages/history-details.js';
+import { renderHistoryDetails, attachHistoryDetailsEvents } from '../pages/history-details.js';
+import { renderHistoryPage, attachHistoryPageEvents } from '../pages/history.js';
+import { renderProfilePage, attachProfilePageEvents } from '../pages/profile.js';
 import { renderProfileEdit, attachProfileEditEvents } from '../pages/profile-edit.js';
-import { getHistory } from '../data/history.js';
 import { renderFooter } from './footer.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
-import { getAuth, logout } from '../auth/state.js';
+import { getAuth } from '../auth/state.js';
 import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 import { EXERCISES } from '../data/exercises.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
+let lastRenderedHash = null;
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -830,11 +832,17 @@ export function startApp() {
     }
 
     const shellHtml = renderShell(routeResult.html);
+    const isRouteChange = hash !== lastRenderedHash;
     renderer.render(shellHtml, root => {
+      if (isRouteChange) {
+        window.scrollTo(0, 0);
+      }
+      activatePageFade(root);
       if (typeof routeResult.afterRender === 'function') {
         routeResult.afterRender(root, state, routeKey);
       }
     });
+    lastRenderedHash = hash;
   };
 
   window.addEventListener('hashchange', renderCurrentRoute);
@@ -880,9 +888,22 @@ function navigateTo(route) {
 
 function renderShell(content) {
   return `
-    <main class="page-shell">${content}</main>
+    <main class="page-shell">
+      <div class="page-fade" data-page-fade>${content}</div>
+    </main>
     ${renderFooter()}
   `;
+}
+
+function activatePageFade(root) {
+  const fadeEl = root.querySelector('[data-page-fade]');
+  if (!fadeEl) {
+    return;
+  }
+  fadeEl.classList.remove('visible');
+  requestAnimationFrame(() => {
+    setTimeout(() => fadeEl.classList.add('visible'), 20);
+  });
 }
 
 function renderAppPage(sections, options = {}) {
@@ -909,7 +930,7 @@ function resolveRoute(hash, state, auth) {
       navigateTo('history');
       return null;
     }
-    return protectRoute(() => ({ html: renderHistoryDetails(id) }));
+    return protectRoute(() => ({ html: renderHistoryDetails(id), afterRender: attachHistoryDetailsEvents }));
   }
   switch (hash) {
     case '#/':
@@ -950,7 +971,7 @@ function resolveRoute(hash, state, auth) {
     case '#/dashboard':
       return protectRoute(() => ({ html: renderDashboard(state) }));
     case '#/history':
-      return protectRoute(() => ({ html: renderHistory(state) }));
+      return protectRoute(() => ({ html: renderHistoryPage(state), afterRender: attachHistoryPageEvents }));
     case '#/generate':
       return protectRoute(() => ({ html: renderGeneratePage(state), afterRender: attachGeneratePageEvents }));
     case '#/planner':
@@ -960,7 +981,7 @@ function resolveRoute(hash, state, auth) {
     case '#/plan-generator':
       return protectRoute(() => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }));
     case '#/profile':
-      return protectRoute(() => ({ html: renderProfile(state), afterRender: attachProfileEvents }));
+      return protectRoute(() => ({ html: renderProfilePage(state), afterRender: attachProfilePageEvents }));
     case '#/profile-edit':
       return protectRoute(() => ({ html: renderProfileEdit(), afterRender: attachProfileEditEvents }));
     case '#/subscribe':
@@ -1434,78 +1455,6 @@ function renderLibrary() {
   return renderAppPage(sections);
 }
 
-function renderHistory(state) {
-  const entries = getHistory().slice().reverse();
-  const sessions = entries.slice(0, 8).map(entry => ({
-    id: entry.id,
-    dateLabel: formatHistoryDate(entry.date),
-    durationLabel: entry.durationMinutes ? `${entry.durationMinutes} min` : 'Duration pending',
-    notesPreview: formatHistoryNotesPreview(entry.notes),
-    description: entry.goal || 'Calm strength session',
-    href: `#/history/${encodeURIComponent(entry.id)}`
-  }));
-
-  const cards = sessions.length
-    ? sessions.map(session => `
-        <article class="landing-card">
-          <p class="landing-subtext">${escapeHTML(`${session.dateLabel} · ${session.durationLabel}`)}</p>
-          <h3>${escapeHTML(session.description)}</h3>
-          <p>${escapeHTML(session.notesPreview)}</p>
-          <div class="landing-actions landing-space-top-sm">
-            <a class="landing-button secondary" href="${session.href}">View Details</a>
-          </div>
-        </article>
-      `).join('')
-    : '<article class="landing-card"><p>No sessions logged yet. Generate a workout to start your streak.</p></article>';
-
-  const sections = `
-    <header class="landing-hero">
-      <div class="landing-hero-content">
-        <span class="landing-tag">History</span>
-        <h1>Your calm streak in one place.</h1>
-        <p class="landing-subtext lead">Each card is a finished session. Tap through for cues and notes.</p>
-      </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Tip</p>
-        <p>Logging finishes instantly updates your streak and dashboard.</p>
-      </div>
-    </header>
-    <section class="landing-section">
-      <p class="landing-subtext">Recent workouts</p>
-      <div class="landing-grid">
-        ${cards}
-      </div>
-    </section>
-  `;
-
-  return renderAppPage(sections);
-}
-
-function formatHistoryDate(value) {
-  if (!value) {
-    return 'Recently';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Recently';
-  }
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function formatHistoryNotesPreview(notes) {
-  if (typeof notes !== 'string') {
-    return 'No notes saved yet. Tap details to add context next time.';
-  }
-  const trimmed = notes.trim();
-  if (!trimmed) {
-    return 'No notes saved yet. Tap details to add context next time.';
-  }
-  if (trimmed.length > 140) {
-    return `${trimmed.slice(0, 137)}…`;
-  }
-  return trimmed;
-}
-
 function renderDashboard(state) {
   const auth = getAuth();
   const displayName = auth.user?.name?.trim() || state.profile?.name || 'Friend';
@@ -1669,186 +1618,6 @@ function renderOnboarding(state) {
   `;
 }
 
-function renderProfile(state) {
-  const profileUser = state.profile;
-  const programInfo = state.program;
-  const stats = calculateWorkoutStats();
-  const weeklyHeights = getWeeklyChartHeights();
-  const auth = getAuth();
-  const email = auth.user?.email?.trim() || 'Not set';
-  const displayName = auth.user?.name?.trim() || profileUser.name;
-  const userAccount = auth.user || {};
-  const accountName = userAccount.name?.trim() || displayName;
-  const accountEmail = email;
-  const accountExperience = userAccount.experienceLevel || profileUser.experience || 'Not set';
-  const accountGoal = userAccount.goal || profileUser.goal || 'Not set';
-  const profileSexChips = renderSexOptions('sex', profileUser.sex, true);
-
-  const snapshotCards = [
-    { label: 'Goal', value: profileUser.goal },
-    { label: 'Experience', value: profileUser.experience },
-    { label: 'Equipment', value: profileUser.equipment },
-    { label: 'Next workout', value: programInfo.nextWorkout }
-  ].map(card => `
-    <article class="landing-card">
-      <p class="landing-subtext">${escapeHTML(card.label)}</p>
-      <h3>${escapeHTML(card.value)}</h3>
-    </article>
-  `).join('');
-
-  const progressCards = `
-    <article class="landing-card">
-      <p class="landing-subtext">Workout streak</p>
-      <h3>${escapeHTML(String(stats.streak || 0))} days</h3>
-    </article>
-    <article class="landing-card">
-      <p class="landing-subtext">Sessions logged</p>
-      <h3>${escapeHTML(String(stats.total || 0))}</h3>
-    </article>
-    <article class="landing-card landing-grid-span">
-      <p class="landing-subtext">This week</p>
-      <div class="progress-mini-chart">
-        ${weeklyHeights.map(val => `<span style="height:${val}%"></span>`).join('')}
-      </div>
-    </article>
-  `;
-
-  const sections = `
-    <header class="landing-hero">
-      <div class="landing-hero-content">
-        <span class="landing-tag">Profile</span>
-        <h1>${escapeHTML(displayName)}</h1>
-        <p class="landing-subtext">${escapeHTML(email)}</p>
-        <p>${escapeHTML(profileUser.subtitle)}</p>
-        <form data-form="profile-start-workout" class="landing-actions">
-          <button class="landing-button" type="submit">Start today's workout</button>
-          <button class="landing-button secondary" type="button" data-profile-logout>Logout</button>
-        </form>
-        <div class="landing-actions landing-space-top-sm">
-          <a class="landing-button secondary" href="${ROUTE_HASHES['profile-edit'] || '#/profile-edit'}">Edit Profile</a>
-        </div>
-      </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Program</p>
-        <h3>Week ${programInfo.currentWeek} of ${programInfo.totalWeeks}</h3>
-        <p>Next: ${escapeHTML(programInfo.nextWorkout)}</p>
-      </div>
-    </header>
-    <section class="landing-section">
-      <p class="landing-subtext">Account basics</p>
-      <article class="landing-card">
-        <div class="landing-grid landing-grid-two">
-          <div>
-            <p class="landing-subtext">Name</p>
-            <h3>${escapeHTML(accountName)}</h3>
-          </div>
-          <div>
-            <p class="landing-subtext">Email</p>
-            <h3>${escapeHTML(accountEmail)}</h3>
-          </div>
-          <div>
-            <p class="landing-subtext">Experience level</p>
-            <h3>${escapeHTML(accountExperience)}</h3>
-          </div>
-          <div>
-            <p class="landing-subtext">Goal</p>
-            <h3>${escapeHTML(accountGoal)}</h3>
-          </div>
-        </div>
-      </article>
-    </section>
-    <section class="landing-section">
-      <p class="landing-subtext">Snapshot</p>
-      <div class="landing-grid landing-grid-two">
-        ${snapshotCards}
-      </div>
-    </section>
-    <section class="landing-section">
-      <p class="landing-subtext">Progress</p>
-      <div class="landing-grid landing-grid-two">
-        ${progressCards}
-      </div>
-    </section>
-    <section class="landing-section">
-      <p class="landing-subtext">Update basics</p>
-      <form class="landing-grid" data-form="profile-main">
-        <label class="landing-card">
-          <span class="landing-subtext">Display name</span>
-          <input type="text" name="name" value="${escapeHTML(profileUser.name)}" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Experience note</span>
-          <input type="text" name="experience" value="${escapeHTML(profileUser.experience)}" required>
-        </label>
-        <label class="landing-card landing-grid-span">
-          <span class="landing-subtext">Subtitle</span>
-          <textarea name="subtitle" required>${escapeHTML(profileUser.subtitle)}</textarea>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Height (in)</span>
-          <input type="number" name="height" min="36" max="96" value="${escapeHTML(profileUser.height || '')}" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Weight (lbs)</span>
-          <input type="number" name="weight" min="70" max="600" value="${escapeHTML(profileUser.weight || '')}" required>
-        </label>
-        <article class="landing-card landing-grid-span">
-          <p class="landing-subtext">Sex</p>
-          <div class="option-chip-group">
-            ${profileSexChips}
-          </div>
-        </article>
-        <label class="landing-card">
-          <span class="landing-subtext">Age</span>
-          <input type="number" name="age" min="13" max="90" value="${escapeHTML(profileUser.age || '')}" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Location</span>
-          <input type="text" name="location" value="${escapeHTML(profileUser.location || '')}" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Current week</span>
-          <input type="number" min="1" max="${programInfo.totalWeeks}" name="current_week" value="${programInfo.currentWeek}" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Total weeks</span>
-          <input type="number" min="1" name="total_weeks" value="${programInfo.totalWeeks}" required>
-        </label>
-        <label class="landing-card landing-grid-span">
-          <span class="landing-subtext">Next workout name</span>
-          <input type="text" name="next_workout" value="${escapeHTML(programInfo.nextWorkout)}" required>
-        </label>
-        <button class="landing-button landing-grid-span" type="submit">Save profile</button>
-      </form>
-    </section>
-    <section class="landing-section">
-      <p class="landing-subtext">Quick tweaks</p>
-      <form class="landing-card" data-form="profile-goal">
-        <label>
-          <span class="landing-subtext">Goal statement</span>
-          <textarea name="goal" required>${escapeHTML(profileUser.goal)}</textarea>
-        </label>
-        <button class="landing-button" type="submit">Update goal</button>
-      </form>
-      <form class="landing-card landing-space-top-sm" data-form="profile-equipment">
-        <label>
-          <span class="landing-subtext">Equipment on hand</span>
-          <textarea name="equipment" required>${escapeHTML(profileUser.equipment)}</textarea>
-        </label>
-        <button class="landing-button" type="submit">Update equipment</button>
-      </form>
-    </section>
-    <section class="landing-section">
-      <p class="landing-subtext">Subscription</p>
-      <article class="landing-card">
-        <h3>Calm membership</h3>
-        <p>Subscription details and payment history will live here soon.</p>
-      </article>
-    </section>
-  `;
-
-  return renderAppPage(sections);
-}
 
 function renderSexOptions(fieldName, selectedValue, required = false) {
   return SEX_OPTIONS.map((option, index) => `
@@ -2042,84 +1811,3 @@ function attachOnboardingEvents(root) {
   });
 }
 
-function attachProfileEvents(root) {
-  const startForm = root.querySelector('[data-form="profile-start-workout"]');
-  if (startForm) {
-    startForm.addEventListener('submit', event => {
-      event.preventDefault();
-      recordWorkoutCompletion();
-    });
-  }
-
-  const logoutBtn = root.querySelector('[data-profile-logout]');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      logout();
-      navigateTo('home');
-    });
-  }
-
-  const mainForm = root.querySelector('[data-form="profile-main"]');
-  if (mainForm) {
-    mainForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const data = new FormData(mainForm);
-      setState(prev => {
-        prev.profile.name = cleanInput(data.get('name'), prev.profile.name);
-        prev.profile.experience = cleanInput(data.get('experience'), prev.profile.experience);
-        prev.profile.subtitle = cleanInput(data.get('subtitle'), prev.profile.subtitle);
-        const height = sanitizeNumberInput(data.get('height'), { min: 36, max: 96 });
-        const weight = sanitizeNumberInput(data.get('weight'), { min: 70, max: 600 });
-        const age = sanitizeNumberInput(data.get('age'), { min: 13, max: 90 });
-        const sex = data.get('sex');
-        if (height) {
-          prev.profile.height = height;
-        }
-        if (weight) {
-          prev.profile.weight = weight;
-        }
-        if (age) {
-          prev.profile.age = age;
-        }
-        if (SEX_OPTIONS.includes(sex)) {
-          prev.profile.sex = sex;
-        }
-        prev.profile.location = cleanInput(data.get('location'), prev.profile.location);
-        prev.program.nextWorkout = cleanInput(data.get('next_workout'), prev.program.nextWorkout);
-        const totalWeeks = Number.parseInt(data.get('total_weeks'), 10);
-        if (Number.isFinite(totalWeeks) && totalWeeks > 0) {
-          prev.program.totalWeeks = totalWeeks;
-        }
-        const currentWeek = Number.parseInt(data.get('current_week'), 10);
-        if (Number.isFinite(currentWeek) && currentWeek > 0) {
-          prev.program.currentWeek = clamp(currentWeek, 1, prev.program.totalWeeks);
-        }
-        return prev;
-      });
-    });
-  }
-
-  const goalForm = root.querySelector('[data-form="profile-goal"]');
-  if (goalForm) {
-    goalForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const data = new FormData(goalForm);
-      setState(prev => {
-        prev.profile.goal = cleanInput(data.get('goal'), prev.profile.goal);
-        return prev;
-      });
-    });
-  }
-
-  const equipmentForm = root.querySelector('[data-form="profile-equipment"]');
-  if (equipmentForm) {
-    equipmentForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const data = new FormData(equipmentForm);
-      setState(prev => {
-        prev.profile.equipment = cleanInput(data.get('equipment'), prev.profile.equipment);
-        return prev;
-      });
-    });
-  }
-}

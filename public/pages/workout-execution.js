@@ -3,16 +3,15 @@ import { getState, setState } from '../logic/state.js';
 import { recordWorkoutCompletion } from '../logic/workout.js';
 import { getAuth } from '../auth/state.js';
 import { addWorkoutToHistory } from '../data/history.js';
+import {
+  renderEmptyStateCard,
+  renderErrorStateCard,
+  wrapWithPageLoading,
+  revealPageContent
+} from '../components/stateCards.js';
 
-function wrapLandingPage(sections) {
-  return `
-    <section class="landing-page">
-      <div class="landing-container">
-        ${sections}
-      </div>
-    </section>
-  `;
-}
+const READY_DELAY_MS = 1000;
+const CARD_TRANSITION_MS = 220;
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -33,17 +32,17 @@ function formatRest(exercise) {
 }
 
 function renderHeader(status, firstName) {
-  let title;
-  let subtext;
+  let title = 'Workout in Progress';
+  let subtext = 'Follow each step at your own pace.';
   if (status === 'empty') {
-    title = 'Workout Missing';
-    subtext = `We could not find your last plan, ${firstName}.`;
-  } else if (status === 'reflection') {
-    title = 'Workout Wrap-Up';
-    subtext = `Take 20 seconds to jot what stood out, ${firstName}. Optional but helpful.`;
-  } else {
-    title = 'Workout in Progress';
-    subtext = 'Follow each step at your own pace.';
+    title = 'No Workout in Progress';
+    subtext = `Let's start a new one, ${firstName}.`;
+  } else if (status === 'ready') {
+    title = 'Get Ready';
+    subtext = 'Your workout is about to begin.';
+  } else if (status === 'complete') {
+    title = 'Workout Complete!';
+    subtext = 'Great job - you finished your routine.';
   }
   return `
     <header class="landing-hero">
@@ -60,15 +59,21 @@ function renderHeader(status, firstName) {
   `;
 }
 
-function renderEmptyState() {
+function renderNoWorkoutSection() {
+  return renderEmptyStateCard({
+    title: 'No Workout in Progress',
+    message: 'We could not find an active routine. Generate a new calm session to begin.',
+    actionLabel: 'Generate a Workout',
+    actionHref: '#/generate'
+  });
+}
+
+function renderReadySection() {
   return `
     <section class="landing-section">
-      <article class="landing-card">
-        <p class="landing-subtext">No active workout</p>
-        <p>We could not find a current plan. Generate a new calm session to begin.</p>
-        <div class="landing-actions landing-space-top-sm">
-          <a class="landing-button" href="#/generate">Go to Generate</a>
-        </div>
+      <article class="landing-card landing-transition-card execution-ready-card card-pop-in" data-ready-card>
+        <h1>Get Ready</h1>
+        <p class="landing-subtext">Your workout is about to begin.</p>
       </article>
     </section>
   `;
@@ -77,12 +82,17 @@ function renderEmptyState() {
 function renderExerciseCard(exercise, index, total) {
   const instructions = exercise.description || 'Move slowly, keep breathing steady, and stop if form slips.';
   const rest = formatRest(exercise);
+  const progressPercent = Math.round(((index + 1) / total) * 100);
   return `
     <section class="landing-section">
-      <p class="landing-subtext">Exercise ${index + 1} of ${total}</p>
-      <article class="landing-card">
-        <h2>${escapeHTML(exercise.exercise || 'Next movement')}</h2>
-        <p class="landing-subtext">${escapeHTML(exercise.sets || '')} × ${escapeHTML(exercise.repRange || '')} · ${escapeHTML(rest)}</p>
+      <article class="landing-card exercise-card" data-exercise-card>
+        <p class="execution-progress">Exercise ${index + 1} of ${total}</p>
+        <div class="execution-progress-bar"><span style="width: ${progressPercent}%"></span></div>
+        <h2 class="landing-card-title">${escapeHTML(exercise.exercise || 'Next movement')}</h2>
+        <div class="execution-meta">
+          <strong>${escapeHTML(exercise.sets || '3 sets')} × ${escapeHTML(exercise.repRange || '8 reps')}</strong>
+          <span>${escapeHTML(rest)}</span>
+        </div>
         <p>${escapeHTML(instructions)}</p>
         <div class="landing-pill-list">
           <span class="landing-pill">${escapeHTML(exercise.muscle || 'Full body')}</span>
@@ -96,67 +106,47 @@ function renderExerciseCard(exercise, index, total) {
 function renderNavigationSection(index, total) {
   const isFirst = index === 0;
   const isLast = index === total - 1;
+  const nextLabel = isLast ? 'Finish Workout' : 'Next Exercise';
+  const nextState = isLast ? 'finish' : 'next';
   return `
     <section class="landing-section">
-      <p class="landing-subtext">Navigation</p>
-      <div class="landing-actions landing-actions-stack">
-        <button class="landing-button secondary" type="button" data-action="prev-exercise" ${isFirst ? 'disabled' : ''}>Previous Exercise</button>
-        <button class="landing-button" type="button" data-action="next-exercise" ${isLast ? 'disabled' : ''}>Next Exercise</button>
-        <button class="landing-button success" type="button" data-action="finish-workout">Finish Workout</button>
-      </div>
+      <article class="landing-card execution-nav">
+        <p class="landing-subtext">Stay calm between sets.</p>
+        <div class="landing-actions landing-actions-stack">
+          <button class="landing-button secondary" type="button" data-action="prev-exercise" ${isFirst ? 'disabled' : ''}>Previous Exercise</button>
+          <button class="landing-button" type="button" data-action="next-exercise" data-state="${nextState}">${nextLabel}</button>
+        </div>
+      </article>
     </section>
   `;
 }
 
-function formatCompletionDate(value) {
-  if (!value) {
-    return 'Just now';
-  }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return 'Just now';
-  }
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
 function renderCompletionSection(entry) {
-  const dateLabel = formatCompletionDate(entry?.date);
   const exerciseCount = entry?.exercises?.length || 0;
-  const goalLabel = entry?.goal || 'Calm practice';
+  const goalLabel = entry?.goal || 'General fitness';
   const durationLabel = entry?.durationMinutes
     ? `${entry.durationMinutes} min`
     : 'Not recorded';
-  const notesCopy = entry?.notes?.trim()
-    ? entry.notes.trim()
-    : 'No notes saved this time, but you can add reflections after future sessions.';
   return `
     <section class="landing-section">
-      <article class="landing-card">
+      <article class="landing-card execution-complete">
         <h1>Workout Complete!</h1>
-        <p class="landing-subtext">Great job — your workout has been saved.</p>
-        <div class="landing-grid landing-grid-two landing-space-top-md">
-          <div>
-            <p class="landing-subtext">Date</p>
-            <h3>${escapeHTML(dateLabel)}</h3>
-          </div>
-          <div>
+        <p class="landing-subtext">Great job - you finished your routine.</p>
+        <div class="execution-summary landing-space-top-md">
+          <div class="execution-summary-item">
             <p class="landing-subtext">Duration</p>
             <h3>${escapeHTML(durationLabel)}</h3>
           </div>
-          <div>
+          <div class="execution-summary-item">
             <p class="landing-subtext">Exercises</p>
             <h3>${escapeHTML(String(exerciseCount))}</h3>
           </div>
-          <div class="landing-grid-span">
+          <div class="execution-summary-item">
             <p class="landing-subtext">Goal</p>
             <h3>${escapeHTML(goalLabel)}</h3>
           </div>
         </div>
-        <div class="landing-space-top-md">
-          <p class="landing-subtext">Notes</p>
-          <p>${escapeHTML(notesCopy)}</p>
-        </div>
-        <div class="landing-actions landing-actions-stack landing-space-top-md">
+        <div class="landing-actions landing-actions-stack execution-complete-actions landing-space-top-md">
           <a class="landing-button" href="#/dashboard">Back to Dashboard</a>
           <a class="landing-button secondary" href="#/history">View Workout History</a>
           <a class="landing-button secondary" href="#/generate">Generate Another Workout</a>
@@ -182,42 +172,6 @@ function calculateDurationMinutes(startedAt, finishTimestamp, planRows) {
     }
   }
   return estimateFallbackDuration(planRows);
-}
-
-function renderReflectionSection(entry) {
-  const durationLabel = entry?.durationMinutes
-    ? `${entry.durationMinutes} min`
-    : 'Duration tracked automatically';
-  const exerciseCount = entry?.exercises?.length || 0;
-  return `
-    <section class="landing-section">
-      <p class="landing-subtext">Ready to save?</p>
-      <article class="landing-card">
-        <h2>Log a quick reflection</h2>
-        <p>${escapeHTML(`This took about ${durationLabel} across ${exerciseCount} moves. Jot what felt smooth or sticky.`)}</p>
-        <div class="landing-grid landing-grid-two landing-space-top-md">
-          <div>
-            <p class="landing-subtext">Duration</p>
-            <h3>${escapeHTML(durationLabel)}</h3>
-          </div>
-          <div>
-            <p class="landing-subtext">Exercises</p>
-            <h3>${escapeHTML(String(exerciseCount))}</h3>
-          </div>
-        </div>
-        <form class="landing-space-top-md" data-form="workout-notes">
-          <label>
-            <span class="landing-subtext">Session notes (optional)</span>
-            <textarea name="notes" rows="4" placeholder="e.g., Tempo squats felt smooth—add 5 lbs next time."></textarea>
-          </label>
-          <div class="landing-actions landing-actions-stack landing-space-top-sm">
-            <button class="landing-button" type="submit">Save Workout</button>
-            <button class="landing-button secondary" type="button" data-action="skip-notes">Skip Notes</button>
-          </div>
-        </form>
-      </article>
-    </section>
-  `;
 }
 
 function buildHistoryEntryPayload(state, options = {}) {
@@ -259,30 +213,44 @@ export function renderWorkoutExecution(state) {
   const exercises = Array.isArray(workout?.planRows) ? workout.planRows : [];
   const total = exercises.length;
   const firstName = getFirstName(state);
-  const pendingSave = state.ui?.pendingWorkoutSave;
+
+  if (workout && !Array.isArray(workout.planRows)) {
+    const sections = `
+      ${renderHeader('empty', firstName)}
+      ${renderErrorStateCard({
+        title: 'Workout looks corrupted',
+        message: 'We had trouble reading that routine. Please generate a new workout to continue.',
+        actionLabel: 'Generate Workout',
+        actionHref: '#/generate'
+      })}
+    `;
+    return wrapWithPageLoading(sections, 'Loading workout...');
+  }
 
   if (!total) {
     const sections = `
       ${renderHeader('empty', firstName)}
-      ${renderEmptyState()}
+      ${renderNoWorkoutSection()}
     `;
-    return wrapLandingPage(sections);
+    return wrapWithPageLoading(sections, 'Loading workout...');
   }
 
   if (state.ui?.activeWorkoutCompleted) {
-    const savedEntry = state.ui?.activeWorkoutSavedEntry;
+    const savedEntry = state.ui?.activeWorkoutSavedEntry || buildHistoryEntryPayload(state);
     const sections = `
+      ${renderHeader('complete', firstName)}
       ${renderCompletionSection(savedEntry)}
     `;
-    return wrapLandingPage(sections);
+    return wrapWithPageLoading(sections, 'Loading workout...');
   }
 
-  if (pendingSave) {
+  const introComplete = Boolean(state.ui?.activeWorkoutIntroComplete);
+  if (!introComplete) {
     const sections = `
-      ${renderHeader('reflection', firstName)}
-      ${renderReflectionSection(pendingSave)}
+      ${renderHeader('ready', firstName)}
+      ${renderReadySection()}
     `;
-    return wrapLandingPage(sections);
+    return wrapWithPageLoading(sections, 'Loading workout...');
   }
 
   const currentIndex = clamp(state.ui?.activeWorkoutIndex ?? 0, 0, total - 1);
@@ -294,29 +262,31 @@ export function renderWorkoutExecution(state) {
     ${renderNavigationSection(currentIndex, total)}
   `;
 
-  return wrapLandingPage(sections);
+  return wrapWithPageLoading(sections, 'Loading workout...');
 }
 
 export function attachWorkoutExecutionEvents(root) {
-  const finalizeWorkout = notesValue => {
-    const cleanNotes = typeof notesValue === 'string' ? notesValue.trim() : '';
-    const state = getState();
-    const pending = state.ui?.pendingWorkoutSave;
-    if (!pending) {
-      return;
-    }
-    const payload = { ...pending, notes: cleanNotes };
-    addWorkoutToHistory(payload);
-    recordWorkoutCompletion(payload.date);
-    setState(prev => {
-      prev.ui = prev.ui || {};
-      prev.ui.pendingWorkoutSave = null;
-      prev.ui.activeWorkoutCompleted = true;
-      prev.ui.activeWorkoutSavedEntry = payload;
-      prev.ui.activeWorkoutStartedAt = null;
-      return prev;
-    });
-  };
+  revealPageContent(root);
+  const readyCard = root.querySelector('[data-ready-card]');
+  if (readyCard) {
+    requestAnimationFrame(() => readyCard.classList.add('visible'));
+    window.setTimeout(() => {
+      setState(prev => {
+        prev.ui = prev.ui || {};
+        prev.ui.activeWorkoutIntroComplete = true;
+        if (!prev.ui.activeWorkoutStartedAt) {
+          prev.ui.activeWorkoutStartedAt = Date.now();
+        }
+        return prev;
+      });
+    }, READY_DELAY_MS);
+    return;
+  }
+
+  const exerciseCard = root.querySelector('[data-exercise-card]');
+  if (exerciseCard) {
+    requestAnimationFrame(() => exerciseCard.classList.add('visible'));
+  }
 
   const shiftExercise = delta => {
     setState(prev => {
@@ -332,46 +302,49 @@ export function attachWorkoutExecutionEvents(root) {
     });
   };
 
+  const animateShift = delta => {
+    if (!exerciseCard) {
+      shiftExercise(delta);
+      return;
+    }
+    exerciseCard.classList.remove('visible');
+    window.setTimeout(() => shiftExercise(delta), CARD_TRANSITION_MS);
+  };
+
+  const completeWorkout = () => {
+    const state = getState();
+    const entry = buildHistoryEntryPayload(state);
+    if (!entry) {
+      window.location.hash = '#/generate';
+      return;
+    }
+    addWorkoutToHistory(entry);
+    recordWorkoutCompletion(entry.date);
+    setState(prev => {
+      prev.ui = prev.ui || {};
+      prev.ui.pendingWorkoutSave = null;
+      prev.ui.activeWorkoutCompleted = true;
+      prev.ui.activeWorkoutSavedEntry = entry;
+      prev.ui.activeWorkoutStartedAt = null;
+      return prev;
+    });
+  };
+
   const prevButton = root.querySelector('[data-action="prev-exercise"]');
   if (prevButton) {
-    prevButton.addEventListener('click', () => shiftExercise(-1));
+    prevButton.addEventListener('click', () => animateShift(-1));
   }
 
   const nextButton = root.querySelector('[data-action="next-exercise"]');
   if (nextButton) {
-    nextButton.addEventListener('click', () => shiftExercise(1));
-  }
-
-  const finishButton = root.querySelector('[data-action="finish-workout"]');
-  if (finishButton) {
-    finishButton.addEventListener('click', () => {
-      finishButton.disabled = true;
-      const state = getState();
-      const pendingEntry = buildHistoryEntryPayload(state);
-      if (!pendingEntry) {
-        finishButton.disabled = false;
+    nextButton.addEventListener('click', () => {
+      const stateAttr = nextButton.dataset.state;
+      if (stateAttr === 'finish') {
+        nextButton.disabled = true;
+        completeWorkout();
         return;
       }
-      setState(prev => {
-        prev.ui = prev.ui || {};
-        prev.ui.pendingWorkoutSave = pendingEntry;
-        return prev;
-      });
+      animateShift(1);
     });
-  }
-
-  const notesForm = root.querySelector('[data-form="workout-notes"]');
-  if (notesForm) {
-    notesForm.addEventListener('submit', event => {
-      event.preventDefault();
-      const formData = new FormData(notesForm);
-      const notesValue = formData.get('notes');
-      finalizeWorkout(typeof notesValue === 'string' ? notesValue : '');
-    });
-  }
-
-  const skipButton = root.querySelector('[data-action="skip-notes"]');
-  if (skipButton) {
-    skipButton.addEventListener('click', () => finalizeWorkout(''));
   }
 }

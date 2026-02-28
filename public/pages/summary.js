@@ -1,6 +1,11 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { setState } from '../logic/state.js';
 import { getAuth } from '../auth/state.js';
+import {
+  renderEmptyStateCard,
+  wrapWithPageLoading,
+  revealPageContent
+} from '../components/stateCards.js';
 
 const MUSCLE_ICONS = {
   Chest: '🧡',
@@ -10,16 +15,6 @@ const MUSCLE_ICONS = {
   Arms: '💪',
   Abs: '🌀'
 };
-
-function wrapLandingPage(sections) {
-  return `
-    <section class="landing-page">
-      <div class="landing-container">
-        ${sections}
-      </div>
-    </section>
-  `;
-}
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -164,21 +159,15 @@ function renderCtaSection() {
 }
 
 function renderEmptyState(reason) {
-  const description = reason === 'invalid'
+  const message = reason === 'invalid'
     ? 'We found a workout but it looks incomplete. Let\u2019s rebuild one that feels solid.'
     : 'Looks like the summary was cleared (maybe after a refresh). Let\u2019s build a new one in a few taps.';
-  return `
-    <section class="landing-section">
-      <article class="landing-card landing-empty-card">
-        <p class="landing-subtext">No workout found</p>
-        <h3>Let\u2019s generate a fresh plan.</h3>
-        <p>${escapeHTML(description)}</p>
-        <div class="landing-actions landing-space-top-sm">
-          <a class="landing-button" href="#/generate">Go to Generate</a>
-        </div>
-      </article>
-    </section>
-  `;
+  return renderEmptyStateCard({
+    title: 'No workout found',
+    message,
+    actionLabel: 'Generate Workout',
+    actionHref: '#/generate'
+  });
 }
 
 export function renderWorkoutSummaryPage(state) {
@@ -195,7 +184,7 @@ export function renderWorkoutSummaryPage(state) {
       ${renderHeader(firstName, false, goalText)}
       ${renderEmptyState(reason)}
     `;
-    return wrapLandingPage(sections);
+    return wrapWithPageLoading(sections, 'Loading summary...');
   }
 
   const sections = `
@@ -205,10 +194,11 @@ export function renderWorkoutSummaryPage(state) {
     ${renderCtaSection()}
   `;
 
-  return wrapLandingPage(sections);
+  return wrapWithPageLoading(sections, 'Loading summary...');
 }
 
 export function attachWorkoutSummaryEvents(root, state) {
+  revealPageContent(root);
   const startButton = root.querySelector('[data-action="start-workout"]');
   if (startButton) {
     startButton.addEventListener('click', () => {
@@ -224,6 +214,7 @@ export function attachWorkoutSummaryEvents(root, state) {
         prev.ui.activeWorkoutCompleted = false;
         prev.ui.activeWorkoutStartedAt = Date.now();
         prev.ui.pendingWorkoutSave = null;
+        prev.ui.activeWorkoutIntroComplete = false;
         return prev;
       });
       window.location.hash = '#/workout';

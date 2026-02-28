@@ -1,6 +1,7 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { createPlannerPlan, storePlannerResult, getEquipmentList } from '../logic/workout.js';
 import { getState } from '../logic/state.js';
+import { wrapWithPageLoading, revealPageContent } from '../components/stateCards.js';
 
 const EXPERIENCE_OPTIONS = ['Beginner', 'Intermediate', 'Advanced'];
 const GOAL_OPTIONS = ['Strength', 'Hypertrophy', 'Fat Loss', 'General Fitness'];
@@ -16,16 +17,6 @@ const GOAL_MUSCLE_MAP = {
   'General Fitness': ['Back', 'Legs', 'Abs']
 };
 const LOADING_DELAY_MS = 1100;
-
-function wrapLandingPage(sections) {
-  return `
-    <section class="landing-page">
-      <div class="landing-container">
-        ${sections}
-      </div>
-    </section>
-  `;
-}
 
 function renderHeader() {
   return `
@@ -62,6 +53,19 @@ function guessEquipment(profileEquipmentText) {
   return getEquipmentList().filter(item => normalized.includes(item.toLowerCase().split(' ')[0]));
 }
 
+function renderEquipmentOptions(selectedEquipment = []) {
+  return `
+    <div class="equipment-list" data-equipment-list>
+      ${getEquipmentList().map(item => `
+        <label class="equipment-item">
+          <input type="checkbox" name="equipment" value="${escapeHTML(item)}" ${selectedEquipment.includes(item) ? 'checked' : ''}>
+          <span>${escapeHTML(item)}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+}
+
 function renderFormSection(state) {
   const profile = state.profile || {};
   const defaultExperience = EXPERIENCE_OPTIONS.find(option => {
@@ -93,15 +97,8 @@ function renderFormSection(state) {
           </label>
           <label>
             <span class="landing-subtext">Equipment on hand</span>
-            <select class="landing-select" name="equipment" multiple size="5" required>
-              ${getEquipmentList()
-                .map(item => {
-                  const selected = defaultEquipment.includes(item) ? 'selected' : '';
-                  return `<option value="${escapeHTML(item)}" ${selected}>${escapeHTML(item)}</option>`;
-                })
-                .join('')}
-            </select>
-            <small class="landing-subtext">Select every option you can reach today.</small>
+            ${renderEquipmentOptions(defaultEquipment)}
+            <small class="landing-subtext">Tap every option you truly have nearby. No pressure to add more.</small>
           </label>
           <label>
             <span class="landing-subtext">Estimated workout length (optional)</span>
@@ -174,10 +171,14 @@ export function renderGeneratePage(state = getState()) {
     ${renderFormSection(state)}
     ${renderTipsSection()}
   `;
-  return wrapLandingPage(sections);
+  return wrapWithPageLoading(sections, 'Loading generator...');
 }
 
 export function attachGeneratePageEvents(root) {
+  revealPageContent(root);
+  if (typeof window !== 'undefined') {
+    window.scrollTo(0, 0);
+  }
   const form = root.querySelector('[data-form="generate-workout"]');
   const formCard = root.querySelector('[data-generate-form]');
   const loadingCard = root.querySelector('[data-generate-loading]');
@@ -207,6 +208,9 @@ export function attachGeneratePageEvents(root) {
     }
     if (loadingCard) {
       loadingCard.hidden = view !== 'loading';
+      if (view === 'loading') {
+        loadingCard.classList.remove('card-fade-out');
+      }
     }
     if (fallbackCard) {
       fallbackCard.hidden = view !== 'fallback';
@@ -217,6 +221,7 @@ export function attachGeneratePageEvents(root) {
     window.clearTimeout(loadingTimer);
     toggleView('form');
     setError('');
+    loadingCard?.classList.remove('card-fade-out');
   };
 
   retryButtons.forEach(button => {
@@ -243,7 +248,9 @@ export function attachGeneratePageEvents(root) {
     const formData = new FormData(form);
     const experience = (formData.get('experience') || '').toString().trim();
     const goal = (formData.get('goal') || '').toString().trim();
-    const equipment = formData.getAll('equipment').map(value => value.toString().trim()).filter(Boolean);
+    const equipment = Array.from(form.querySelectorAll('input[name="equipment"]:checked'))
+      .map(input => input.value.toString().trim())
+      .filter(Boolean);
     const duration = (formData.get('duration') || '').toString().trim();
 
     if (!experience || !goal || !equipment.length) {
@@ -260,16 +267,25 @@ export function attachGeneratePageEvents(root) {
             fallbackCopy.textContent = 'Nothing matched those exact inputs. Try selecting different equipment or a new goal, then generate again.';
           }
           toggleView('fallback');
+          loadingCard?.classList.remove('card-fade-out');
           return;
         }
         plan.generatedAt = new Date().toISOString();
         plan.preferences = { experience, goal, equipment, duration };
-        storePlannerResult(plan);
-        window.location.hash = '#/summary';
+        if (loadingCard) {
+          loadingCard.classList.remove('card-fade-out');
+          requestAnimationFrame(() => loadingCard.classList.add('card-fade-out'));
+        }
+        window.setTimeout(() => {
+          storePlannerResult(plan);
+          window.location.hash = '#/summary';
+          loadingCard?.classList.remove('card-fade-out');
+        }, 250);
       } catch (error) {
         console.warn('Unable to build plan', error);
         setError('Something glitched while building that plan. Please try again.');
         toggleView('form');
+        loadingCard?.classList.remove('card-fade-out');
       }
     }, LOADING_DELAY_MS);
   });
