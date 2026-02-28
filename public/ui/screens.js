@@ -35,10 +35,10 @@ import { renderPricingLanding } from './landingPricing.js';
 import { renderStartTrial } from './landingStartTrial.js';
 import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
-import { renderNavbar } from './navbar.js';
 import { renderFooter } from './footer.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
-import { isLoggedIn } from '../auth/state.js';
+import { getAuth } from '../auth/state.js';
+import { renderPublicNavbar, renderAppNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
@@ -51,6 +51,7 @@ const ROUTE_HASHES = {
   profile: '#/profile',
   subscribe: '#/subscribe',
   onboarding: '#/onboarding',
+  features: '#/features',
   'program-generator': '#/program-generator',
   'exercise-library': '#/exercise-library',
   'workout-summary': '#/workout-summary',
@@ -781,160 +782,24 @@ const HOME_CALM_POINTS = [
   'Every screen keeps things obvious, calm, and easy.'
 ];
 
-let latestProgramLanding = null;
-let latestExerciseLanding = null;
-let latestWorkoutLanding = null;
-let latestAboutLanding = null;
-let latestContactLanding = null;
-let latestPricingLanding = null;
-let latestStartTrialLanding = null;
-let latestCreateAccountLanding = null;
-let latestWelcomeLanding = null;
-let latestNotFoundLanding = null;
-
-const ROUTES = {
-  home: { render: renderHome },
-  planner: {
-    render: (...args) => protectRoute(() => renderPlanner(...args)),
-    afterRender: (...args) => protectRoute(() => attachPlannerEvents(...args))
+const FEATURE_OVERVIEW = [
+  {
+    title: 'Calm Program Generator',
+    copy: 'Turns your available equipment into bite-sized workouts with etiquette tips baked in.'
   },
-  'plan-generator': {
-    render: (...args) => protectRoute(() => renderPlanGenerator(...args)),
-    afterRender: (...args) => protectRoute(() => attachPlanGeneratorEvents(...args))
+  {
+    title: 'Exercise Library',
+    copy: 'Short, friendly walkthroughs teach form, tempo, and how to share gear without stress.'
   },
-  dashboard: {
-    render: (...args) => protectRoute(() => renderDashboard(...args))
+  {
+    title: 'Workout Summaries',
+    copy: 'Gentle recaps and progress notes highlight what went well and what to tweak next time.'
   },
-  profile: {
-    render: (...args) => protectRoute(() => renderProfile(...args)),
-    afterRender: (...args) => protectRoute(() => attachProfileEvents(...args))
-  },
-  subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
-  pricing: {
-    render: () => {
-      latestPricingLanding = renderPricingLanding({ standalone: false, includeFooter: false });
-      return latestPricingLanding.html;
-    },
-    afterRender: root => {
-      if (latestPricingLanding?.afterRender) {
-        latestPricingLanding.afterRender(root);
-      }
-    }
-  },
-  onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents },
-  'program-generator': {
-    render: () => {
-      latestProgramLanding = renderProgramGeneratorLanding({ standalone: false, includeFooter: false });
-      return latestProgramLanding.html;
-    },
-    afterRender: root => {
-      if (latestProgramLanding?.afterRender) {
-        latestProgramLanding.afterRender(root);
-      }
-    }
-  },
-  'exercise-library': {
-    render: () => {
-      latestExerciseLanding = renderExerciseLibraryLanding({ standalone: false, includeFooter: false });
-      return latestExerciseLanding.html;
-    },
-    afterRender: root => {
-      if (latestExerciseLanding?.afterRender) {
-        latestExerciseLanding.afterRender(root);
-      }
-    }
-  },
-  'workout-summary': {
-    render: () => {
-      latestWorkoutLanding = renderWorkoutSummaryLanding({ standalone: false, includeFooter: false });
-      return latestWorkoutLanding.html;
-    },
-    afterRender: root => {
-      if (latestWorkoutLanding?.afterRender) {
-        latestWorkoutLanding.afterRender(root);
-      }
-    }
-  },
-  about: {
-    render: () => {
-      latestAboutLanding = renderAboutLanding({ standalone: false, includeFooter: false });
-      return latestAboutLanding.html;
-    },
-    afterRender: root => {
-      if (latestAboutLanding?.afterRender) {
-        latestAboutLanding.afterRender(root);
-      }
-    }
-  },
-  contact: {
-    render: () => {
-      latestContactLanding = renderContactLanding({ standalone: false, includeFooter: false });
-      return latestContactLanding.html;
-    },
-    afterRender: root => {
-      if (latestContactLanding?.afterRender) {
-        latestContactLanding.afterRender(root);
-      }
-    }
-  },
-  'start-trial': {
-    render: () => {
-      if (redirectIfLoggedIn()) {
-        return null;
-      }
-      latestStartTrialLanding = renderStartTrial({ standalone: false, includeFooter: false });
-      return latestStartTrialLanding.html;
-    },
-    afterRender: root => {
-      if (latestStartTrialLanding?.afterRender) {
-        latestStartTrialLanding.afterRender(root);
-      }
-    }
-  },
-  'create-account': {
-    render: () => {
-      if (redirectIfLoggedIn()) {
-        return null;
-      }
-      latestCreateAccountLanding = renderCreateAccount({ standalone: false, includeFooter: false });
-      return latestCreateAccountLanding.html;
-    },
-    afterRender: root => {
-      if (latestCreateAccountLanding?.afterRender) {
-        latestCreateAccountLanding.afterRender(root);
-      }
-    }
-  },
-  welcome: {
-    render: () => {
-      if (redirectIfLoggedIn()) {
-        return null;
-      }
-      latestWelcomeLanding = renderWelcome({ standalone: false, includeFooter: false });
-      return latestWelcomeLanding.html;
-    },
-    afterRender: root => {
-      if (latestWelcomeLanding?.afterRender) {
-        latestWelcomeLanding.afterRender(root);
-      }
-    }
-  },
-  timer: { render: () => renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') },
-  'progress-tracking': { render: () => renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') },
-  'beginner-onboarding': { render: () => renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') },
-  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') },
-  '404': {
-    render: () => {
-      latestNotFoundLanding = renderNotFound({ standalone: false, includeFooter: false });
-      return latestNotFoundLanding.html;
-    },
-    afterRender: root => {
-      if (latestNotFoundLanding?.afterRender) {
-        latestNotFoundLanding.afterRender(root);
-      }
-    }
+  {
+    title: 'Gentle Accountability',
+    copy: 'Soft reminders, streak nudges, and message prompts keep you going without yelling.'
   }
-};
+];
 
 export function startApp() {
   initializeState();
@@ -943,17 +808,22 @@ export function startApp() {
 
   const renderCurrentRoute = () => {
     const state = getState();
-    const requested = parseRoute(window.location.hash);
-    const routeKey = ROUTES[requested] ? requested : '404';
-    const routeConfig = ROUTES[routeKey];
-    const content = routeConfig.render(state, routeKey);
-    if (content === null) {
+    const hash = normalizeHash(window.location.hash);
+    const routeKey = parseRoute(hash);
+    const auth = getAuth();
+    const navbar = auth.loggedIn
+      ? renderAppNavbar(routeKey, ROUTE_HASHES)
+      : renderPublicNavbar(routeKey, ROUTE_HASHES);
+
+    const routeResult = resolveRoute(hash, state, auth);
+    if (!routeResult || !routeResult.html) {
       return;
     }
-    const shellHtml = renderShell(routeKey, state, content);
+
+    const shellHtml = renderShell(navbar, routeResult.html);
     renderer.render(shellHtml, root => {
-      if (typeof routeConfig.afterRender === 'function') {
-        routeConfig.afterRender(root, state, routeKey);
+      if (typeof routeResult.afterRender === 'function') {
+        routeResult.afterRender(root, state, routeKey);
       }
     });
   };
@@ -974,6 +844,16 @@ function injectBaseStyles() {
   document.head.append(style);
 }
 
+function normalizeHash(hash) {
+  if (!hash || hash === '#/' || hash === '#') {
+    return '#/';
+  }
+  if (!hash.startsWith('#/')) {
+    return `#/${hash.replace(/^#?/, '')}`;
+  }
+  return hash;
+}
+
 function parseRoute(hash) {
   if (!hash || hash === '#/' || hash === '#') {
     return 'home';
@@ -989,9 +869,7 @@ function navigateTo(route) {
   window.location.hash = targetHash;
 }
 
-function renderShell(route, state, content) {
-  const nav = renderNavbar(route, ROUTE_HASHES);
-
+function renderShell(nav, content) {
   return `
     <header class="site-header">
       <div class="header-inner">
@@ -1007,6 +885,80 @@ function renderShell(route, state, content) {
   `;
 }
 
+function landingResult(factory) {
+  const page = factory({ standalone: false, includeFooter: false });
+  return { html: page.html, afterRender: page.afterRender };
+}
+
+function resolveRoute(hash, state, auth) {
+  switch (hash) {
+    case '#/':
+    case '#/home':
+      return { html: renderHome(state, auth) };
+    case '#/features':
+      return { html: renderFeaturesShowcase() };
+    case '#/pricing':
+      return landingResult(renderPricingLanding);
+    case '#/about':
+      return landingResult(renderAboutLanding);
+    case '#/contact':
+      return landingResult(renderContactLanding);
+    case '#/program-generator':
+      return landingResult(renderProgramGeneratorLanding);
+    case '#/exercise-library':
+      return landingResult(renderExerciseLibraryLanding);
+    case '#/workout-summary':
+      return landingResult(renderWorkoutSummaryLanding);
+    case '#/start-trial':
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
+      return landingResult(renderStartTrial);
+    case '#/create-account':
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
+      return landingResult(renderCreateAccount);
+    case '#/welcome':
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
+      return landingResult(renderWelcome);
+    case '#/dashboard':
+      return protectRoute(() => ({ html: renderDashboard(state) }));
+    case '#/history':
+      return protectRoute(() => ({ html: renderDashboard(state) }));
+    case '#/generate':
+    case '#/planner':
+      return protectRoute(() => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }));
+    case '#/library':
+    case '#/plan-generator':
+      return protectRoute(() => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }));
+    case '#/profile':
+      return protectRoute(() => ({ html: renderProfile(state), afterRender: attachProfileEvents }));
+    case '#/subscribe':
+      return { html: renderSubscribe(state), afterRender: attachSubscribeEvents };
+    case '#/onboarding':
+      return { html: renderOnboarding(state), afterRender: attachOnboardingEvents };
+    case '#/timer':
+      return { html: renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') };
+    case '#/progress-tracking':
+      return { html: renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') };
+    case '#/beginner-onboarding':
+      return { html: renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') };
+    case '#/relaxed-training':
+      return { html: renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') };
+    case '#/404':
+      return landingResult(renderNotFound);
+    default:
+      if (hash !== ROUTE_HASHES['404']) {
+        navigateTo('404');
+        return null;
+      }
+      return landingResult(renderNotFound);
+  }
+}
+
 function renderFeaturePlaceholder(title, description) {
   return `
     <section class="panel" style="margin-top:32px;">
@@ -1018,18 +970,57 @@ function renderFeaturePlaceholder(title, description) {
   `;
 }
 
-function resolvePrimaryCta(state) {
-  if (!isLoggedIn()) {
-    return { href: ROUTE_HASHES['start-trial'] || '#/start-trial', label: 'Start free trial' };
+function resolvePrimaryCta(state, auth) {
+  const defaultCta = { href: ROUTE_HASHES['start-trial'] || '#/start-trial', label: 'Start free trial' };
+  if (!auth?.loggedIn) {
+    return defaultCta;
   }
-  if (!state.profile.onboardingComplete) {
-    return { href: ROUTE_HASHES.dashboard, label: 'Continue setup' };
+  if (!state?.profile?.onboardingComplete) {
+    return { href: ROUTE_HASHES.onboarding || ROUTE_HASHES.dashboard, label: 'Continue setup' };
   }
-  return { href: ROUTE_HASHES.dashboard, label: 'Go to Dashboard' };
+  return { href: ROUTE_HASHES.dashboard || '#/dashboard', label: 'Go to Dashboard' };
 }
 
-function renderHome(state) {
-  const cta = resolvePrimaryCta(state);
+function renderFeaturesShowcase() {
+  const cards = FEATURE_OVERVIEW.map(feature => `
+    <article class="panel" style="padding:24px;display:flex;flex-direction:column;gap:10px;">
+      <span class="badge">Core Feature</span>
+      <h3 style="margin:6px 0 0;">${escapeHTML(feature.title)}</h3>
+      <p style="color:var(--muted);line-height:1.6;">${escapeHTML(feature.copy)}</p>
+    </article>
+  `).join('');
+
+  return `
+    <section class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Gentle toolkit</span>
+        <h1>Everything a calm beginner needs—nothing that rattles you.</h1>
+        <p class="landing-subtext lead">Peek at the modules inside AllAroundAthlete before you unlock them.</p>
+        <p>Each feature is built to keep nervous starters grounded. Clear copy, short actions, and reminders that it is okay to move slowly.</p>
+        <div class="landing-actions">
+          <a class="landing-button" href="${ROUTE_HASHES['start-trial']}">Start free trial</a>
+          <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+        </div>
+      </div>
+      <div class="landing-hero-aside">
+        <div class="landing-card emphasis">
+          <div class="landing-label">Coming soon</div>
+          <ul class="landing-list landing-list-check">
+            <li>Guided stretching pods</li>
+            <li>Voice notes for cues</li>
+            <li>Social-free accountability</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+    <section class="plan-grid" style="margin-top:32px;">
+      ${cards}
+    </section>
+  `;
+}
+
+function renderHome(state, auth) {
+  const cta = resolvePrimaryCta(state, auth);
   return `
     <section class="landing-hero">
       <div class="landing-hero-content">
@@ -1129,7 +1120,7 @@ function renderHome(state) {
         </article>
       </div>
       <div class="subscription-pricing">
-        <div class="pricing-copy">
+        <div>
           <h4>Try it free, stay for the calm coaching.</h4>
           <p>$7.99 per month or $49.99 per year after the trial.</p>
         </div>
@@ -1151,6 +1142,7 @@ function renderHome(state) {
     </section>
   `;
 }
+
 
 function renderPlanner(state) {
   const equipmentOptions = getEquipmentList().map(eq => `
