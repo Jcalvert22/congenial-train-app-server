@@ -1,21 +1,33 @@
-import { isLoggedIn } from './state.js';
+import { getAuth } from './state.js';
 
-const START_TRIAL_HASH = '#/start-trial';
+const START_TRIAL_URL = '/#/start-trial';
+const DASHBOARD_URL = '/#/dashboard';
 
-function redirectToTrial() {
+function redirectTo(targetUrl) {
   if (typeof window === 'undefined' || typeof window.location === 'undefined') {
     return;
   }
-  if (window.location.hash === START_TRIAL_HASH) {
+  const targetHash = targetUrl.replace('/#', '#');
+  if (window.location.hash === targetHash) {
     return;
   }
-  window.location.hash = START_TRIAL_HASH;
+  window.location.replace(targetUrl);
 }
 
-export function protectRoute(callback) {
-  if (!isLoggedIn()) {
-    redirectToTrial();
+export function protectRoute(renderCallback) {
+  const auth = getAuth();
+  if (!auth || auth.loggedIn !== true) {
+    redirectTo(START_TRIAL_URL);
     return null;
   }
-  return typeof callback === 'function' ? callback() : null;
+  return typeof renderCallback === 'function' ? renderCallback() : null;
+}
+
+export function redirectIfLoggedIn() {
+  const auth = getAuth();
+  if (auth && auth.loggedIn === true) {
+    redirectTo(DASHBOARD_URL);
+    return true;
+  }
+  return false;
 }

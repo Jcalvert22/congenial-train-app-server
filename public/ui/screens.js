@@ -37,7 +37,7 @@ import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
 import { renderNavbar } from './navbar.js';
 import { renderFooter } from './footer.js';
-import { protectRoute } from '../auth/guard.js';
+import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
 import { isLoggedIn } from '../auth/state.js';
 import { renderNotFound } from '../router/404.js';
 
@@ -792,25 +792,23 @@ let latestCreateAccountLanding = null;
 let latestWelcomeLanding = null;
 let latestNotFoundLanding = null;
 
-function withProtectedRender(renderFn) {
-  return (...args) => protectRoute(() => renderFn(...args));
-}
-
-function withProtectedAfterRender(afterRenderFn) {
-  return (...args) => {
-    if (!isLoggedIn()) {
-      return null;
-    }
-    return afterRenderFn(...args);
-  };
-}
-
 const ROUTES = {
   home: { render: renderHome },
-  planner: { render: withProtectedRender(renderPlanner), afterRender: withProtectedAfterRender(attachPlannerEvents) },
-  'plan-generator': { render: withProtectedRender(renderPlanGenerator), afterRender: withProtectedAfterRender(attachPlanGeneratorEvents) },
-  dashboard: { render: withProtectedRender(renderDashboard) },
-  profile: { render: withProtectedRender(renderProfile), afterRender: withProtectedAfterRender(attachProfileEvents) },
+  planner: {
+    render: (...args) => protectRoute(() => renderPlanner(...args)),
+    afterRender: (...args) => protectRoute(() => attachPlannerEvents(...args))
+  },
+  'plan-generator': {
+    render: (...args) => protectRoute(() => renderPlanGenerator(...args)),
+    afterRender: (...args) => protectRoute(() => attachPlanGeneratorEvents(...args))
+  },
+  dashboard: {
+    render: (...args) => protectRoute(() => renderDashboard(...args))
+  },
+  profile: {
+    render: (...args) => protectRoute(() => renderProfile(...args)),
+    afterRender: (...args) => protectRoute(() => attachProfileEvents(...args))
+  },
   subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
   pricing: {
     render: () => {
@@ -881,6 +879,9 @@ const ROUTES = {
   },
   'start-trial': {
     render: () => {
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
       latestStartTrialLanding = renderStartTrial({ standalone: false, includeFooter: false });
       return latestStartTrialLanding.html;
     },
@@ -892,6 +893,9 @@ const ROUTES = {
   },
   'create-account': {
     render: () => {
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
       latestCreateAccountLanding = renderCreateAccount({ standalone: false, includeFooter: false });
       return latestCreateAccountLanding.html;
     },
@@ -903,6 +907,9 @@ const ROUTES = {
   },
   welcome: {
     render: () => {
+      if (redirectIfLoggedIn()) {
+        return null;
+      }
       latestWelcomeLanding = renderWelcome({ standalone: false, includeFooter: false });
       return latestWelcomeLanding.html;
     },
@@ -915,7 +922,18 @@ const ROUTES = {
   timer: { render: () => renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') },
   'progress-tracking': { render: () => renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') },
   'beginner-onboarding': { render: () => renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') },
-  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') }
+  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') },
+  '404': {
+    render: () => {
+      latestNotFoundLanding = renderNotFound({ standalone: false, includeFooter: false });
+      return latestNotFoundLanding.html;
+    },
+    afterRender: root => {
+      if (latestNotFoundLanding?.afterRender) {
+        latestNotFoundLanding.afterRender(root);
+      }
+    }
+  }
 };
 
 export function startApp() {

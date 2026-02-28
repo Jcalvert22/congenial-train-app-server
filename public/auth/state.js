@@ -101,3 +101,8 @@ export function login() {
 export function logout() {
   persistAuthState({ loggedIn: false }, { clearStorage: true });
 }
+
+export function getAuth() {
+  const state = loadAuthState();
+  return { ...state };
+}
