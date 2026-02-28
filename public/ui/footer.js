@@ -1,7 +1,7 @@
 const EXPLORE_LINKS = [
   { label: 'Workout Program Generator', href: '#/program-generator' },
   { label: 'Exercise Library', href: '#/exercise-library' },
-  { label: 'Workout Summary', href: '#/workout-summary' },
+  { label: 'Workout Summary', href: '#/summary' },
   { label: 'Timer', href: '#/timer' },
   { label: 'Progress Tracking', href: '#/progress-tracking' },
   { label: 'Beginner Onboarding', href: '#/beginner-onboarding' },

@@ -38,7 +38,7 @@ function estimateDuration(rows) {
 function collectEquipmentSummary(rows, profile) {
   const tags = new Set();
   rows.forEach(row => {
-    (row.equipment || '')
+    (row?.equipment || '')
       .split(',')
       .map(piece => piece.trim())
       .filter(Boolean)
@@ -56,16 +56,16 @@ function getExerciseIcon(muscle) {
 }
 
 function formatRestTime(row) {
-  if (row.rest) {
+  if (row?.rest) {
     return row.rest;
   }
-  return row.usesWeight ? 'Rest 75-90 sec' : 'Rest 40-60 sec';
+  return row?.usesWeight ? 'Rest 75-90 sec' : 'Rest 40-60 sec';
 }
 
 function renderHeader(firstName, hasPlan, goalText) {
   const subtext = hasPlan
     ? `We personalized this calm session around your ${goalText} goal, ${firstName}.`
-    : `We could not find your latest plan. Generate one to get a personalized breakdown, ${firstName}.`;
+    : `We couldn\u2019t find your latest plan. Generate one to get a personalized breakdown, ${firstName}.`;
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
@@ -87,7 +87,7 @@ function renderSummarySection(state, rows, summary) {
   const duration = estimateDuration(rows);
   const equipmentSummary = collectEquipmentSummary(rows, profile);
   const focusAreas = Array.isArray(summary?.focus) && summary.focus.length
-    ? summary.focus.slice(0, 2).join(', ')
+    ? summary.focus.filter(Boolean).slice(0, 2).join(', ')
     : 'Full body';
 
   const stats = [
@@ -104,12 +104,14 @@ function renderSummarySection(state, rows, summary) {
       <p class="landing-subtext">Summary</p>
       <article class="landing-card">
         <div class="landing-grid landing-grid-two">
-          ${stats.map(stat => `
-            <div>
-              <p class="landing-subtext">${escapeHTML(stat.label)}</p>
-              <h3>${escapeHTML(stat.value)}</h3>
-            </div>
-          `).join('')}
+          ${stats
+            .map(stat => `
+              <div>
+                <p class="landing-subtext">${escapeHTML(stat.label)}</p>
+                <h3>${escapeHTML(stat.value)}</h3>
+              </div>
+            `)
+            .join('')}
         </div>
       </article>
     </section>
@@ -117,28 +119,33 @@ function renderSummarySection(state, rows, summary) {
 }
 
 function renderExercisesSection(rows) {
-  const cards = rows.map(row => {
-    const instructions = row.description || 'Move slowly, breathe through the hardest part, and stop if form slips.';
+  const cards = rows.map((row, index) => {
+    const exerciseName = row?.exercise || `Movement ${index + 1}`;
+    const instructions = row?.description || 'Move slowly, breathe through the hardest part, and stop if form slips.';
     const restLabel = formatRestTime(row);
+    const sets = row?.sets || '3 sets';
+    const reps = row?.repRange || '8-12 reps';
+    const muscle = row?.muscle || 'Full body';
+    const equipment = row?.equipment || 'Bodyweight';
     return `
       <article class="landing-card">
-        <div class="landing-card-image" aria-hidden="true">${getExerciseIcon(row.muscle)}</div>
-        <h3>${escapeHTML(row.exercise)}</h3>
-        <p class="landing-subtext">${escapeHTML(row.sets)} × ${escapeHTML(row.repRange)} · ${escapeHTML(restLabel)}</p>
+        <div class="landing-card-image" aria-hidden="true">${getExerciseIcon(muscle)}</div>
+        <h3>${escapeHTML(exerciseName)}</h3>
+        <p class="landing-subtext">${escapeHTML(sets)} × ${escapeHTML(reps)} · ${escapeHTML(restLabel)}</p>
         <p>${escapeHTML(instructions)}</p>
         <div class="landing-pill-list">
-          <span class="landing-pill">${escapeHTML(row.muscle)}</span>
-          <span class="landing-pill">${escapeHTML(row.equipment || 'Bodyweight')}</span>
+          <span class="landing-pill">${escapeHTML(muscle)}</span>
+          <span class="landing-pill">${escapeHTML(equipment)}</span>
         </div>
       </article>
     `;
-  }).join('');
+  });
 
   return `
     <section class="landing-section">
       <p class="landing-subtext">Exercises</p>
       <div class="landing-grid">
-        ${cards}
+        ${cards.join('')}
       </div>
     </section>
   `;
@@ -156,12 +163,16 @@ function renderCtaSection() {
   `;
 }
 
-function renderEmptyState() {
+function renderEmptyState(reason) {
+  const description = reason === 'invalid'
+    ? 'We found a workout but it looks incomplete. Let\u2019s rebuild one that feels solid.'
+    : 'Looks like the summary was cleared (maybe after a refresh). Let\u2019s build a new one in a few taps.';
   return `
     <section class="landing-section">
-      <article class="landing-card">
-        <p class="landing-subtext">No workout loaded</p>
-        <p>Generate a new plan to see your personal summary, cues, and pacing tips.</p>
+      <article class="landing-card landing-empty-card">
+        <p class="landing-subtext">No workout found</p>
+        <h3>Let\u2019s generate a fresh plan.</h3>
+        <p>${escapeHTML(description)}</p>
         <div class="landing-actions landing-space-top-sm">
           <a class="landing-button" href="#/generate">Go to Generate</a>
         </div>
@@ -172,16 +183,17 @@ function renderEmptyState() {
 
 export function renderWorkoutSummaryPage(state) {
   const plan = state.ui?.plannerResult;
-  const rows = Array.isArray(plan?.planRows) ? plan.planRows : [];
-  const summary = plan?.summary || {};
+  const rows = Array.isArray(plan?.planRows) ? plan.planRows.filter(Boolean) : [];
+  const summary = plan && typeof plan.summary === 'object' ? plan.summary : {};
   const hasPlan = rows.length > 0;
   const firstName = getFirstName(state);
   const goalText = state.profile?.goal || 'consistency';
+  const reason = plan ? 'invalid' : 'missing';
 
   if (!hasPlan) {
     const sections = `
       ${renderHeader(firstName, false, goalText)}
-      ${renderEmptyState()}
+      ${renderEmptyState(reason)}
     `;
     return wrapLandingPage(sections);
   }

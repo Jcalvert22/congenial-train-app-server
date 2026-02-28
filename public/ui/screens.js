@@ -25,7 +25,8 @@ import {
   normalizeSelection,
   clamp
 } from '../utils/helpers.js';
-import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from './workoutSummary.js';
+import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
+import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderAboutLanding } from './landingAbout.js';
@@ -63,6 +64,7 @@ const ROUTE_HASHES = {
   'program-generator': '#/program-generator',
   'exercise-library': '#/exercise-library',
   'workout-summary': '#/workout-summary',
+  summary: '#/summary',
   workout: '#/workout',
   about: '#/about',
   contact: '#/contact',
@@ -925,6 +927,7 @@ function resolveRoute(hash, state, auth) {
       return landingResult(renderProgramGeneratorLanding);
     case '#/exercise-library':
       return landingResult(renderExerciseLibraryLanding);
+    case '#/summary':
     case '#/workout-summary':
       return protectRoute(() => ({ html: renderWorkoutSummaryPage(state), afterRender: attachWorkoutSummaryEvents }));
     case '#/workout':
@@ -949,6 +952,7 @@ function resolveRoute(hash, state, auth) {
     case '#/history':
       return protectRoute(() => ({ html: renderHistory(state) }));
     case '#/generate':
+      return protectRoute(() => ({ html: renderGeneratePage(state), afterRender: attachGeneratePageEvents }));
     case '#/planner':
       return protectRoute(() => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }));
     case '#/library':
@@ -1877,7 +1881,7 @@ function attachPlannerEvents(root) {
       const muscles = data.getAll('muscle');
       const plan = createPlannerPlan({ equipment, muscles });
       storePlannerResult(plan);
-      navigateTo('workout-summary');
+      navigateTo('summary');
     });
   }
 
