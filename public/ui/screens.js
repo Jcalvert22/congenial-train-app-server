@@ -35,8 +35,13 @@ import { renderPricingLanding } from './landingPricing.js';
 import { renderStartTrial } from './landingStartTrial.js';
 import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
-import { renderNavbar, FEATURE_ROUTES } from './navbar.js';
+import { renderNavbar } from './navbar.js';
 import { renderFooter } from './footer.js';
+import { protectRoute } from '../auth/guard.js';
+import { isLoggedIn } from '../auth/state.js';
+import { renderNotFound } from '../router/404.js';
+
+const AUTH_EVENT_NAME = 'aaa-auth-changed';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -58,11 +63,23 @@ const ROUTE_HASHES = {
   timer: '#/timer',
   'progress-tracking': '#/progress-tracking',
   'beginner-onboarding': '#/beginner-onboarding',
-  'relaxed-training': '#/relaxed-training'
+  'relaxed-training': '#/relaxed-training',
+  '404': '#/404'
 };
 
 const BASE_STYLES = `
-:root {
+  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') },
+  '404': {
+    render: () => {
+      latestNotFoundLanding = renderNotFound({ standalone: false, includeFooter: false });
+      return latestNotFoundLanding.html;
+    },
+    afterRender: root => {
+      if (latestNotFoundLanding?.afterRender) {
+        latestNotFoundLanding.afterRender(root);
+      }
+    }
+  }
   --accent: #7fc6a2;
   --accent-dark: #4f9c7a;
   --bg: #0b1615;
@@ -784,13 +801,27 @@ let latestPricingLanding = null;
 let latestStartTrialLanding = null;
 let latestCreateAccountLanding = null;
 let latestWelcomeLanding = null;
+let latestNotFoundLanding = null;
+
+function withProtectedRender(renderFn) {
+  return (...args) => protectRoute(() => renderFn(...args));
+}
+
+function withProtectedAfterRender(afterRenderFn) {
+  return (...args) => {
+    if (!isLoggedIn()) {
+      return null;
+    }
+    return afterRenderFn(...args);
+  };
+}
 
 const ROUTES = {
   home: { render: renderHome },
-  planner: { render: renderPlanner, afterRender: attachPlannerEvents },
-  'plan-generator': { render: renderPlanGenerator, afterRender: attachPlanGeneratorEvents },
-  dashboard: { render: renderDashboard },
-  profile: { render: renderProfile, afterRender: attachProfileEvents },
+  planner: { render: withProtectedRender(renderPlanner), afterRender: withProtectedAfterRender(attachPlannerEvents) },
+  'plan-generator': { render: withProtectedRender(renderPlanGenerator), afterRender: withProtectedAfterRender(attachPlanGeneratorEvents) },
+  dashboard: { render: withProtectedRender(renderDashboard) },
+  profile: { render: withProtectedRender(renderProfile), afterRender: withProtectedAfterRender(attachProfileEvents) },
   subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
   pricing: {
     render: () => {
@@ -898,20 +929,6 @@ const ROUTES = {
   'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') }
 };
 
-const PUBLIC_ROUTES = new Set([
-  'home',
-  'subscribe',
-  'pricing',
-  'about',
-  'contact',
-  'start-trial',
-  'create-account',
-  'welcome',
-  ...FEATURE_ROUTES
-]);
-
-const LOGGED_OUT_ONLY_ROUTES = new Set(['about', 'contact', 'pricing', 'start-trial', 'create-account', 'welcome']);
-
 export function startApp() {
   initializeState();
   injectBaseStyles();
@@ -920,22 +937,22 @@ export function startApp() {
   const renderCurrentRoute = () => {
     const state = getState();
     const requested = parseRoute(window.location.hash);
-    const resolved = guardRoute(requested, state);
-    if (resolved !== requested) {
-      navigateTo(resolved);
+    const routeKey = ROUTES[requested] ? requested : '404';
+    const routeConfig = ROUTES[routeKey];
+    const content = routeConfig.render(state, routeKey);
+    if (content === null) {
       return;
     }
-    const routeConfig = ROUTES[resolved] || ROUTES.home;
-    const content = routeConfig.render(state, resolved);
-    const shellHtml = renderShell(resolved, state, content);
+    const shellHtml = renderShell(routeKey, state, content);
     renderer.render(shellHtml, root => {
       if (typeof routeConfig.afterRender === 'function') {
-        routeConfig.afterRender(root, state);
+        routeConfig.afterRender(root, state, routeKey);
       }
     });
   };
 
   window.addEventListener('hashchange', renderCurrentRoute);
+  window.addEventListener(AUTH_EVENT_NAME, renderCurrentRoute);
   subscribe(renderCurrentRoute);
   renderCurrentRoute();
 }
@@ -965,39 +982,8 @@ function navigateTo(route) {
   window.location.hash = targetHash;
 }
 
-function guardRoute(route, state) {
-  if (route === 'subscribe') {
-    if (!state.isSubscribed) {
-      return 'subscribe';
-    }
-    if (!state.profile.onboardingComplete) {
-      return 'onboarding';
-    }
-    return 'subscribe';
-  }
-  if (state.isSubscribed && LOGGED_OUT_ONLY_ROUTES.has(route)) {
-    return state.profile.onboardingComplete ? 'planner' : 'onboarding';
-  }
-  if (!state.isSubscribed) {
-    if (PUBLIC_ROUTES.has(route)) {
-      return route;
-    }
-    return 'subscribe';
-  }
-  if (!state.profile.onboardingComplete) {
-    if (route === 'home') {
-      return 'home';
-    }
-    return 'onboarding';
-  }
-  if (route === 'onboarding') {
-    return 'planner';
-  }
-  return route;
-}
-
 function renderShell(route, state, content) {
-  const nav = renderNavbar(route, ROUTE_HASHES, state);
+  const nav = renderNavbar(route, ROUTE_HASHES);
 
   return `
     <header class="site-header">
@@ -1020,19 +1006,19 @@ function renderFeaturePlaceholder(title, description) {
       <span class="badge">Feature Preview</span>
       <h2 style="margin:12px 0 8px;">${escapeHTML(title)}</h2>
       <p style="color:var(--muted);line-height:1.6;max-width:720px;">${escapeHTML(description)}</p>
-      <a class="cta-btn" href="${ROUTE_HASHES.subscribe}" style="display:inline-flex;margin-top:18px;">Start Trial</a>
+      <a class="cta-btn" href="${ROUTE_HASHES['start-trial']}" style="display:inline-flex;margin-top:18px;">Start Trial</a>
     </section>
   `;
 }
 
 function resolvePrimaryCta(state) {
-  if (!state.isSubscribed) {
+  if (!isLoggedIn()) {
     return { href: ROUTE_HASHES['start-trial'] || '#/start-trial', label: 'Start free trial' };
   }
   if (!state.profile.onboardingComplete) {
-    return { href: ROUTE_HASHES.onboarding, label: 'Finish Setup' };
+    return { href: ROUTE_HASHES.dashboard, label: 'Continue setup' };
   }
-  return { href: ROUTE_HASHES.planner, label: 'Open Planner' };
+  return { href: ROUTE_HASHES.dashboard, label: 'Go to Dashboard' };
 }
 
 function renderHome(state) {

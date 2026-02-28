@@ -2,6 +2,7 @@ import { render } from './render.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 import { getState, setState } from '../logic/state.js';
+import { login } from '../auth/state.js';
 
 function buildHero(profileName) {
   return `
@@ -90,6 +91,7 @@ export function renderWelcome(options = {}) {
           }
           return prev;
         });
+        login();
         window.location.hash = '#/dashboard';
       });
     }

@@ -1,18 +1,26 @@
 import { render } from './render.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
+import { isLoggedIn } from '../auth/state.js';
 
-function buildHero() {
+function buildHero(isMember) {
+  const primaryCtaLabel = isMember ? 'Go to Dashboard' : 'Create Account';
+  const primaryCtaHref = isMember ? '#/dashboard' : '#/create-account';
+  const secondaryLabel = isMember ? 'See latest features' : 'See pricing';
+  const secondaryHref = isMember ? '#/plan-generator' : '#/pricing';
+  const heroLead = isMember
+    ? 'You are already inside the calm workspace. Jump back into your tools whenever you are ready.'
+    : 'No pressure. No confusion. Just a clear path to confidence.';
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Trial</span>
         <h1>Start your free trial.</h1>
-        <p class="landing-subtext lead">No pressure. No confusion. Just a clear path to confidence.</p>
+        <p class="landing-subtext lead">${heroLead}</p>
         <p>AllAroundAthlete slows everything down so you can step into the gym with a calm plan, gentle cues, and supportive reminders.</p>
         <div class="landing-actions">
-          <a class="landing-button" href="#/create-account">Create Account</a>
-          <a class="landing-button secondary" href="#/pricing">See pricing</a>
+          <a class="landing-button" href="${primaryCtaHref}">${primaryCtaLabel}</a>
+          <a class="landing-button secondary" href="${secondaryHref}">${secondaryLabel}</a>
         </div>
       </div>
       <div class="landing-card" aria-hidden="true">
@@ -53,7 +61,20 @@ function buildTrialDetails() {
   `;
 }
 
-function buildCtaSection() {
+function buildCtaSection(isMember) {
+  if (isMember) {
+    return `
+      <section class="landing-section landing-cta">
+        <p class="landing-subtext">Next step</p>
+        <h2>Head back into your workspace.</h2>
+        <p>Your dashboard, planner, and history are ready whenever you are.</p>
+        <div class="landing-actions">
+          <a class="landing-button" href="#/dashboard">Open Dashboard</a>
+          <a class="landing-button secondary" href="#/profile">Update profile</a>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="landing-section landing-cta">
       <p class="landing-subtext">Next step</p>
@@ -70,13 +91,14 @@ function buildCtaSection() {
 export function renderStartTrial(options = {}) {
   const { standalone = true, includeFooter = true } = options;
   ensureLandingStyles();
+  const loggedIn = isLoggedIn();
 
   const html = `
     <section class="landing-page">
       <div class="landing-container">
-        ${buildHero()}
+        ${buildHero(loggedIn)}
         ${buildTrialDetails()}
-        ${buildCtaSection()}
+        ${buildCtaSection(loggedIn)}
       </div>
       ${includeFooter ? renderFooter() : ''}
     </section>

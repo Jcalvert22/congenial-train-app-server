@@ -1,4 +1,4 @@
-import { getState } from '../logic/state.js';
+import { isLoggedIn } from '../auth/state.js';
 
 const FEATURE_LINKS = [
 	{ label: 'Workout Program Generator', route: 'program-generator' },
@@ -29,10 +29,6 @@ const PUBLIC_SECONDARY_LINKS = [
 
 export const FEATURE_ROUTES = FEATURE_LINKS.map(link => link.route);
 export const PUBLIC_NAV_ROUTES = new Set([...FEATURE_ROUTES, 'home', 'pricing', 'about', 'contact', 'start-trial', 'create-account', 'welcome']);
-
-function isAppMode(state) {
-	return Boolean(state?.isSubscribed && state?.profile?.onboardingComplete);
-}
 
 function anchorHtml(label, routeKey, currentRoute, routeMap, extraClass = '') {
 	const href = routeMap[routeKey] || '#/';
@@ -73,7 +69,6 @@ function renderAppNav(currentRoute, routeMap) {
 	return `<nav class="nav-links nav-app">${links}</nav>`;
 }
 
-export function renderNavbar(currentRoute, routeMap, stateOverride) {
-	const state = stateOverride ?? getState();
-	return isAppMode(state) ? renderAppNav(currentRoute, routeMap) : renderPublicNav(currentRoute, routeMap);
+export function renderNavbar(currentRoute, routeMap) {
+	return isLoggedIn() ? renderAppNav(currentRoute, routeMap) : renderPublicNav(currentRoute, routeMap);
 }

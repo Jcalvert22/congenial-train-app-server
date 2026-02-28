@@ -2,6 +2,7 @@ import { render } from './render.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 import { setState } from '../logic/state.js';
+import { login } from '../auth/state.js';
 
 function buildHero() {
   return `
@@ -96,6 +97,7 @@ export function renderCreateAccount(options = {}) {
           prev.ui.trialAccount = payload;
           return prev;
         });
+        login();
         window.location.hash = '#/welcome';
       });
     }
