@@ -1,8 +1,8 @@
 import { render } from './render.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
-import { getState, setState } from '../logic/state.js';
-import { login } from '../auth/state.js';
+import { getAuth } from '../auth/state.js';
+import { protectRoute } from '../auth/guard.js';
 
 function buildHero(profileName) {
   return `
@@ -54,7 +54,7 @@ function buildCtaSection() {
       <h2>Head to your dashboard.</h2>
       <p>We'll keep everything calm and obvious so you always know what to do next.</p>
       <div class="landing-actions">
-        <button class="landing-button" type="button" data-action="go-dashboard">Go to Dashboard</button>
+        <a class="landing-button" href="#/dashboard">Go to Dashboard</a>
         <a class="landing-button secondary" href="#/exercise-library">Review moves first</a>
       </div>
     </section>
@@ -63,9 +63,13 @@ function buildCtaSection() {
 
 export function renderWelcome(options = {}) {
   const { standalone = true, includeFooter = true } = options;
+  const guardResult = protectRoute(() => true);
+  if (!guardResult) {
+    return { html: '', afterRender: () => {} };
+  }
   ensureLandingStyles();
-  const state = getState();
-  const profileName = state.ui?.trialAccount?.name || 'Friend';
+  const auth = getAuth();
+  const profileName = auth.user?.name?.trim() || 'Friend';
 
   const html = `
     <section class="landing-page">
@@ -78,24 +82,7 @@ export function renderWelcome(options = {}) {
     </section>
   `;
 
-  const afterRender = root => {
-    const button = root.querySelector('[data-action="go-dashboard"]');
-    if (button) {
-      button.addEventListener('click', () => {
-        setState(prev => {
-          prev.isSubscribed = true;
-          prev.profile.onboardingComplete = true;
-          const storedName = prev.ui?.trialAccount?.name;
-          if (storedName) {
-            prev.profile.name = storedName;
-          }
-          return prev;
-        });
-        login();
-        window.location.hash = '#/dashboard';
-      });
-    }
-  };
+  const afterRender = () => {};
 
   if (standalone) {
     render(html, afterRender);

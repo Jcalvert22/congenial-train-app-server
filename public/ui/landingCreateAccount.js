@@ -1,8 +1,8 @@
 import { render } from './render.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
-import { setState } from '../logic/state.js';
 import { login } from '../auth/state.js';
+import { redirectIfLoggedIn } from '../auth/guard.js';
 
 function buildHero() {
   return `
@@ -36,18 +36,10 @@ function buildFormSection() {
           <span class="landing-subtext">Email</span>
           <input type="email" name="email" placeholder="you@example.com" required>
         </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Password</span>
-          <input type="password" name="password" placeholder="Create a password" minlength="6" required>
-        </label>
-        <label class="landing-card">
-          <span class="landing-subtext">Confirm password</span>
-          <input type="password" name="confirm" placeholder="Repeat password" minlength="6" required>
-        </label>
         <div class="landing-card landing-grid-span">
           <p>Your information is safe and never shared. We only use it to personalize your plan.</p>
         </div>
-        <button class="landing-button landing-grid-span" type="submit">Continue</button>
+        <button class="landing-button landing-grid-span" type="submit">Create Account</button>
       </form>
     </section>
   `;
@@ -69,6 +61,9 @@ function buildCtaSection() {
 
 export function renderCreateAccount(options = {}) {
   const { standalone = true, includeFooter = true } = options;
+  if (redirectIfLoggedIn()) {
+    return { html: '', afterRender: () => {} };
+  }
   ensureLandingStyles();
 
   const html = `
@@ -88,16 +83,9 @@ export function renderCreateAccount(options = {}) {
       form.addEventListener('submit', event => {
         event.preventDefault();
         const formData = new FormData(form);
-        const payload = {
-          name: formData.get('name')?.toString().trim() || 'New Member',
-          email: formData.get('email')?.toString().trim() || ''
-        };
-        setState(prev => {
-          prev.ui = prev.ui || {};
-          prev.ui.trialAccount = payload;
-          return prev;
-        });
-        login();
+        const name = formData.get('name')?.toString().trim() || 'New Member';
+        const email = formData.get('email')?.toString().trim() || '';
+        login({ name, email });
         window.location.hash = '#/welcome';
       });
     }
