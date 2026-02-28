@@ -114,8 +114,3 @@ export function logout(options = {}) {
 export function isLoggedIn() {
   return getAuth().loggedIn === true;
 }
-
-export function getAuth() {
-  const state = loadAuthState();
-  return { ...state };
-}
