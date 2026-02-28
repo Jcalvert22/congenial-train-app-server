@@ -40,19 +40,69 @@ const ROUTE_HASHES = {
   onboarding: '#/onboarding',
   'program-generator': '#/program-generator',
   'exercise-library': '#/exercise-library',
-  'workout-summary': '#/workout-summary'
+  'workout-summary': '#/workout-summary',
+  pricing: '#/pricing',
+  timer: '#/timer',
+  'progress-tracking': '#/progress-tracking',
+  'beginner-onboarding': '#/beginner-onboarding',
+  'relaxed-training': '#/relaxed-training'
 };
 
-const NAV_LINKS = [
-  { label: 'Home', route: 'home' },
-  { label: 'Planner', route: 'planner' },
-  { label: 'Plan Generator', route: 'plan-generator' },
-  { label: 'Dashboard', route: 'dashboard' },
-  { label: 'Profile', route: 'profile' },
-  { label: 'Program Generator', route: 'program-generator' },
+const FEATURE_LINKS = [
+  { label: 'Workout Program Generator', route: 'program-generator' },
   { label: 'Exercise Library', route: 'exercise-library' },
-  { label: 'Workout Summary', route: 'workout-summary' }
+  { label: 'Workout Summary', route: 'workout-summary' },
+  { label: 'Timer', route: 'timer' },
+  { label: 'Progress Tracking', route: 'progress-tracking' },
+  { label: 'Beginner Onboarding', route: 'beginner-onboarding' },
+  { label: 'Relaxed Training Philosophy', route: 'relaxed-training' }
 ];
+
+const FEATURE_ROUTE_SET = new Set(FEATURE_LINKS.map(link => link.route));
+
+const APP_NAV_LINKS = [
+  { label: 'Generate', route: 'planner' },
+  { label: 'Library', route: 'plan-generator' },
+  { label: 'History', route: 'dashboard' },
+  { label: 'Profile', route: 'profile' }
+];
+
+function isAppMode(state) {
+  return Boolean(state?.isSubscribed && state?.profile?.onboardingComplete);
+}
+
+function navAnchor(label, route, currentRoute, extraClass = '') {
+  const href = ROUTE_HASHES[route] || '#/';
+  const classes = [extraClass, route === currentRoute ? 'active-link' : ''].filter(Boolean).join(' ');
+  return `<a href="${href}" class="${classes}">${label}</a>`;
+}
+
+function renderPublicNav(route) {
+  const featureLinks = FEATURE_LINKS.map(link => navAnchor(link.label, link.route, route, 'nav-feature-link')).join('');
+  const featuresOpen = FEATURE_ROUTE_SET.has(route) ? ' open' : '';
+  return `
+    <nav class="nav-links nav-public">
+      ${navAnchor('Home', 'home', route)}
+      <details class="nav-features"${featuresOpen}>
+        <summary>Features</summary>
+        <div class="nav-feature-panel">
+          ${featureLinks}
+        </div>
+      </details>
+      ${navAnchor('Pricing', 'pricing', route)}
+      <a href="${ROUTE_HASHES.subscribe}" class="cta-btn nav-trial">Start Trial</a>
+    </nav>
+  `;
+}
+
+function renderAppNav(route) {
+  const links = APP_NAV_LINKS.map(link => navAnchor(link.label, link.route, route)).join('');
+  return `<nav class="nav-links nav-app">${links}</nav>`;
+}
+
+function renderNav(route, state) {
+  return isAppMode(state) ? renderAppNav(route) : renderPublicNav(route);
+}
 
 const BASE_STYLES = `
 :root {
@@ -114,6 +164,52 @@ a { color: inherit; text-decoration: none; }
   color: var(--muted);
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+.nav-public {
+  align-items: center;
+  gap: 14px;
+}
+.nav-app {
+  align-items: center;
+}
+.nav-features {
+  position: relative;
+}
+.nav-features summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--muted);
+}
+.nav-features summary::-webkit-details-marker {
+  display: none;
+}
+.nav-feature-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: rgba(7,11,27,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 240px;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+}
+.nav-feature-panel a {
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: #c7d3fb;
+}
+.nav-feature-panel a:hover {
+  background: rgba(255,255,255,0.05);
+}
+.nav-trial {
+  font-weight: 600;
 }
 .cta-btn {
   padding: 10px 18px;
@@ -815,6 +911,7 @@ const ROUTES = {
   dashboard: { render: renderDashboard },
   profile: { render: renderProfile, afterRender: attachProfileEvents },
   subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
+  pricing: { render: renderSubscribe, afterRender: attachSubscribeEvents },
   onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents },
   'program-generator': {
     render: () => {
@@ -848,10 +945,25 @@ const ROUTES = {
         latestWorkoutLanding.afterRender(root);
       }
     }
-  }
+  },
+  timer: { render: () => renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') },
+  'progress-tracking': { render: () => renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') },
+  'beginner-onboarding': { render: () => renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') },
+  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') }
 };
 
-const PUBLIC_ROUTES = new Set(['home', 'subscribe', 'program-generator', 'exercise-library', 'workout-summary']);
+const PUBLIC_ROUTES = new Set([
+  'home',
+  'subscribe',
+  'pricing',
+  'program-generator',
+  'exercise-library',
+  'workout-summary',
+  'timer',
+  'progress-tracking',
+  'beginner-onboarding',
+  'relaxed-training'
+]);
 
 export function startApp() {
   initializeState();
@@ -926,13 +1038,8 @@ function guardRoute(route, state) {
 }
 
 function renderShell(route, state, content) {
-  const nav = NAV_LINKS.map(link => {
-    const href = ROUTE_HASHES[link.route] || '#/';
-    return `<a href="${href}" class="${link.route === route ? 'active-link' : ''}">${link.label}</a>`;
-  }).join('');
-
+  const nav = renderNav(route, state);
   const footerYear = new Date().getFullYear();
-  const subscribeHref = ROUTE_HASHES.subscribe;
 
   return `
     <header class="site-header">
@@ -941,14 +1048,22 @@ function renderShell(route, state, content) {
           <img src="/images/allaround-athlete-logo.png" alt="AllAroundAthlete Logo">
           <h1>All-Around Athlete</h1>
         </div>
-        <nav class="nav-links">
-          ${nav}
-          <a href="${subscribeHref}" class="cta-btn">Subscribe</a>
-        </nav>
+        ${nav}
       </div>
     </header>
     <main class="page-shell">${content}</main>
     <footer>© ${footerYear} AllAroundAthlete · Built for everyday consistency</footer>
+  `;
+}
+
+function renderFeaturePlaceholder(title, description) {
+  return `
+    <section class="panel" style="margin-top:32px;">
+      <span class="badge">Feature Preview</span>
+      <h2 style="margin:12px 0 8px;">${escapeHTML(title)}</h2>
+      <p style="color:var(--muted);line-height:1.6;max-width:720px;">${escapeHTML(description)}</p>
+      <a class="cta-btn" href="${ROUTE_HASHES.subscribe}" style="display:inline-flex;margin-top:18px;">Start Trial</a>
+    </section>
   `;
 }
 
