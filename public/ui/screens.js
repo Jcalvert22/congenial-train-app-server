@@ -68,28 +68,17 @@ const ROUTE_HASHES = {
 };
 
 const BASE_STYLES = `
-  'relaxed-training': { render: () => renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') },
-  '404': {
-    render: () => {
-      latestNotFoundLanding = renderNotFound({ standalone: false, includeFooter: false });
-      return latestNotFoundLanding.html;
-    },
-    afterRender: root => {
-      if (latestNotFoundLanding?.afterRender) {
-        latestNotFoundLanding.afterRender(root);
-      }
-    }
+  :root {
+    --accent: #9ae6b4;
+    --accent-dark: #3c9b74;
+    --bg: #050d0b;
+    --panel: #0f201d;
+    --panel-light: #16302b;
+    --text: #fcfffc;
+    --muted: #d8f3e6;
+    --border: rgba(210, 255, 234, 0.4);
+    --success: #a7fad2;
   }
-  --accent: #7fc6a2;
-  --accent-dark: #4f9c7a;
-  --bg: #0b1615;
-  --panel: #132423;
-  --panel-light: #152b29;
-  --text: #f4fff8;
-  --muted: #a3c6b6;
-  --border: rgba(176, 255, 221, 0.22);
-  --success: #8fe0b9;
-}
 * { box-sizing: border-box; }
 body {
   margin: 0;

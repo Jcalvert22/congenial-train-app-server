@@ -41,19 +41,19 @@ function buildContactSection() {
       <form class="landing-grid" data-form="contact">
         <label class="landing-card">
           <span class="landing-subtext">Name</span>
-          <input type="text" name="name" placeholder="Your name" required style="margin-top:8px;">
+          <input type="text" name="name" placeholder="Your name" required>
         </label>
         <label class="landing-card">
           <span class="landing-subtext">Email</span>
-          <input type="email" name="email" placeholder="you@example.com" required style="margin-top:8px;">
+          <input type="email" name="email" placeholder="you@example.com" required>
         </label>
-        <label class="landing-card landing-card-compact" style="grid-column: 1 / -1;">
+        <label class="landing-card landing-card-compact landing-grid-span">
           <span class="landing-subtext">Message</span>
-          <textarea name="message" rows="4" placeholder="Share your question or situation" required style="margin-top:8px;"></textarea>
+          <textarea name="message" rows="4" placeholder="Share your question or situation" required></textarea>
         </label>
-        <button class="landing-button" type="submit" style="grid-column: 1 / -1;">Send Message</button>
+        <button class="landing-button landing-grid-span" type="submit">Send Message</button>
       </form>
-      <p class="landing-subtext" style="margin-top:12px;">Prefer email? Write to <a href="mailto:support@allaroundathlete.com">support@allaroundathlete.com</a>.</p>
+      <p class="landing-subtext landing-space-top-sm">Prefer email? Write to <a href="mailto:support@allaroundathlete.com">support@allaroundathlete.com</a>.</p>
     </section>
   `;
 }

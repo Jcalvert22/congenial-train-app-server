@@ -73,7 +73,7 @@ function buildPlanCard(cta) {
           <ul class="landing-list">
             ${benefits.slice(0, 4).map(item => `<li>${item}</li>`).join('')}
           </ul>
-          <div class="landing-actions" style="margin-top:var(--space-md);">
+          <div class="landing-actions landing-space-top-md">
             <a class="landing-button" href="${cta.href}">${cta.label}</a>
           </div>
         </article>
@@ -83,7 +83,7 @@ function buildPlanCard(cta) {
           <ul class="landing-list">
             ${benefits.slice(4).map(item => `<li>${item}</li>`).join('')}
           </ul>
-          <p class="landing-subtext" style="margin-top:var(--space-md);">Switch plans anytime.</p>
+          <p class="landing-subtext landing-space-top-md">Switch plans anytime.</p>
         </article>
       </div>
     </section>

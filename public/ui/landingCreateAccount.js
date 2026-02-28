@@ -30,24 +30,24 @@ function buildFormSection() {
       <form class="landing-grid" data-form="create-account" autocomplete="off">
         <label class="landing-card">
           <span class="landing-subtext">Name</span>
-          <input type="text" name="name" placeholder="Your name" required style="margin-top:8px;">
+          <input type="text" name="name" placeholder="Your name" required>
         </label>
         <label class="landing-card">
           <span class="landing-subtext">Email</span>
-          <input type="email" name="email" placeholder="you@example.com" required style="margin-top:8px;">
+          <input type="email" name="email" placeholder="you@example.com" required>
         </label>
         <label class="landing-card">
           <span class="landing-subtext">Password</span>
-          <input type="password" name="password" placeholder="Create a password" minlength="6" required style="margin-top:8px;">
+          <input type="password" name="password" placeholder="Create a password" minlength="6" required>
         </label>
         <label class="landing-card">
           <span class="landing-subtext">Confirm password</span>
-          <input type="password" name="confirm" placeholder="Repeat password" minlength="6" required style="margin-top:8px;">
+          <input type="password" name="confirm" placeholder="Repeat password" minlength="6" required>
         </label>
-        <div class="landing-card" style="grid-column:1 / -1;">
+        <div class="landing-card landing-grid-span">
           <p>Your information is safe and never shared. We only use it to personalize your plan.</p>
         </div>
-        <button class="landing-button" type="submit" style="grid-column:1 / -1;">Continue</button>
+        <button class="landing-button landing-grid-span" type="submit">Continue</button>
       </form>
     </section>
   `;

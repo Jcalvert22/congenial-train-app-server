@@ -1,10 +1,10 @@
 :root {
-  --bg: radial-gradient(circle at top, rgba(140, 214, 179, 0.25), rgba(8, 18, 20, 0.92));
-  --panel: #132423;
-  --panel-border: rgba(170, 249, 210, 0.26);
-  --text: #f6fff9;
-  --muted: #a7cbbd;
-  --accent: #7fc6a2;
+  --bg: radial-gradient(circle at top, rgba(130, 215, 175, 0.2), rgba(4, 10, 9, 0.98));
+  --panel: #0f201d;
+  --panel-border: rgba(209, 255, 234, 0.4);
+  --text: #fcfffc;
+  --muted: #e2f5ec;
+  --accent: #9ae6b4;
 }
 
 body {
