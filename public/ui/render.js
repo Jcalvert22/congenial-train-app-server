@@ -1,3 +1,5 @@
+let defaultRenderer = null;
+
 export function initRenderer(rootSelector = '#app') {
   const root = typeof rootSelector === 'string' ? document.querySelector(rootSelector) : rootSelector;
   if (!root) {
@@ -12,4 +14,11 @@ export function initRenderer(rootSelector = '#app') {
   };
 
   return { root, render };
+}
+
+export function render(html, afterRender, rootSelector = '#app') {
+  if (!defaultRenderer) {
+    defaultRenderer = initRenderer(rootSelector);
+  }
+  defaultRenderer.render(html, afterRender);
 }

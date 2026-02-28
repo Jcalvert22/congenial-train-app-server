@@ -26,6 +26,8 @@ import {
   clamp
 } from '../utils/helpers.js';
 import { renderWorkoutSummary } from './workoutSummary.js';
+import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
+import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 
 const ROUTE_HASHES = {
   home: '#/',
@@ -34,7 +36,9 @@ const ROUTE_HASHES = {
   dashboard: '#/dashboard',
   profile: '#/profile',
   subscribe: '#/subscribe',
-  onboarding: '#/onboarding'
+  onboarding: '#/onboarding',
+  'program-generator': '#/program-generator',
+  'exercise-library': '#/exercise-library'
 };
 
 const NAV_LINKS = [
@@ -42,7 +46,9 @@ const NAV_LINKS = [
   { label: 'Planner', route: 'planner' },
   { label: 'Plan Generator', route: 'plan-generator' },
   { label: 'Dashboard', route: 'dashboard' },
-  { label: 'Profile', route: 'profile' }
+  { label: 'Profile', route: 'profile' },
+  { label: 'Program Generator', route: 'program-generator' },
+  { label: 'Exercise Library', route: 'exercise-library' }
 ];
 
 const BASE_STYLES = `
@@ -795,6 +801,9 @@ footer {
 }
 `;
 
+let latestProgramLanding = null;
+let latestExerciseLanding = null;
+
 const ROUTES = {
   home: { render: renderHome },
   planner: { render: renderPlanner, afterRender: attachPlannerEvents },
@@ -802,8 +811,32 @@ const ROUTES = {
   dashboard: { render: renderDashboard },
   profile: { render: renderProfile, afterRender: attachProfileEvents },
   subscribe: { render: renderSubscribe, afterRender: attachSubscribeEvents },
-  onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents }
+  onboarding: { render: renderOnboarding, afterRender: attachOnboardingEvents },
+  'program-generator': {
+    render: () => {
+      latestProgramLanding = renderProgramGeneratorLanding({ standalone: false });
+      return latestProgramLanding.html;
+    },
+    afterRender: root => {
+      if (latestProgramLanding?.afterRender) {
+        latestProgramLanding.afterRender(root);
+      }
+    }
+  },
+  'exercise-library': {
+    render: () => {
+      latestExerciseLanding = renderExerciseLibraryLanding({ standalone: false });
+      return latestExerciseLanding.html;
+    },
+    afterRender: root => {
+      if (latestExerciseLanding?.afterRender) {
+        latestExerciseLanding.afterRender(root);
+      }
+    }
+  }
 };
+
+const PUBLIC_ROUTES = new Set(['home', 'subscribe', 'program-generator', 'exercise-library']);
 
 export function startApp() {
   initializeState();
@@ -860,7 +893,7 @@ function navigateTo(route) {
 
 function guardRoute(route, state) {
   if (!state.isSubscribed) {
-    if (route === 'home' || route === 'subscribe') {
+    if (PUBLIC_ROUTES.has(route)) {
       return route;
     }
     return 'subscribe';
