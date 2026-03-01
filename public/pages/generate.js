@@ -22,7 +22,6 @@ const GOAL_MUSCLE_MAP = {
   'Fat Loss': ['Legs', 'Shoulders', 'Abs'],
   'General Fitness': ['Back', 'Legs', 'Abs']
 };
-const LOADING_DELAY_MS = 1100;
 const GYMXIETY_MODAL_TRANSITION_MS = 220;
 const MIN_MUSCLE_SELECTION = 1;
 const MAX_MUSCLE_SELECTION = 3;
@@ -287,7 +286,6 @@ export function attachGeneratePageEvents(root) {
   const modalCard = root.querySelector('[data-gymxiety-modal-card]');
   const confirmModalButton = root.querySelector('[data-action="confirm-gymxiety-modal"]');
   const dismissModalButtons = root.querySelectorAll('[data-action="dismiss-gymxiety-modal"]');
-  let loadingTimer = null;
   let gymxietyModalTimer = null;
   let gymxietyModalOpen = false;
   let onboardingComplete = hasCompletedGymxietyOnboarding();
@@ -490,7 +488,6 @@ export function attachGeneratePageEvents(root) {
   };
 
   const resetView = () => {
-    window.clearTimeout(loadingTimer);
     toggleView('form');
     setError('');
     loadingCard?.classList.remove('card-fade-out');
@@ -534,7 +531,8 @@ export function attachGeneratePageEvents(root) {
     }
 
     toggleView('loading');
-    loadingTimer = window.setTimeout(() => {
+
+    const runPlannerBuild = () => {
       try {
         const plan = buildPlanPayload({ experience, goal, equipment, muscles, duration, gymxietyMode });
         if (!plan || !Array.isArray(plan.planRows) || !plan.planRows.length) {
@@ -562,6 +560,11 @@ export function attachGeneratePageEvents(root) {
         toggleView('form');
         loadingCard?.classList.remove('card-fade-out');
       }
-    }, LOADING_DELAY_MS);
+    };
+
+    const scheduleRun = typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+      ? window.requestAnimationFrame.bind(window)
+      : callback => callback();
+    scheduleRun(() => runPlannerBuild());
   });
 }

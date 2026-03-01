@@ -115,6 +115,34 @@ const DEFAULT_MOVEMENT_PATTERN = 'General';
 const DEFAULT_INTIMIDATION_LEVEL = 'moderate';
 const INTIMIDATION_LEVEL_ORDER = ['low', 'moderate', 'high'];
 const DEFAULT_EQUIPMENT_FALLBACK = ['Bodyweight'];
+const TIME_BASED_KEYWORDS = ['plank', 'carry', 'hold', 'march', 'walk', 'bike', 'ride', 'row', 'glide', 'crawl'];
+const CONDITIONING_TIME_RANGE = '60-90 sec steady pace';
+const HOLD_TIME_RANGE = '30-45 sec hold';
+const CURATED_EQUIPMENT_PRIORITIES = [
+  'Bodyweight',
+  'Dumbbells',
+  'Bench',
+  'Resistance Bands',
+  'Cables',
+  'Machine',
+  'Smith Machine',
+  'Suspension Trainer',
+  'Stability Ball',
+  'Mini Bands',
+  'Lat Pulldown',
+  'Seated Row',
+  'Leg Extension',
+  'Hamstring Curl',
+  'Cardio Bike',
+  'Treadmill',
+  'Rowing Machine',
+  'Elliptical'
+];
+const CURATED_EQUIPMENT_LIST = CURATED_EQUIPMENT_PRIORITIES.filter(item => EQUIPMENT_LIST.includes(item));
+const CURATED_MUSCLE_GROUPS = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Glutes', 'Abs', 'Core'].filter(item =>
+  MUSCLE_GROUPS.includes(item)
+);
+const BODYWEIGHT_CORE_MUSCLES = new Set(['abs', 'core']);
 
 function expandEquipmentTokens(value = '') {
   return value
@@ -203,6 +231,47 @@ function normalizeExerciseEntry(exercise) {
 
 const NORMALIZED_EXERCISES = EXERCISES.map(normalizeExerciseEntry).filter(Boolean);
 
+function shouldUseTimeBasedPrescription(exercise) {
+  if (!exercise) {
+    return false;
+  }
+  const name = (exercise.name || '').toLowerCase();
+  if ((exercise.movement_pattern || '').toLowerCase() === 'conditioning') {
+    return true;
+  }
+  const equipmentList = Array.isArray(exercise.equipment) ? exercise.equipment : [];
+  const hasBodyweight = equipmentList.some(item => item.toLowerCase().includes('bodyweight'));
+  const muscleGroup = (exercise.muscle_group || '').toLowerCase();
+  if (!hasBodyweight) {
+    return false;
+  }
+  if (BODYWEIGHT_CORE_MUSCLES.has(muscleGroup)) {
+    return true;
+  }
+  return TIME_BASED_KEYWORDS.some(keyword => name.includes(keyword));
+}
+
+function getTimeBasedPrescription(exercise, options = {}) {
+  const name = (exercise?.name || '').toLowerCase();
+  if (name.includes('plank') || name.includes('hold')) {
+    return options.gymxietyMode ? '20-30 sec calm hold' : HOLD_TIME_RANGE;
+  }
+  if (name.includes('carry')) {
+    return options.gymxietyMode ? '25-35 sec steady walk' : '35-45 sec walk';
+  }
+  if (
+    (exercise?.movement_pattern || '').toLowerCase() === 'conditioning' ||
+    name.includes('walk') ||
+    name.includes('bike') ||
+    name.includes('ride') ||
+    name.includes('row') ||
+    name.includes('march')
+  ) {
+    return CONDITIONING_TIME_RANGE;
+  }
+  return options.gymxietyMode ? '20-30 sec controlled tempo' : '30-40 sec steady tempo';
+}
+
 function resolveAllowedIntimidationLevels(cap = '') {
   if (!cap) {
     return null;
@@ -251,6 +320,158 @@ function collectMatchesForMuscle(muscle, options = {}) {
     }
   }
   return matches;
+}
+
+const GOAL_MUSCLE_FALLBACKS = {
+  Strength: ['Back', 'Legs', 'Chest'],
+  Hypertrophy: ['Chest', 'Shoulders', 'Arms'],
+  'Fat Loss': ['Legs', 'Shoulders', 'Abs'],
+  'General Fitness': ['Back', 'Legs', 'Abs']
+};
+
+function inferGoalFromInputs(goalInput, muscles = [], mode = 'dieting') {
+  const normalizedGoal = (goalInput || '').toString().trim();
+  if (normalizedGoal) {
+    return normalizedGoal;
+  }
+  const normalizedMode = (mode || '').toString().trim().toLowerCase();
+  if (normalizedMode.includes('bulk')) {
+    return 'Hypertrophy';
+  }
+  if (normalizedMode.includes('strength')) {
+    return 'Strength';
+  }
+  if (normalizedMode.includes('diet')) {
+    return 'Fat Loss';
+  }
+  const muscleSet = new Set((Array.isArray(muscles) ? muscles : [muscles]).map(muscle => (muscle || '').toString().trim().toLowerCase()));
+  if (muscleSet.has('legs') || muscleSet.has('glutes')) {
+    return 'Strength';
+  }
+  if (muscleSet.has('chest') || muscleSet.has('shoulders') || muscleSet.has('arms') || muscleSet.has('upper chest')) {
+    return 'Hypertrophy';
+  }
+  if (muscleSet.has('abs') || muscleSet.has('core') || muscleSet.has('conditioning')) {
+    return 'Fat Loss';
+  }
+  return 'General Fitness';
+}
+
+function mapExerciseToPlanRow(exercise, index, options = {}) {
+  if (!exercise) {
+    return null;
+  }
+  const {
+    percent = 70,
+    benchMax = 0,
+    squatMax = 0,
+    deadliftMax = 0,
+    noMax = false,
+    repRange = '12-20 reps, light/moderate weight',
+    setsPerExercise = '3 sets',
+    gymxietyMode = false
+  } = options;
+  const exerciseKey = exercise.name;
+  let recommendedWeight = getRecommendedWeight(exercise, benchMax, squatMax, deadliftMax, percent, noMax);
+  let usesWeight = /lbs/i.test(recommendedWeight);
+  const timeBased = shouldUseTimeBasedPrescription(exercise);
+  let displayedRepRange = repRange;
+  let appliedSets = setsPerExercise;
+  if (timeBased) {
+    displayedRepRange = getTimeBasedPrescription(exercise, { gymxietyMode });
+    recommendedWeight = 'Bodyweight / steady tempo';
+    usesWeight = false;
+    appliedSets = gymxietyMode ? GYMXIETY_SETS : setsPerExercise;
+  } else if (!usesWeight) {
+    displayedRepRange = applyRepDeltaToRange(repRange, exerciseKey);
+  }
+  const confidenceAlternative = buildConfidenceAlternative(exercise, {
+    sets: appliedSets,
+    repRange: displayedRepRange
+  });
+  return {
+    id: index,
+    exercise: exerciseKey,
+    name: exerciseKey,
+    baseExercise: exerciseKey,
+    equipment: exercise.equipment.join(', '),
+    muscle: exercise.muscle_group || 'Full Body',
+    repRange: displayedRepRange,
+    reps: displayedRepRange,
+    sets: appliedSets,
+    recommendedWeight,
+    description: exercise.howto,
+    instructions: exercise.howto,
+    video: exercise.video,
+    usesWeight,
+    exerciseKey,
+    confidence: 'Moderate',
+    supportiveCues: [],
+    confidenceAlternative,
+    confidenceApplied: false,
+    rest: undefined
+  };
+}
+
+function buildGoalDrivenFallbackPlan(options = {}) {
+  const {
+    goal = 'General Fitness',
+    gymxietyMode = false,
+    planMeta = null,
+    preferredMuscles = []
+  } = options;
+  const targets = preferredMuscles.length
+    ? preferredMuscles
+    : GOAL_MUSCLE_FALLBACKS[goal] || GOAL_MUSCLE_FALLBACKS['General Fitness'];
+  const usedNames = new Set();
+  const selections = [];
+  targets.forEach(muscle => {
+    const matches = collectMatchesForMuscle(muscle, {
+      equipmentSet: null,
+      preferGymxietySafe: gymxietyMode,
+      allowedIntimidationLevels: gymxietyMode ? resolveAllowedIntimidationLevels('moderate') : null
+    });
+    if (!matches.length) {
+      return;
+    }
+    const pick = matches.find(entry => !usedNames.has(entry.name)) || matches[0];
+    if (pick) {
+      usedNames.add(pick.name);
+      selections.push(pick);
+    }
+  });
+  if (!selections.length) {
+    return null;
+  }
+  const repRange = gymxietyMode ? GYMXIETY_REP_RANGE : '12-20 reps, light/moderate weight';
+  const setsPerExercise = gymxietyMode ? GYMXIETY_SETS : '3 sets';
+  const planRows = selections
+    .slice(0, MAX_STANDARD_MOVEMENTS)
+    .map((exercise, index) =>
+      mapExerciseToPlanRow(exercise, index, {
+        percent: 60,
+        benchMax: 0,
+        squatMax: 0,
+        deadliftMax: 0,
+        noMax: true,
+        repRange,
+        setsPerExercise,
+        gymxietyMode
+      })
+    )
+    .filter(Boolean);
+  if (!planRows.length) {
+    return null;
+  }
+  const focus = Array.from(new Set(planRows.map(row => row.muscle))).slice(0, 2);
+  const summary = {
+    movementCount: planRows.length,
+    focus: focus.length ? focus : targets.slice(0, 2),
+    repRange,
+    setsPerExercise,
+    mode: gymxietyMode ? 'Gymxiety' : 'Goal Fallback'
+  };
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode, planMeta });
 }
 
 const GYMXIETY_CATEGORY_POOLS = {
@@ -674,11 +895,26 @@ function isWeightedEquipment(label = '') {
 
 function buildFallbackRow(entry, index, options = {}) {
   const gymxietyMode = Boolean(options.gymxietyMode);
-  const repRange = gymxietyMode ? GYMXIETY_REP_RANGE : DEFAULT_FALLBACK_REP_RANGE;
-  const sets = gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS;
+  const equipmentTokens = Array.isArray(entry.equipment)
+    ? entry.equipment
+    : expandEquipmentTokens((entry.equipment || '').toString());
+  const pseudoExercise = {
+    name: entry.name,
+    movement_pattern: entry.movement_pattern || 'General',
+    equipment: equipmentTokens.length ? equipmentTokens : ['Bodyweight'],
+    muscle_group: entry.muscle || 'Full Body'
+  };
+  let repRange = gymxietyMode ? GYMXIETY_REP_RANGE : DEFAULT_FALLBACK_REP_RANGE;
+  let sets = gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS;
   const rest = gymxietyMode ? DEFAULT_GYMXIETY_REST : DEFAULT_FALLBACK_REST;
-  const recommendedWeight = gymxietyMode ? GYMXIETY_WEIGHT_TEXT : 'Choose a load that feels steady and light.';
+  let recommendedWeight = gymxietyMode ? GYMXIETY_WEIGHT_TEXT : 'Choose a load that feels steady and light.';
   const supportiveCues = gymxietyMode ? DEFAULT_GYMXIETY_CUES : [];
+  let usesWeight = isWeightedEquipment(entry.equipment || '');
+  if (shouldUseTimeBasedPrescription(pseudoExercise)) {
+    repRange = getTimeBasedPrescription(pseudoExercise, { gymxietyMode });
+    recommendedWeight = GYMXIETY_WEIGHT_TEXT;
+    usesWeight = false;
+  }
   return {
     id: index,
     exercise: entry.name,
@@ -693,7 +929,7 @@ function buildFallbackRow(entry, index, options = {}) {
     description: entry.instructions,
     instructions: entry.instructions,
     video: null,
-    usesWeight: isWeightedEquipment(entry.equipment || ''),
+    usesWeight,
     exerciseKey: entry.name,
     confidence: 'Moderate',
     supportiveCues,
@@ -753,11 +989,11 @@ function ensurePlanPayload(plan, options = {}) {
 }
 
 export function getMuscleGroups() {
-  return MUSCLE_GROUPS;
+  return CURATED_MUSCLE_GROUPS.length ? CURATED_MUSCLE_GROUPS : MUSCLE_GROUPS;
 }
 
 export function getEquipmentList() {
-  return EQUIPMENT_LIST;
+  return CURATED_EQUIPMENT_LIST.length ? CURATED_EQUIPMENT_LIST : EQUIPMENT_LIST;
 }
 
 function getAdjustedPercent(basePercent, exerciseName) {
@@ -935,6 +1171,25 @@ function mapGymxietyCategoryToMuscle(category) {
   }
 }
 
+function mapGymxietyCategoryToPattern(category) {
+  switch (category) {
+    case 'squat':
+      return 'Squat';
+    case 'hinge':
+      return 'Hinge';
+    case 'push':
+      return 'Horizontal Push';
+    case 'pull':
+      return 'Horizontal Pull';
+    case 'arms':
+      return 'Arms';
+    case 'core':
+      return 'Core';
+    default:
+      return 'General';
+  }
+}
+
 function resolveGymxietyCategoryOrder(goal = '') {
   if (!goal) {
     return DEFAULT_GYMXIETY_CATEGORY_ORDER;
@@ -1018,7 +1273,7 @@ function buildGymxietyPlanRow(entry, index) {
   const supportiveCues = alternative?.supportiveCues || fallback.supportiveCues;
   const confidence = alternative ? 'Easy' : 'Moderate';
 
-  return {
+  const row = {
     id: index,
     exercise: exerciseName,
     name: exerciseName,
@@ -1040,6 +1295,19 @@ function buildGymxietyPlanRow(entry, index) {
     confidenceApplied: Boolean(alternative),
     rest: DEFAULT_GYMXIETY_REST
   };
+  const equipmentTokens = expandEquipmentTokens((equipment || '').toString());
+  const pseudoExercise = {
+    name: exerciseName,
+    movement_pattern: mapGymxietyCategoryToPattern(entry.category),
+    equipment: equipmentTokens.length ? equipmentTokens : ['Bodyweight'],
+    muscle_group: muscle
+  };
+  if (shouldUseTimeBasedPrescription(pseudoExercise)) {
+    const durationRange = getTimeBasedPrescription(pseudoExercise, { gymxietyMode: true });
+    row.repRange = durationRange;
+    row.reps = durationRange;
+  }
+  return row;
 }
 
 function buildGymxietyPlannerPlan({ goal, equipmentList }) {
@@ -1097,7 +1365,10 @@ function buildStandardPlannerPlan(options = {}) {
   if (!requestedMuscles.length) {
     planMeta.usedFallback = true;
     planMeta.errorReason = 'missing-muscles';
-    return buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta });
+    return (
+      buildGoalDrivenFallbackPlan({ goal, gymxietyMode: false, planMeta }) ||
+      buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta })
+    );
   }
 
   let plan = [];
@@ -1131,9 +1402,37 @@ function buildStandardPlannerPlan(options = {}) {
   planMeta.matchedMuscles = requestedMuscles.filter(muscle => (muscleMatchCounts[muscle] || 0) > 0);
 
   if (!plan.length) {
+    const relaxedTargets = requestedMuscles.length
+      ? requestedMuscles
+      : GOAL_MUSCLE_FALLBACKS[goal] || GOAL_MUSCLE_FALLBACKS['General Fitness'];
+    const relaxedUsed = new Set();
+    relaxedTargets.forEach(muscle => {
+      const matches = collectMatchesForMuscle(muscle, {
+        equipmentSet: null,
+        preferGymxietySafe: false,
+        allowedIntimidationLevels: null
+      });
+      if (!matches.length) {
+        return;
+      }
+      const pick = matches.find(entry => !relaxedUsed.has(entry.name)) || matches[0];
+      if (pick) {
+        relaxedUsed.add(pick.name);
+        plan.push(pick);
+      }
+    });
+    if (plan.length) {
+      planMeta.relaxedFilters = true;
+    }
+  }
+
+  if (!plan.length) {
     planMeta.usedFallback = true;
     planMeta.errorReason = planMeta.missingMuscles.length ? 'no-matches' : 'missing-muscles';
-    return buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta });
+    return (
+      buildGoalDrivenFallbackPlan({ goal, gymxietyMode: false, planMeta, preferredMuscles: requestedMuscles }) ||
+      buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta })
+    );
   }
 
   if (plan.length >= MIN_STANDARD_MOVEMENTS) {
@@ -1143,44 +1442,20 @@ function buildStandardPlannerPlan(options = {}) {
     }
   }
 
-  const planRows = plan.map((ex, index) => {
-    const baseExerciseName = ex.name;
-    const exerciseKey = baseExerciseName;
-    const recommendedWeight = getRecommendedWeight(
-      ex,
-      benchMax,
-      squatMax,
-      deadliftMax,
-      getAdjustedPercent(percent, exerciseKey),
-      noMax
-    );
-    const usesWeight = /lbs/i.test(recommendedWeight);
-    const displayedRepRange = usesWeight ? repRange : applyRepDeltaToRange(repRange, exerciseKey);
-    const confidenceAlternative = buildConfidenceAlternative(ex, { sets: setsPerExercise, repRange: displayedRepRange });
-
-    return {
-      id: index,
-      exercise: baseExerciseName,
-      name: baseExerciseName,
-      baseExercise: baseExerciseName,
-      equipment: ex.equipment.join(', '),
-      muscle: ex.muscle_group || 'Full Body',
-      repRange: displayedRepRange,
-      reps: displayedRepRange,
-      sets: setsPerExercise,
-      recommendedWeight,
-      description: ex.howto,
-      instructions: ex.howto,
-      video: ex.video,
-      usesWeight,
-      exerciseKey,
-      confidence: 'Moderate',
-      supportiveCues: [],
-      confidenceAlternative,
-      confidenceApplied: false,
-      rest: undefined
-    };
-  });
+  const planRows = plan
+    .map((exercise, index) =>
+      mapExerciseToPlanRow(exercise, index, {
+        percent: getAdjustedPercent(percent, exercise.name),
+        benchMax,
+        squatMax,
+        deadliftMax,
+        noMax,
+        repRange,
+        setsPerExercise,
+        gymxietyMode: false
+      })
+    )
+    .filter(Boolean);
 
   if (!planRows.length) {
     planMeta.usedFallback = true;
