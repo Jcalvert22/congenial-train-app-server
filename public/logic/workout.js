@@ -3,7 +3,8 @@ import {
   MUSCLE_GROUPS,
   EQUIPMENT_LIST,
   BEGINNER_EQUIPMENT,
-  BEGINNER_MUSCLES
+  BEGINNER_MUSCLES,
+  BASIC_EXERCISES
 } from '../data/exercises.js';
 import {
   clamp,
@@ -13,6 +14,10 @@ import {
   MS_PER_DAY
 } from '../utils/helpers.js';
 import { getState, setState } from './state.js';
+import {
+  getConfidenceAlternativeDetails,
+  confidenceAlternativeMap
+} from '../data/confidenceAlternativeMap.js';
 
 const PERCENT_MIN = 30;
 const PERCENT_MAX = 95;
@@ -22,6 +27,266 @@ const PERCENT_OFFSET_MAX = 25;
 const REP_STEP = 2;
 const REP_DELTA_MIN = -6;
 const REP_DELTA_MAX = 6;
+
+const DEFAULT_GYMXIETY_CUES = [
+  'Keep chest tall.',
+  'Move slow and controlled.',
+  'Stop if anything feels sharp or painful.'
+];
+
+const DEFAULT_GYMXIETY_REST = 'Rest 60-90 sec';
+const GYMXIETY_REP_RANGE = '8-12 reps, calm tempo';
+const GYMXIETY_SETS = '2-3 sets';
+const GYMXIETY_WEIGHT_TEXT = 'Use a light setting that feels steady.';
+const DEFAULT_GYMXIETY_DESCRIPTION = 'Move slowly, breathe through each rep, and stop if anything feels sharp.';
+const MIN_GYMXIETY_EXERCISES = 4;
+const MAX_GYMXIETY_EXERCISES = 6;
+const MIN_STANDARD_MOVEMENTS = 3;
+const MAX_STANDARD_MOVEMENTS = 5;
+const DEFAULT_FALLBACK_SETS = '3 sets';
+const DEFAULT_FALLBACK_REP_RANGE = '10 calm reps';
+const DEFAULT_FALLBACK_REST = 'Rest 90 sec';
+
+const DEFAULT_BEGINNER_WORKOUT = [
+  {
+    name: 'Goblet Squat',
+    equipment: 'Dumbbells',
+    muscle: 'Legs',
+    instructions: 'Hold a light dumbbell at chest height, sit back into hips, and stand tall without rushing.'
+  },
+  {
+    name: 'Dumbbell RDL',
+    equipment: 'Dumbbells',
+    muscle: 'Posterior Chain',
+    instructions: 'Hinge at the hips with soft knees, feel hamstrings load, and squeeze glutes to stand up.'
+  },
+  {
+    name: 'Chest Press Machine',
+    equipment: 'Chest Press Machine',
+    muscle: 'Chest',
+    instructions: 'Sit tall against the pad, press handles forward smoothly, and return with control.'
+  },
+  {
+    name: 'Seated Row Machine',
+    equipment: 'Seated Row Machine',
+    muscle: 'Back',
+    instructions: 'Keep chest supported, pull elbows toward ribs, and pause briefly before releasing.'
+  },
+  {
+    name: 'Cable Biceps Curl',
+    equipment: 'Cable Machine',
+    muscle: 'Arms',
+    instructions: 'Stand tall, curl hands toward shoulders, and lower slowly while breathing out.'
+  },
+  {
+    name: 'Cable Triceps Pushdown',
+    equipment: 'Cable Machine',
+    muscle: 'Arms',
+    instructions: 'Keep elbows tucked, press rope down, and pause at the bottom without locking out hard.'
+  },
+  {
+    name: 'Dead Bug',
+    equipment: 'Bodyweight',
+    muscle: 'Core',
+    instructions: 'Lie on your back, lower opposite arm and leg slowly, and exhale through the motion.'
+  }
+];
+
+function mapDefaultEntryToExercise(entry) {
+  if (!entry) {
+    return null;
+  }
+  const equipmentValue = entry.equipment || 'Bodyweight';
+  const equipment = equipmentValue
+    .split('/')
+    .join(',')
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean);
+  return {
+    name: entry.name,
+    equipment: equipment.length ? equipment : ['Bodyweight'],
+    muscle_group: entry.muscle || 'Full Body',
+    howto: entry.instructions,
+    video: ''
+  };
+}
+
+function pickDefaultExerciseForMuscle(muscle = '') {
+  const normalized = (muscle || '').toLowerCase();
+  const match = DEFAULT_BEGINNER_WORKOUT.find(entry =>
+    normalized && entry.muscle && entry.muscle.toLowerCase().includes(normalized)
+  );
+  return mapDefaultEntryToExercise(match || DEFAULT_BEGINNER_WORKOUT[0]);
+}
+
+const GYMXIETY_CATEGORY_POOLS = {
+  squat: [
+    {
+      name: 'Goblet Squat',
+      equipment: 'Dumbbells',
+      muscle: 'Legs',
+      instructions: 'Hold a light dumbbell at chest height, sit down slowly, and stand tall without rushing.',
+      tags: ['dumbbell']
+    },
+    {
+      name: 'Leg Press',
+      equipment: 'Leg Press Machine',
+      muscle: 'Legs',
+      instructions: 'Set feet shoulder-width, press through mid-foot, and control the return.',
+      tags: ['machine']
+    },
+    {
+      name: 'Smith Machine Squat',
+      equipment: 'Smith Machine',
+      muscle: 'Legs',
+      instructions: 'Let the rails guide you, keep chest tall, and move with a calm tempo.',
+      tags: ['smith', 'machine']
+    },
+    {
+      name: 'Bodyweight Squat',
+      equipment: 'Bodyweight',
+      muscle: 'Legs',
+      instructions: 'Reach arms forward as you sit back, then stand up softly.',
+      tags: ['bodyweight']
+    }
+  ],
+  hinge: [
+    {
+      name: 'Dumbbell Romanian Deadlift',
+      equipment: 'Dumbbells',
+      muscle: 'Posterior Chain',
+      instructions: 'Hinge at the hips with soft knees and stand tall while squeezing glutes.',
+      tags: ['dumbbell']
+    },
+    {
+      name: 'Cable Pull-Through',
+      equipment: 'Cable Machine',
+      muscle: 'Glutes',
+      instructions: 'Face away from the cable, let hips travel back, and drive forward calmly.',
+      tags: ['cable']
+    },
+    {
+      name: 'Hip Thrust Machine',
+      equipment: 'Hip Thrust Machine',
+      muscle: 'Glutes',
+      instructions: 'Let the pad support you, press hips upward, and pause briefly on top.',
+      tags: ['machine']
+    },
+    {
+      name: 'Glute Bridge',
+      equipment: 'Bodyweight / Bench',
+      muscle: 'Glutes',
+      instructions: 'Drive through heels, squeeze glutes, and lower with control.',
+      tags: ['bodyweight']
+    }
+  ],
+  push: [
+    {
+      name: 'Chest Press Machine',
+      equipment: 'Chest Press Machine',
+      muscle: 'Chest',
+      instructions: 'Sit tall against the pad, press handles forward, and return slowly.',
+      tags: ['machine']
+    },
+    {
+      name: 'Seated Dumbbell Shoulder Press',
+      equipment: 'Bench + Dumbbells',
+      muscle: 'Shoulders',
+      instructions: 'Brace back against the bench, press bells overhead, and lower for three counts.',
+      tags: ['dumbbell']
+    },
+    {
+      name: 'Cable Chest Press',
+      equipment: 'Cable Machine',
+      muscle: 'Chest',
+      instructions: 'Stagger your stance, press handles forward, and bring them back with control.',
+      tags: ['cable']
+    }
+  ],
+  pull: [
+    {
+      name: 'Seated Row Machine',
+      equipment: 'Seated Row Machine',
+      muscle: 'Back',
+      instructions: 'Keep chest against the pad, pull elbows toward ribs, and squeeze shoulder blades.',
+      tags: ['machine']
+    },
+    {
+      name: 'Lat Pulldown',
+      equipment: 'Lat Pulldown Machine',
+      muscle: 'Back',
+      instructions: 'Hold the bar slightly wider than shoulders, pull toward collarbones, and control back up.',
+      tags: ['machine']
+    },
+    {
+      name: 'Chest-Supported Row',
+      equipment: 'Bench + Dumbbells',
+      muscle: 'Back',
+      instructions: 'Lie on an incline bench, row bells toward hips, and lower slowly.',
+      tags: ['dumbbell']
+    }
+  ],
+  arms: [
+    {
+      name: 'Cable Biceps Curl',
+      equipment: 'Cable Machine',
+      muscle: 'Arms',
+      instructions: 'Stand tall, curl the bar toward shoulders, and lower with control.',
+      tags: ['cable']
+    },
+    {
+      name: 'Cable Triceps Pushdown',
+      equipment: 'Cable Machine',
+      muscle: 'Arms',
+      instructions: 'Keep elbows close, press rope down, and pause briefly at the bottom.',
+      tags: ['cable']
+    },
+    {
+      name: 'Dumbbell Curl',
+      equipment: 'Dumbbells',
+      muscle: 'Arms',
+      instructions: 'Curl bells with soft grip and lower for a steady three-count.',
+      tags: ['dumbbell']
+    }
+  ],
+  core: [
+    {
+      name: 'Dead Bug',
+      equipment: 'Bodyweight',
+      muscle: 'Core',
+      instructions: 'Lie on your back, lower opposite arm and leg slowly, and exhale.',
+      tags: ['bodyweight']
+    },
+    {
+      name: 'Plank',
+      equipment: 'Bodyweight',
+      muscle: 'Core',
+      instructions: 'Press forearms into the floor, keep hips level, and breathe steadily.',
+      tags: ['bodyweight']
+    },
+    {
+      name: 'Machine Crunch',
+      equipment: 'Ab Machine',
+      muscle: 'Core',
+      instructions: 'Brace lightly, crunch forward slowly, and return with control.',
+      tags: ['machine']
+    }
+  ]
+};
+
+const DEFAULT_GYMXIETY_CATEGORY_ORDER = ['squat', 'hinge', 'push', 'pull', 'core', 'arms'];
+
+const GYMXIETY_GOAL_CATEGORY_ORDER = {
+  Strength: ['squat', 'hinge', 'pull', 'push', 'core', 'arms'],
+  Hypertrophy: ['push', 'pull', 'squat', 'arms', 'hinge', 'core'],
+  'Fat Loss': ['hinge', 'squat', 'push', 'pull', 'core', 'arms'],
+  'General Fitness': DEFAULT_GYMXIETY_CATEGORY_ORDER
+};
+
+const MACHINE_ACCESS_TOKENS = ['lat pulldown', 'seated row', 'pec deck', 'leg extension', 'hamstring curl', 'shoulder press', 'squat rack'];
+const DUMBBELL_ACCESS_TOKENS = ['dumbbells', 'bench', 'preacher curl'];
+const CABLE_ACCESS_TOKENS = ['cables', 'lat pulldown', 'seated row', 'pec deck'];
 
 const PLAN_GOAL_CONFIGS = {
   build_muscle: {
@@ -269,6 +534,86 @@ const WORKOUT_LIBRARY = {
   ]
 };
 
+function isWeightedEquipment(label = '') {
+  const normalized = label.toLowerCase();
+  return !normalized.includes('bodyweight');
+}
+
+function buildFallbackRow(entry, index, options = {}) {
+  const gymxietyMode = Boolean(options.gymxietyMode);
+  const repRange = gymxietyMode ? GYMXIETY_REP_RANGE : DEFAULT_FALLBACK_REP_RANGE;
+  const sets = gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS;
+  const rest = gymxietyMode ? DEFAULT_GYMXIETY_REST : DEFAULT_FALLBACK_REST;
+  const recommendedWeight = gymxietyMode ? GYMXIETY_WEIGHT_TEXT : 'Choose a load that feels steady and light.';
+  const supportiveCues = gymxietyMode ? DEFAULT_GYMXIETY_CUES : [];
+  return {
+    id: index,
+    exercise: entry.name,
+    name: entry.name,
+    baseExercise: entry.name,
+    equipment: entry.equipment,
+    muscle: entry.muscle,
+    repRange,
+    reps: repRange,
+    sets,
+    recommendedWeight,
+    description: entry.instructions,
+    instructions: entry.instructions,
+    video: null,
+    usesWeight: isWeightedEquipment(entry.equipment || ''),
+    exerciseKey: entry.name,
+    confidence: 'Moderate',
+    supportiveCues,
+    confidenceAlternative: null,
+    confidenceApplied: false,
+    rest
+  };
+}
+
+function finalizePlanPayload(planRows, summary, meta = {}) {
+  const timestamp = meta.timestamp || new Date().toISOString();
+  return {
+    planRows,
+    exercises: planRows,
+    summary,
+    gymxietyMode: Boolean(meta.gymxietyMode),
+    goal: meta.goal || 'General Fitness',
+    timestamp
+  };
+}
+
+function buildDefaultFallbackPlan(options = {}) {
+  const { goal = 'General Fitness', gymxietyMode = false } = options;
+  const planRows = DEFAULT_BEGINNER_WORKOUT.map((exercise, index) => buildFallbackRow(exercise, index, { gymxietyMode }));
+  const focus = Array.from(new Set(planRows.map(row => row.muscle))).slice(0, 2);
+  const summary = {
+    movementCount: planRows.length,
+    focus,
+    repRange: gymxietyMode ? GYMXIETY_REP_RANGE : DEFAULT_FALLBACK_REP_RANGE,
+    setsPerExercise: gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS,
+    mode: gymxietyMode ? 'Gymxiety' : 'Beginner Reset'
+  };
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode });
+}
+
+function ensurePlanPayload(plan, options = {}) {
+  const safeRows = Array.isArray(plan?.planRows) ? plan.planRows.filter(Boolean) : [];
+  if (!safeRows.length) {
+    return buildDefaultFallbackPlan(options);
+  }
+  const exercises = Array.isArray(plan.exercises) && plan.exercises.length
+    ? plan.exercises.filter(Boolean)
+    : safeRows;
+  return {
+    ...plan,
+    planRows: safeRows,
+    exercises,
+    goal: plan?.goal || options.goal || 'General Fitness',
+    gymxietyMode: typeof plan?.gymxietyMode === 'boolean' ? plan.gymxietyMode : Boolean(options.gymxietyMode),
+    timestamp: plan?.timestamp || new Date().toISOString()
+  };
+}
+
 export function getMuscleGroups() {
   return MUSCLE_GROUPS;
 }
@@ -321,6 +666,376 @@ function updateRepAdjustment(exerciseName, delta) {
     prev.repAdjustments[exerciseName] = next;
     return prev;
   });
+}
+
+function buildConfidenceAlternative(exercise, overrides = {}) {
+  if (!exercise) {
+    return null;
+  }
+  const fallback = {
+    equipment: Array.isArray(exercise.equipment) ? exercise.equipment.join(', ') : exercise.equipment,
+    muscle: exercise.muscle_group,
+    description: exercise.howto,
+    supportiveCues: DEFAULT_GYMXIETY_CUES
+  };
+  const details = getConfidenceAlternativeDetails(exercise.name, fallback);
+  if (!details) {
+    return null;
+  }
+  return {
+    exercise: details.exercise,
+    equipment: details.equipment,
+    muscle: details.muscle,
+    description: details.description,
+    sets: overrides.sets || '2 sets',
+    repRange: overrides.repRange || '8-12 gentle reps',
+    confidence: details.confidence || 'Easy',
+    source: exercise.name,
+    supportiveCues: details.supportiveCues || DEFAULT_GYMXIETY_CUES
+  };
+}
+
+function normalizeEquipmentSelection(list = []) {
+  if (!Array.isArray(list)) {
+    return new Set();
+  }
+  return new Set(
+    list
+      .map(item => (item || '').toString().trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+function hasAnyToken(equipmentSet, tokens = []) {
+  if (!equipmentSet || !equipmentSet.size) {
+    return false;
+  }
+  return tokens.some(token => equipmentSet.has(token));
+}
+
+function userHasMachineAccess(equipmentSet) {
+  if (!equipmentSet || !equipmentSet.size) {
+    return true;
+  }
+  return hasAnyToken(equipmentSet, MACHINE_ACCESS_TOKENS);
+}
+
+function userHasDumbbellAccess(equipmentSet) {
+  if (!equipmentSet || !equipmentSet.size) {
+    return true;
+  }
+  return hasAnyToken(equipmentSet, DUMBBELL_ACCESS_TOKENS);
+}
+
+function userHasCableAccess(equipmentSet) {
+  if (!equipmentSet || !equipmentSet.size) {
+    return true;
+  }
+  return hasAnyToken(equipmentSet, CABLE_ACCESS_TOKENS);
+}
+
+function userHasSmithAccess(equipmentSet) {
+  return userHasMachineAccess(equipmentSet) || (equipmentSet && equipmentSet.has('squat rack'));
+}
+
+function matchesGymxietyEquipmentTags(entry, equipmentSet) {
+  if (!entry?.tags || !entry.tags.length) {
+    return true;
+  }
+  if (!equipmentSet || !equipmentSet.size) {
+    return true;
+  }
+  return entry.tags.every(tag => {
+    switch (tag) {
+      case 'machine':
+        return userHasMachineAccess(equipmentSet);
+      case 'cable':
+        return userHasCableAccess(equipmentSet);
+      case 'dumbbell':
+        return userHasDumbbellAccess(equipmentSet);
+      case 'smith':
+        return userHasSmithAccess(equipmentSet);
+      case 'bodyweight':
+        return true;
+      default:
+        return true;
+    }
+  });
+}
+
+function formatEquipmentLabel(value = '') {
+  return value || 'Bodyweight';
+}
+
+function mapGymxietyCategoryToMuscle(category) {
+  switch (category) {
+    case 'squat':
+      return 'Legs';
+    case 'hinge':
+      return 'Glutes';
+    case 'push':
+      return 'Chest';
+    case 'pull':
+      return 'Back';
+    case 'arms':
+      return 'Arms';
+    case 'core':
+      return 'Core';
+    default:
+      return 'Full Body';
+  }
+}
+
+function resolveGymxietyCategoryOrder(goal = '') {
+  if (!goal) {
+    return DEFAULT_GYMXIETY_CATEGORY_ORDER;
+  }
+  const normalized = goal.trim();
+  return GYMXIETY_GOAL_CATEGORY_ORDER[normalized] || DEFAULT_GYMXIETY_CATEGORY_ORDER;
+}
+
+function pickGymxietyExercise(category, equipmentSet, usedNames) {
+  const pool = GYMXIETY_CATEGORY_POOLS[category] || [];
+  if (!pool.length) {
+    return null;
+  }
+  const available = pool.find(entry => !usedNames.has(entry.name) && matchesGymxietyEquipmentTags(entry, equipmentSet));
+  if (available) {
+    usedNames.add(available.name);
+    return { ...available, category };
+  }
+  const fallback = pool.find(entry => !usedNames.has(entry.name));
+  if (fallback) {
+    usedNames.add(fallback.name);
+    return { ...fallback, category };
+  }
+  return { ...pool[0], category };
+}
+
+function buildGymxietySelections(goal, equipmentList = []) {
+  const equipmentSet = normalizeEquipmentSelection(equipmentList);
+  const order = resolveGymxietyCategoryOrder(goal);
+  const selections = [];
+  const usedNames = new Set();
+
+  order.forEach(category => {
+    if (selections.length >= MAX_GYMXIETY_EXERCISES) {
+      return;
+    }
+    const choice = pickGymxietyExercise(category, equipmentSet, usedNames);
+    if (choice) {
+      selections.push(choice);
+    }
+  });
+
+  let cursor = 0;
+  while (selections.length < MIN_GYMXIETY_EXERCISES && cursor < DEFAULT_GYMXIETY_CATEGORY_ORDER.length) {
+    const fallbackCategory = DEFAULT_GYMXIETY_CATEGORY_ORDER[cursor++];
+    const choice = pickGymxietyExercise(fallbackCategory, equipmentSet, usedNames);
+    if (choice) {
+      selections.push(choice);
+    }
+  }
+
+  if (!selections.length) {
+    DEFAULT_GYMXIETY_CATEGORY_ORDER.forEach(category => {
+      const choice = pickGymxietyExercise(category, equipmentSet, usedNames);
+      if (choice) {
+        selections.push(choice);
+      }
+    });
+  }
+
+  return selections.slice(0, MAX_GYMXIETY_EXERCISES);
+}
+
+function buildGymxietyPlanRow(entry, index) {
+  if (!entry) {
+    return null;
+  }
+  const fallback = {
+    equipment: formatEquipmentLabel(entry.equipment),
+    muscle: entry.muscle || mapGymxietyCategoryToMuscle(entry.category),
+    description: entry.instructions || DEFAULT_GYMXIETY_DESCRIPTION,
+    supportiveCues: DEFAULT_GYMXIETY_CUES
+  };
+  const alternative = confidenceAlternativeMap[entry.name]
+    ? getConfidenceAlternativeDetails(entry.name, fallback)
+    : null;
+  const exerciseName = alternative?.exercise || entry.name;
+  const description = alternative?.description || fallback.description;
+  const equipment = alternative?.equipment || fallback.equipment;
+  const muscle = alternative?.muscle || fallback.muscle;
+  const supportiveCues = alternative?.supportiveCues || fallback.supportiveCues;
+  const confidence = alternative ? 'Easy' : 'Moderate';
+
+  return {
+    id: index,
+    exercise: exerciseName,
+    name: exerciseName,
+    baseExercise: entry.name,
+    equipment,
+    muscle,
+    repRange: GYMXIETY_REP_RANGE,
+    reps: '8-12 reps',
+    sets: GYMXIETY_SETS,
+    recommendedWeight: GYMXIETY_WEIGHT_TEXT,
+    description,
+    instructions: description,
+    video: null,
+    usesWeight: false,
+    exerciseKey: entry.name,
+    confidence,
+    supportiveCues,
+    confidenceAlternative: null,
+    confidenceApplied: Boolean(alternative),
+    rest: DEFAULT_GYMXIETY_REST
+  };
+}
+
+function buildGymxietyPlannerPlan({ goal, equipmentList }) {
+  const selections = buildGymxietySelections(goal, equipmentList);
+  const planRows = selections.map((entry, index) => buildGymxietyPlanRow(entry, index)).filter(Boolean);
+  if (!planRows.length) {
+    return buildDefaultFallbackPlan({ goal, gymxietyMode: true });
+  }
+  const focus = Array.from(new Set(planRows.map(row => row.muscle))).slice(0, 2);
+  const summary = {
+    movementCount: planRows.length,
+    focus,
+    repRange: GYMXIETY_REP_RANGE,
+    setsPerExercise: GYMXIETY_SETS,
+    mode: 'Gymxiety'
+  };
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode: true });
+}
+
+function buildStandardPlannerPlan(options = {}) {
+  const {
+    selectedMuscles = [],
+    selectedEquipment = [],
+    exercisesPerGroup = 3,
+    repRange = '12-20 reps, light/moderate weight',
+    setsPerExercise = '3 sets',
+    percent = 70,
+    noMax = false,
+    benchMax = 0,
+    squatMax = 0,
+    deadliftMax = 0,
+    mode = 'dieting',
+    goal = 'General Fitness'
+  } = options;
+
+  let plan = [];
+  selectedMuscles.forEach(muscle => {
+    let baseMatches = EXERCISES.filter(
+      ex =>
+        ex.muscle_group === muscle &&
+        ex.equipment.some(eq => selectedEquipment.includes(eq) || (eq === 'Bodyweight' && selectedEquipment.includes('Bodyweight Only')))
+    );
+    if (!baseMatches.length) {
+      const fallbackExercise = pickDefaultExerciseForMuscle(muscle);
+      if (fallbackExercise) {
+        baseMatches = [fallbackExercise];
+      }
+    }
+    const shuffled = shuffleArray(baseMatches);
+    plan = plan.concat(shuffled.slice(0, exercisesPerGroup));
+  });
+
+  if (!plan.length) {
+    const fallbackCount = Math.max(MIN_STANDARD_MOVEMENTS, exercisesPerGroup * 2);
+    plan = BASIC_EXERCISES.slice(0, fallbackCount).map(ex => ({
+      ...ex,
+      howto: ex.howto || `Move through ${ex.name} with calm, steady reps.`,
+      video: ex.video || ''
+    }));
+  }
+
+  if (!plan.length) {
+    plan = DEFAULT_BEGINNER_WORKOUT.map(entry => mapDefaultEntryToExercise(entry)).filter(Boolean);
+  }
+
+  if (plan.length >= MIN_STANDARD_MOVEMENTS) {
+    const targetCount = Math.min(plan.length, MAX_STANDARD_MOVEMENTS);
+    if (plan.length > targetCount) {
+      plan = shuffleArray(plan).slice(0, targetCount);
+    }
+  }
+
+  const planRows = plan.map((ex, index) => {
+    const baseExerciseName = ex.name;
+    const exerciseKey = baseExerciseName;
+    const recommendedWeight = getRecommendedWeight(
+      ex,
+      benchMax,
+      squatMax,
+      deadliftMax,
+      getAdjustedPercent(percent, exerciseKey),
+      noMax
+    );
+    const usesWeight = /lbs/i.test(recommendedWeight);
+    const displayedRepRange = usesWeight ? repRange : applyRepDeltaToRange(repRange, exerciseKey);
+    const confidenceAlternative = buildConfidenceAlternative(ex, { sets: setsPerExercise, repRange: displayedRepRange });
+
+    return {
+      id: index,
+      exercise: baseExerciseName,
+      name: baseExerciseName,
+      baseExercise: baseExerciseName,
+      equipment: ex.equipment.join(', '),
+      muscle: ex.muscle_group || 'Full Body',
+      repRange: displayedRepRange,
+      reps: displayedRepRange,
+      sets: setsPerExercise,
+      recommendedWeight,
+      description: ex.howto,
+      instructions: ex.howto,
+      video: ex.video,
+      usesWeight,
+      exerciseKey,
+      confidence: 'Moderate',
+      supportiveCues: [],
+      confidenceAlternative,
+      confidenceApplied: false,
+      rest: undefined
+    };
+  });
+
+  if (!planRows.length) {
+    return buildDefaultFallbackPlan({ goal, gymxietyMode: false });
+  }
+
+  const focus = planRows.length
+    ? Array.from(new Set(planRows.map(row => row.muscle))).slice(0, 2)
+    : selectedMuscles.slice(0, 2);
+  const summary = {
+    movementCount: planRows.length || 0,
+    focus: focus.length ? focus : ['Full Body'],
+    repRange,
+    setsPerExercise,
+    mode: mode === 'bulking' ? 'Bulking' : 'Dieting'
+  };
+
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode: false });
+}
+
+export function generateWorkout(goal, equipment = [], gymxietyMode = false, extraOptions = {}) {
+  const normalizedGoal = typeof goal === 'string' && goal.trim() ? goal.trim() : 'General Fitness';
+  const normalizedEquipment = Array.isArray(equipment) ? equipment : [equipment].filter(Boolean);
+  try {
+    const plan = gymxietyMode
+      ? buildGymxietyPlannerPlan({ goal: normalizedGoal, equipmentList: normalizedEquipment })
+      : buildStandardPlannerPlan({
+          ...extraOptions,
+          goal: normalizedGoal,
+          selectedEquipment: extraOptions.selectedEquipment || normalizedEquipment
+        });
+    return ensurePlanPayload(plan, { goal: normalizedGoal, gymxietyMode });
+  } catch (error) {
+    console.warn('generateWorkout fallback applied', error);
+    return buildDefaultFallbackPlan({ goal: normalizedGoal, gymxietyMode });
+  }
 }
 
 function calculateStreak(workouts) {
@@ -553,7 +1268,7 @@ export function generateStructuredPlan(profile = {}) {
       if (weekIndex === 0 && workoutIndex === 0) {
         return;
       }
-      upcoming.push({ id: workout.id, label: `Week ${week.weekNumber} · ${workout.name}` });
+      upcoming.push({ id: workout.id, label: `Week ${week.weekNumber} - ${workout.name}` });
     });
   });
 
@@ -607,13 +1322,18 @@ export function createPlannerPlan(options = {}) {
   const workoutTime = Number.parseInt(options.workoutTime, 10) || 60;
   const exercisesPerGroup = workoutTime <= 45 ? 2 : 3;
   const beginnerMode = Boolean(options.beginnerMode);
+  const gymxietyMode = Boolean(options.gymxietyMode);
 
   let benchMax = noMax ? 0 : Number.parseFloat(options.benchMax) || 0;
   let squatMax = noMax ? 0 : Number.parseFloat(options.squatMax) || 0;
   let deadliftMax = noMax ? 0 : Number.parseFloat(options.deadliftMax) || 0;
 
-  const repRange = mode === 'bulking' ? '4-8 reps, heavy weight' : '12-20 reps, light/moderate weight';
-  const setsPerExercise = mode === 'bulking' ? '4 sets' : '3 sets';
+  let repRange = mode === 'bulking' ? '4-8 reps, heavy weight' : '12-20 reps, light/moderate weight';
+  let setsPerExercise = mode === 'bulking' ? '4 sets' : '3 sets';
+  if (gymxietyMode) {
+    repRange = GYMXIETY_REP_RANGE;
+    setsPerExercise = GYMXIETY_SETS;
+  }
 
   let filteredEquipment = selectedEquipment;
   let filteredMuscles = selectedMuscles;
@@ -622,56 +1342,36 @@ export function createPlannerPlan(options = {}) {
     filteredMuscles = filteredMuscles.filter(mg => BEGINNER_MUSCLES.includes(mg));
   }
 
-  let plan = [];
-  filteredMuscles.forEach(muscle => {
-    const matches = EXERCISES.filter(ex =>
-      ex.muscle_group === muscle &&
-      ex.equipment.some(eq => filteredEquipment.includes(eq) || (eq === 'Bodyweight' && filteredEquipment.includes('Bodyweight Only')))
-    );
-    const shuffled = shuffleArray(matches);
-    plan = plan.concat(shuffled.slice(0, exercisesPerGroup));
-  });
-
-  const MIN_MOVEMENTS = 3;
-  const MAX_MOVEMENTS = 5;
-  if (plan.length >= MIN_MOVEMENTS) {
-    const targetCount = Math.min(plan.length, MAX_MOVEMENTS);
-    if (plan.length > targetCount) {
-      plan = shuffleArray(plan).slice(0, targetCount);
-    }
+  if (!filteredEquipment.length) {
+    filteredEquipment = selectedEquipment;
+  }
+  if (!filteredMuscles.length) {
+    filteredMuscles = selectedMuscles;
   }
 
-  const planRows = plan.map((ex, index) => {
-    const exerciseKey = ex.name;
-    const adjustedPercent = getAdjustedPercent(percent, exerciseKey);
-    const recommendedWeight = getRecommendedWeight(ex, benchMax, squatMax, deadliftMax, adjustedPercent, noMax);
-    const usesWeight = /lbs/i.test(recommendedWeight);
-    const displayedRepRange = usesWeight ? repRange : applyRepDeltaToRange(repRange, exerciseKey);
-    return {
-      id: index,
-      exercise: ex.name,
-      equipment: ex.equipment.join(', '),
-      muscle: ex.muscle_group,
-      repRange: displayedRepRange,
-      sets: setsPerExercise,
-      recommendedWeight,
-      description: ex.howto,
-      video: ex.video,
-      usesWeight,
-      exerciseKey
-    };
-  });
+  const inferredGoal = inferGoalFromInputs(options.goal || options.goalPreference || options.goalName, filteredMuscles, mode);
 
-  return {
-    planRows,
-    summary: {
-      movementCount: planRows.length || 0,
-      focus: filteredMuscles.slice(0, 2),
-      repRange,
-      setsPerExercise,
-      mode: mode === 'bulking' ? 'Bulking' : 'Dieting'
-    }
+  const generationOptions = {
+    selectedEquipment: filteredEquipment,
+    selectedMuscles: filteredMuscles,
+    exercisesPerGroup: gymxietyMode ? MIN_GYMXIETY_EXERCISES : exercisesPerGroup,
+    repRange,
+    setsPerExercise,
+    percent,
+    noMax,
+    benchMax,
+    squatMax,
+    deadliftMax,
+    mode
   };
+
+  try {
+    const plan = generateWorkout(inferredGoal, filteredEquipment, gymxietyMode, generationOptions);
+    return ensurePlanPayload(plan, { goal: inferredGoal, gymxietyMode });
+  } catch (error) {
+    console.warn('createPlannerPlan fallback applied', error);
+    return buildDefaultFallbackPlan({ goal: inferredGoal, gymxietyMode });
+  }
 }
 
 export function storePlannerResult(result) {

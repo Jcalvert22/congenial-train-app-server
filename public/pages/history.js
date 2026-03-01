@@ -3,8 +3,7 @@ import { getHistory } from '../data/history.js';
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
-  wrapWithPageLoading,
-  revealPageContent
+  renderPageShell
 } from '../components/stateCards.js';
 
 export function formatDate(isoString) {
@@ -108,7 +107,9 @@ function renderHistoryList(entries) {
 }
 
 export function renderHistoryPage() {
+  let isLoading = true;
   const history = getHistory();
+  isLoading = false;
   if (!Array.isArray(history)) {
     const sections = `
       ${renderHeader()}
@@ -119,18 +120,17 @@ export function renderHistoryPage() {
         actionHref: '#/dashboard'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading history...');
+    return renderPageShell(sections, { isLoading });
   }
   const entries = history.slice().reverse();
   const sections = `
     ${renderHeader()}
     ${entries.length ? renderHistoryList(entries) : renderEmptyState()}
   `;
-  return wrapWithPageLoading(sections, 'Loading history...');
+  return renderPageShell(sections, { isLoading });
 }
 
 export function attachHistoryPageEvents(root) {
-  revealPageContent(root);
   if (typeof window !== 'undefined') {
     window.scrollTo(0, 0);
   }

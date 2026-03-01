@@ -22,7 +22,7 @@ function buildHero(cta) {
         <span class="landing-tag">Pricing</span>
         <h1>Simple, transparent pricing.</h1>
         <p class="landing-subtext lead">Start your beginner journey with confidence. No pressure, no confusion.</p>
-        <p>Every membership includes the same calm tools—no tiers, no upsells. Just steady guidance that keeps things approachable.</p>
+        <p>Every membership includes the same calm tools - no tiers, no upsells. Just steady guidance that keeps things approachable.</p>
         <div class="landing-actions">
           <a class="landing-button" href="${cta.href}">${cta.label}</a>
           <a class="landing-button secondary" href="#/program-generator">Explore features</a>
@@ -31,7 +31,7 @@ function buildHero(cta) {
       <div class="landing-card emphasis" aria-hidden="true">
         <p class="landing-subtext">Soft visual</p>
         <h3>Structure without stress</h3>
-        <p>Planner · Library · Workout summaries</p>
+        <p>Planner - Library - Workout summaries</p>
         <div class="landing-stat-list">
           <div class="landing-stat">
             <strong>7.99</strong>
@@ -67,8 +67,8 @@ function buildPlanCard(cta) {
       <h2>One calm plan for everyone.</h2>
       <div class="landing-grid landing-grid-two">
         <article class="landing-card">
-          <div class="landing-card-image" aria-hidden="true">🌿</div>
-          <h3>AllAccess · $7.99 / month</h3>
+          <div class="landing-card-image" aria-hidden="true">&#x1F33F;</div>
+          <h3>AllAccess - $7.99 / month</h3>
           <p>Try it free, then stay for gentle coaching, steady reminders, and a planner made for nervous beginners.</p>
           <ul class="landing-list">
             ${benefits.slice(0, 4).map(item => `<li>${item}</li>`).join('')}
@@ -78,8 +78,8 @@ function buildPlanCard(cta) {
           </div>
         </article>
         <article class="landing-card">
-          <h3>Annual · $49.99 / year</h3>
-          <p>Same calm features, just one easy payment—and two months on us.</p>
+          <h3>Annual - $49.99 / year</h3>
+          <p>Same calm features, just one easy payment - and two months on us.</p>
           <ul class="landing-list">
             ${benefits.slice(4).map(item => `<li>${item}</li>`).join('')}
           </ul>
@@ -123,7 +123,7 @@ function buildWhySection() {
 
 function buildFaqSection() {
   const faqs = [
-    { q: 'Can I cancel anytime?', a: 'Yes. Manage your membership from the account screen—no hidden hoops.' },
+    { q: 'Can I cancel anytime?', a: 'Yes. Manage your membership from the account screen - no hidden hoops.' },
     { q: 'Is this good for absolute beginners?', a: 'Every feature was written for day-one lifters who want gentle coaching.' },
     { q: 'Do I need equipment?', a: 'No. Start with bodyweight-only and add gear when you are ready.' },
     { q: 'What happens after my trial?', a: 'You choose to continue monthly or yearly. If you do nothing, access simply pauses.' }
@@ -149,7 +149,7 @@ function buildCtaSection(cta) {
     <section class="landing-section landing-cta">
       <p class="landing-subtext">Ready when you are</p>
       <h2>Start your free trial today.</h2>
-      <p>Sign up when it feels right—no pressure, just steady support.</p>
+      <p>Sign up when it feels right - no pressure, just steady support.</p>
       <div class="landing-actions">
         <a class="landing-button" href="${cta.href}">${cta.label}</a>
         <a class="landing-button secondary" href="#/exercise-library">Preview the library</a>

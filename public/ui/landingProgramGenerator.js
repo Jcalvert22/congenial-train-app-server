@@ -5,7 +5,7 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
-const SAMPLE_ICONS = ['🏋️', '🧘', '💪', '🌀'];
+const SAMPLE_ICONS = ['\u{1F3CB}', '\u{1F9D8}', '\u{1F4AA}', '\u{1F300}'];
 
 const STEPS = [
   {
@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     title: 'Pick your equipment',
-    copy: 'Select whatever you actually have—apartment dumbbells, hotel gym, or just bodyweight.'
+    copy: 'Select whatever you actually have - apartment dumbbells, hotel gym, or just bodyweight.'
   },
   {
     title: 'We build the plan',
@@ -77,7 +77,7 @@ function buildHero(profile, cta) {
       <div>
         <p class="landing-subtext">Beginner friendly</p>
         <h1>Workout Program Generator</h1>
-        <p class="landing-subtext lead">Creates calm, beginner-ready programs based on your goals, experience, and equipment—so you can follow a plan without overwhelm.</p>
+        <p class="landing-subtext lead">Creates calm, beginner-ready programs based on your goals, experience, and equipment - so you can follow a plan without overwhelm.</p>
         <ul class="landing-list">
           <li>Goal detected: <strong>${escapeHTML(goal)}</strong></li>
           <li>Equipment noted: <strong>${escapeHTML(equipment)}</strong></li>
@@ -88,16 +88,16 @@ function buildHero(profile, cta) {
         </div>
       </div>
       <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Today · Full Body Calm</p>
+        <p class="landing-subtext">Today - Full Body Calm</p>
         <ul class="landing-list">
           ${SAMPLE_EXERCISES.slice(0, 3).map(exercise => `
             <li>
               <span>${escapeHTML(exercise.name)}</span>
-              <small>${escapeHTML(exercise.sets)} · ${escapeHTML(exercise.reps)} · ${escapeHTML(exercise.rest)}</small>
+              <small>${escapeHTML(exercise.sets)} - ${escapeHTML(exercise.reps)} - ${escapeHTML(exercise.rest)}</small>
             </li>
           `).join('')}
         </ul>
-        <p class="landing-subtext">Locked in for you — just tap start.</p>
+        <p class="landing-subtext">Locked in for you - just tap start.</p>
       </div>
     </header>
   `;
@@ -111,7 +111,7 @@ function buildSteps() {
       <div class="landing-grid">
         ${STEPS.map(step => `
           <article class="landing-card">
-            <div class="landing-card-image">✦</div>
+            <div class="landing-card-image">&#x2726;</div>
             <h3>${escapeHTML(step.title)}</h3>
             <p>${escapeHTML(step.copy)}</p>
           </article>
@@ -136,7 +136,7 @@ function buildSampleProgram(profile) {
             <article class="landing-card">
               <div class="landing-card-image">${SAMPLE_ICONS[index % SAMPLE_ICONS.length]}</div>
               <h3>${escapeHTML(exercise.name)}</h3>
-              <p>${escapeHTML(exercise.sets)} · ${escapeHTML(exercise.reps)} · ${escapeHTML(exercise.rest)}</p>
+              <p>${escapeHTML(exercise.sets)} - ${escapeHTML(exercise.reps)} - ${escapeHTML(exercise.rest)}</p>
               <span class="landing-chip">${escapeHTML(exercise.equipment)}</span>
             </article>
           `).join('')}
@@ -154,7 +154,7 @@ function buildBenefits() {
       <div class="landing-grid">
         ${BENEFITS.map(benefit => `
           <article class="landing-card">
-            <div class="landing-card-image">☺︎</div>
+            <div class="landing-card-image">&#x263A;</div>
             <h3>${escapeHTML(benefit.title)}</h3>
             <p>${escapeHTML(benefit.copy)}</p>
           </article>

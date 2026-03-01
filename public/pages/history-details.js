@@ -3,8 +3,7 @@ import { getHistory } from '../data/history.js';
 import { getAuth } from '../auth/state.js';
 import {
   renderErrorStateCard,
-  wrapWithPageLoading,
-  revealPageContent
+  renderPageShell
 } from '../components/stateCards.js';
 
 function formatDateLabel(dateValue) {
@@ -26,7 +25,7 @@ function renderHeader(dateLabel) {
       <div class="landing-hero-content">
         <span class="landing-tag">History detail</span>
         <h1>Workout Details</h1>
-        <p class="landing-subtext lead">Completed on ${escapeHTML(dateLabel)} · logged for ${escapeHTML(firstName)}</p>
+        <p class="landing-subtext lead">Completed on ${escapeHTML(dateLabel)} - logged for ${escapeHTML(firstName)}</p>
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Reflection tip</p>
@@ -89,7 +88,7 @@ function renderExercises(exercises) {
   const cards = list.map(exercise => `
     <article class="landing-card">
       <h3>${escapeHTML(exercise.name || 'Exercise')}</h3>
-      <p class="landing-subtext">${escapeHTML(exercise.sets || '?')} × ${escapeHTML(exercise.reps || '?')} · ${escapeHTML(exercise.rest || 'Rest 40-60 sec')}</p>
+      <p class="landing-subtext">${escapeHTML(exercise.sets || '?')} x ${escapeHTML(exercise.reps || '?')} - ${escapeHTML(exercise.rest || 'Rest 40-60 sec')}</p>
       <p>${escapeHTML(exercise.instructions || 'Move slowly, breathe through the hardest part, and stop if form slips.')}</p>
     </article>
   `).join('');
@@ -116,7 +115,9 @@ function renderNavigation() {
 }
 
 export function renderHistoryDetails(id) {
+  let isLoading = true;
   const history = getHistory();
+  isLoading = false;
   if (!Array.isArray(history)) {
     const sections = `
       ${renderHeader('Unknown date')}
@@ -127,7 +128,7 @@ export function renderHistoryDetails(id) {
         actionHref: '#/dashboard'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout details...');
+    return renderPageShell(sections, { isLoading });
   }
   const entry = history.find(item => String(item.id) === String(id));
   if (!entry) {
@@ -140,7 +141,7 @@ export function renderHistoryDetails(id) {
         actionHref: '#/history'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout details...');
+    return renderPageShell(sections, { isLoading });
   }
   const dateLabel = formatDateLabel(entry.date);
   const sections = `
@@ -150,11 +151,10 @@ export function renderHistoryDetails(id) {
     ${renderExercises(entry.exercises)}
     ${renderNavigation()}
   `;
-  return wrapWithPageLoading(sections, 'Loading workout details...');
+  return renderPageShell(sections, { isLoading });
 }
 
 export function attachHistoryDetailsEvents(root) {
-  revealPageContent(root);
   if (typeof window !== 'undefined') {
     window.scrollTo(0, 0);
   }

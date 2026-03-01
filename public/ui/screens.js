@@ -41,6 +41,7 @@ import { renderHistoryPage, attachHistoryPageEvents } from '../pages/history.js'
 import { renderProfilePage, attachProfilePageEvents } from '../pages/profile.js';
 import { renderProfileEdit, attachProfileEditEvents } from '../pages/profile-edit.js';
 import { renderFooter } from './footer.js';
+import { revealPageContent } from '../components/stateCards.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
 import { getAuth } from '../auth/state.js';
 import { updateNavbar } from '../components/navbar.js';
@@ -367,109 +368,6 @@ a { color: inherit; text-decoration: none; }
   opacity: 1;
   transform: translateY(0);
 }
-.relaxed-section {
-  margin-top: 36px;
-  padding: 36px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(176,255,221,0.18);
-  box-shadow: 0 28px 58px rgba(0,0,0,0.38);
-}
-.relaxed-header {
-  text-align: center;
-  margin-bottom: 36px;
-}
-.relaxed-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-.relaxed-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 180px;
-}
-.relaxed-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-}
-.subscription-section {
-  margin-top: 32px;
-  padding: 36px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, rgba(20,40,38,0.95), rgba(28,60,54,0.9));
-  border: 1px solid rgba(176,255,221,0.2);
-  box-shadow: 0 28px 58px rgba(0,0,0,0.42);
-}
-.subscription-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-.subscription-card {
-  background: rgba(8,18,18,0.35);
-  border: 1px solid rgba(176,255,221,0.18);
-  border-radius: 20px;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.35);
-}
-.subscription-pricing {
-  margin-top: 28px;
-  padding: 24px;
-  border-radius: 20px;
-  border: 1px solid rgba(176,255,221,0.25);
-  background: rgba(6,16,15,0.45);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  align-items: center;
-}
-.subscription-pricing > div {
-  flex: 1 1 220px;
-}
-.pricing-amounts {
-  display: flex;
-  gap: 14px;
-  align-items: baseline;
-  justify-content: flex-end;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #e8fff5;
-}
-.pricing-amounts span:last-child {
-  font-size: 1rem;
-  opacity: 0.85;
-}
-.subscription-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px 24px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #a5e8c7, #54a887);
-  color: #06251d;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 22px 40px rgba(32,110,86,0.4);
-}
-.subscription-pricing .subscription-cta {
-  flex: 0 0 auto;
-  min-width: 200px;
-}
 .badge {
   display: inline-flex;
   align-items: center;
@@ -502,20 +400,6 @@ form label.option {
   color: var(--muted);
   cursor: pointer;
   font-size: 0.85rem;
-}
-.primary-btn {
-  display: inline-flex;
-  justify-content: center;
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  margin-top: 14px;
 }
 .info-grid {
   display: grid;
@@ -779,10 +663,6 @@ footer {
   .header-inner { flex-direction: column; gap: 12px; }
   .nav-links { justify-content: center; }
   .page-shell { padding: 36px 18px 64px; }
-  .relaxed-section { padding: 32px 22px; }
-  .subscription-section { padding: 32px 22px; }
-  .subscription-pricing { flex-direction: column; align-items: stretch; }
-  .subscription-pricing .subscription-cta { width: 100%; min-width: 0; }
   .pricing-amounts { justify-content: flex-start; }
   .plan-overview { grid-template-columns: 1fr; }
   .plan-card { padding: 24px; }
@@ -877,6 +757,7 @@ export function startApp() {
       if (typeof routeResult.afterRender === 'function') {
         routeResult.afterRender(root, state, routeKey);
       }
+      revealPageContent(root, 0);
     });
     lastRenderedHash = hash;
   };
@@ -936,10 +817,13 @@ function activatePageFade(root) {
   if (!fadeEl) {
     return;
   }
+  const alreadyVisible = fadeEl.classList.contains('visible');
+  if (!alreadyVisible) {
+    requestAnimationFrame(() => fadeEl.classList.add('visible'));
+    return;
+  }
   fadeEl.classList.remove('visible');
-  requestAnimationFrame(() => {
-    setTimeout(() => fadeEl.classList.add('visible'), 20);
-  });
+  requestAnimationFrame(() => fadeEl.classList.add('visible'));
 }
 
 function renderAppPage(sections, options = {}) {
@@ -1078,7 +962,7 @@ function renderFeaturesShowcase() {
     <section class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Gentle toolkit</span>
-        <h1>Everything a calm beginner needs—nothing that rattles you.</h1>
+        <h1>Everything a calm beginner needs - nothing that rattles you.</h1>
         <p class="landing-subtext lead">Peek at the modules inside AllAroundAthlete before you unlock them.</p>
         <p>Each feature is built to keep nervous starters grounded. Clear copy, short actions, and reminders that it is okay to move slowly.</p>
         <div class="landing-actions">
@@ -1108,30 +992,22 @@ function renderHome(state, auth) {
   return `
     <section class="landing-hero">
       <div class="landing-hero-content">
-        <span class="landing-tag">Beginner friendly</span>
-        <h1>Structure without stress for brand-new lifters.</h1>
-        <p class="landing-subtext lead">The only beginner app that swaps loud, crowded advice for calm, plain steps.</p>
-        <p>Other starter tools assume you already speak gym; we slow everything down. You get short workouts, soft words, and zero pressure—plus tiny etiquette nudges so walking in feels natural.</p>
-        <ul class="landing-list landing-list-check">
-          ${HOME_BENEFITS.map(item => `<li>${escapeHTML(item)}</li>`).join('')}
-        </ul>
-        <div class="landing-pill-list">
-          ${HOME_PILLARS.map(point => `<span class="landing-pill">${escapeHTML(point)}</span>`).join('')}
-        </div>
-        <div class="landing-actions">
-          <a class="landing-button" href="${cta.href}">${cta.label}</a>
-          <a class="landing-button secondary" href="#relaxed">Learn More</a>
-        </div>
+        <span class="landing-tag">Gymxiety Mode</span>
+        <h1>Workouts that feel safe, simple, and beginner-friendly.</h1>
+        <p class="landing-subtext lead">
+          Gymxiety Mode removes the pressure, confusion, and intimidation of the gym &mdash; so you can build confidence one step at a time.
+        </p>
+        <a href="${ROUTE_HASHES['start-trial']}" class="primary-btn">Start Your 7-day Trial</a>
       </div>
       <div class="landing-hero-aside">
         <div class="landing-card emphasis">
-          <div class="landing-label">Why it stays calm</div>
+          <div class="landing-label">Why it feels safe</div>
           <ul class="landing-list landing-list-check">
             ${HOME_CALM_POINTS.map(point => `<li>${escapeHTML(point)}</li>`).join('')}
           </ul>
         </div>
         <div class="landing-card landing-card-compact">
-          <div class="landing-label">What to expect</div>
+          <div class="landing-label">Confidence boosters</div>
           <div class="landing-stat-list">
             ${HOME_STATS.map(stat => `
               <div class="landing-stat">
@@ -1143,85 +1019,144 @@ function renderHome(state, auth) {
         </div>
       </div>
     </section>
-    <section class="relaxed-section" id="relaxed">
-      <div class="relaxed-header">
-        <h3>A Relaxed Approach to Fitness</h3>
-        <p>AllAroundAthlete is a calm corner of the gym world. We keep steps tiny, words soft, and guidance steady so you can focus on just showing up.</p>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>A calmer way to start your fitness journey.</h2>
+        <p class="landing-text">
+          Most workout apps assume you already know what you're doing. Gymxiety Mode is different. It is designed for people who want to get stronger without feeling overwhelmed, judged, or lost in the gym.
+        </p>
+        <ul class="landing-list">
+          <li><strong>Simple, stable exercises</strong> that feel safe to perform</li>
+          <li><strong>Beginner-friendly alternatives</strong> to intimidating movements</li>
+          <li><strong>Supportive step-by-step cues</strong> instead of technical jargon</li>
+          <li><strong>A calm, steady pace</strong> with no pressure to "push harder"</li>
+          <li><strong>Workouts that build confidence</strong>, not anxiety</li>
+        </ul>
       </div>
-      <div class="relaxed-grid">
-        <article class="relaxed-card">
-          <div class="relaxed-icon" aria-hidden="true">🌿</div>
-          <h4>No overwhelming choices</h4>
+    </section>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>Because confidence comes before intensity.</h2>
+        <p class="landing-text">
+          Walking into a gym can feel overwhelming &mdash; the equipment, the people, the pressure to "know what you're doing." Gymxiety Mode helps you take the first step without fear. Every workout is designed to feel approachable, doable, and safe.
+        </p>
+      </div>
+    </section>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>Beginner-friendly workouts, built intelligently.</h2>
+        <p class="landing-text">
+          When Gymxiety Mode is on, your workouts automatically adjust to your comfort level:
+        </p>
+        <ul class="landing-list">
+          <li>Complex barbell lifts become simple, stable alternatives</li>
+          <li>Heavy free-weight movements become machine-based options</li>
+          <li>Technical cues become easy, supportive guidance</li>
+          <li>Volume adjusts to a pace that feels manageable</li>
+        </ul>
+        <p class="landing-text">
+          You still get effective, full-body training &mdash; just without the intimidation.
+        </p>
+      </div>
+    </section>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>What makes Gymxiety Mode different?</h2>
+        <ul class="landing-list">
+          <li>Confidence-based exercise selection</li>
+          <li>Easier alternatives for intimidating movements</li>
+          <li>Supportive microcopy throughout your workout</li>
+          <li>Calmer transitions and pacing</li>
+          <li>Beginner-friendly instructions</li>
+          <li>No pressure, no jargon, no judgment</li>
+        </ul>
+      </div>
+    </section>
+    <section class="landing-section landing-section-dark" id="relaxed">
+      <p class="landing-subtext">Philosophy</p>
+      <h2>A Relaxed Approach to Fitness</h2>
+      <p class="landing-text">AllAroundAthlete is a calm corner of the gym world. We keep steps tiny, words soft, and guidance steady so you can focus on just showing up.</p>
+      <div class="landing-grid landing-grid-two">
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F33F;</div>
+          <h3>No overwhelming choices</h3>
           <p>We pick a handful of moves for you, explain why they matter, and remove extra buttons so you can press start without second-guessing.</p>
         </article>
-        <article class="relaxed-card">
-          <div class="relaxed-icon" aria-hidden="true">🔢</div>
-          <h4>No complicated metrics</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F522;</div>
+          <h3>No complicated metrics</h3>
           <p>You will never see mystery charts or math puzzles. Just plain reps, sets, and soft reminders to breathe and move with control.</p>
         </article>
-        <article class="relaxed-card">
-          <div class="relaxed-icon" aria-hidden="true">🧭</div>
-          <h4>Simple, guided workouts</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F9ED;</div>
+          <h3>Simple, guided workouts</h3>
           <p>Each session feels like a friend texting you what to do next. Short cues, gentle pacing, and check-ins keep you grounded from warm-up to finisher.</p>
         </article>
-        <article class="relaxed-card">
-          <div class="relaxed-icon" aria-hidden="true">💛</div>
-          <h4>Designed for gym anxiety</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F49B;</div>
+          <h3>Designed for gym anxiety</h3>
           <p>Etiquette nudges, shared-space tips, and calm language help you walk in with confidence even if gyms have felt scary before.</p>
         </article>
       </div>
     </section>
-    <section class="subscription-section" id="subscription-benefits">
-      <div class="subscription-header">
-        <h3>What You Get With Your Subscription</h3>
-        <p>Unlock every calm tool we build—designed for brand-new lifters who want structure without stress.</p>
-      </div>
-      <div class="subscription-grid">
-        <article class="subscription-card">
-          <div class="subscription-icon" aria-hidden="true">🧩</div>
-          <h4>Personalized training plan</h4>
+    <section class="landing-section landing-section-dark" id="subscription-benefits">
+      <p class="landing-subtext">Membership</p>
+      <h2>What You Get With Your Subscription</h2>
+      <p class="landing-text">Unlock every calm tool we build &mdash; designed for brand-new lifters who want structure without stress.</p>
+      <div class="landing-grid landing-grid-two">
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F9E9;</div>
+          <h3>Personalized training plan</h3>
           <p>We match your goals and available equipment to short sessions you can actually finish.</p>
         </article>
-        <article class="subscription-card">
-          <div class="subscription-icon" aria-hidden="true">📋</div>
-          <h4>Beginner-friendly workouts</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F4CB;</div>
+          <h3>Beginner-friendly workouts</h3>
           <p>Each move comes with simple cues, tempo notes, and manners tips so you always know what to do.</p>
         </article>
-        <article class="subscription-card">
-          <div class="subscription-icon" aria-hidden="true">🍽️</div>
-          <h4>Maintenance calorie calculator</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F37D;</div>
+          <h3>Maintenance calorie calculator</h3>
           <p>Dial in portions with a calm, plain calculator made for real life schedules.</p>
         </article>
-        <article class="subscription-card">
-          <div class="subscription-icon" aria-hidden="true">📈</div>
-          <h4>Progress tracking & check-ins</h4>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F4C8;</div>
+          <h3>Progress tracking & check-ins</h3>
           <p>Weekly nudge reminders and streak views keep you accountable without pressure.</p>
         </article>
-        <article class="subscription-card">
-          <div class="subscription-icon" aria-hidden="true">🚀</div>
-          <h4>Future modules unlocked</h4>
-          <p>Gain access to every new pack we ship—running prep, mobility resets, and hybrid training.</p>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F680;</div>
+          <h3>Future modules unlocked</h3>
+          <p>Gain access to every new pack we ship &mdash; running prep, mobility resets, and hybrid training.</p>
         </article>
       </div>
-      <div class="subscription-pricing">
-        <div>
-          <h4>Try it free, stay for the calm coaching.</h4>
-          <p>$7.99 per month or $49.99 per year after the trial.</p>
+      <article class="landing-card landing-stack landing-card-dark">
+        <div class="landing-grid landing-grid-two">
+          <div>
+            <p class="landing-subtext">Monthly</p>
+            <h3>$7.99</h3>
+            <p class="supportive-text">Cancel anytime after your trial.</p>
+          </div>
+          <div>
+            <p class="landing-subtext">Yearly</p>
+            <h3>$49.99</h3>
+            <p class="supportive-text">Includes two free months.</p>
+          </div>
         </div>
-        <div class="pricing-amounts">
-          <span>$7.99/mo</span>
-          <span>$49.99/yr</span>
+        <p class="landing-text">Try it free, stay for the calm coaching. One plan unlocks everything.</p>
+        <div class="landing-actions landing-actions-stack landing-space-top-md">
+          <a class="landing-button" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button secondary" href="${ROUTE_HASHES['pricing']}">See pricing</a>
         </div>
-        <a class="subscription-cta" href="${cta.href}">${cta.label}</a>
-      </div>
+      </article>
     </section>
-    <section class="landing-section landing-cta">
-      <p class="landing-subtext">Ready when you are</p>
-      <h2>Start your calm routine today</h2>
-      <p>Tap in for the beginner-friendly planner, exercise walk-throughs, and Gymxiety Mode support—all wrapped in one gentle membership.</p>
-      <div class="landing-actions">
-        <a class="landing-button" href="${ROUTE_HASHES.subscribe}">Start free trial</a>
-        <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>Start feeling confident in the gym &mdash; one workout at a time.</h2>
+        <p class="landing-text">
+          Try Gymxiety Mode free for 7 days. No pressure. No judgment. Just progress.
+        </p>
+        <a href="${ROUTE_HASHES['start-trial']}" class="primary-btn">Start Your Trial</a>
       </div>
     </section>
   `;
@@ -1254,7 +1189,7 @@ function renderPlanner(state) {
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Tip</p>
-        <p>Keep it to 3–5 moves. Consistency beats complexity.</p>
+        <p>Keep it to 3-5 moves. Consistency beats complexity.</p>
       </div>
     </header>
     <section class="landing-section">
@@ -1294,7 +1229,7 @@ function renderPlannerResult(result) {
   const summaryCards = [
     { label: 'Movements', value: summary.movementCount || 0 },
     { label: 'Focus', value: summary.focus?.slice(0, 2).map(escapeHTML).join(', ') || 'General' },
-    { label: 'Intensity', value: `${escapeHTML(summary.repRange || '')} · ${escapeHTML(summary.setsPerExercise || '')}` },
+    { label: 'Intensity', value: `${escapeHTML(summary.repRange || '')} - ${escapeHTML(summary.setsPerExercise || '')}` },
     { label: 'Mode', value: summary.mode || 'Calm builder' }
   ].map(card => `
     <article class="landing-card">
@@ -1307,7 +1242,7 @@ function renderPlannerResult(result) {
     ? planRows.map(row => `
         <article class="landing-card">
           <h3>${escapeHTML(row.exercise)}</h3>
-          <p class="landing-subtext">${escapeHTML(row.muscle)} · ${escapeHTML(row.equipment)}</p>
+          <p class="landing-subtext">${escapeHTML(row.muscle)} - ${escapeHTML(row.equipment)}</p>
           <ul class="landing-list">
             <li>Reps: ${escapeHTML(row.repRange)}</li>
             <li>Sets: ${escapeHTML(row.sets)}</li>
@@ -1384,7 +1319,7 @@ function renderPlanGenerator(state) {
               <p class="workout-name">${escapeHTML(workout.name)}</p>
               <p class="workout-focus">${escapeHTML(workout.focus)}</p>
             </div>
-            <span class="lock-icon">🔒</span>
+            <span class="lock-icon">&#x1F512;</span>
           </div>
           <p class="progression-note">${escapeHTML(workout.progression)}</p>
           <div class="exercise-list">
@@ -1408,7 +1343,7 @@ function renderPlanGenerator(state) {
 
   const upcomingItems = planData.upcoming.slice(0, 5).map(item => `
     <li>
-      <span role="img" aria-hidden="true">🔒</span>
+      <span role="img" aria-hidden="true">&#x1F512;</span>
       <span>${escapeHTML(item.label)}</span>
     </li>
   `).join('') || '<li>Fresh workouts will appear here after generation.</li>';
@@ -1425,7 +1360,7 @@ function renderPlanGenerator(state) {
           <p>${escapeHTML(planData.today.focus)}</p>
           <p class="progression-note">${escapeHTML(planData.today.progression)}</p>
           <p class="progression-note" data-today-status>Locked until you press start.</p>
-          <p style="color:var(--muted);font-size:0.9rem;margin-top:6px;">Goal: ${escapeHTML(planData.goalLabel)} · Equipment: ${escapeHTML(planData.equipmentLabel)}</p>
+          <p style="color:var(--muted);font-size:0.9rem;margin-top:6px;">Goal: ${escapeHTML(planData.goalLabel)} - Equipment: ${escapeHTML(planData.equipmentLabel)}</p>
           <button class="primary-btn plan-start-btn" data-start-workout>Start Workout</button>
           <div class="plan-stats">
             <div>
@@ -1582,7 +1517,7 @@ function renderSubscribe(state) {
       <section class="panel onboarding-panel">
         <span class="badge">Membership</span>
         <h2>Unlock the calm planner.</h2>
-        <p class="onboarding-lede">We are not processing real payments inside this demo—tap the button below to simulate a subscription and move into onboarding.</p>
+        <p class="onboarding-lede">We are not processing real payments inside this demo - tap the button below to simulate a subscription and move into onboarding.</p>
         <form data-form="subscribe" class="onboarding-form">
           <button class="primary-btn" type="submit">Confirm subscription</button>
         </form>
@@ -1596,12 +1531,12 @@ function renderSubscribe(state) {
   const nextLabel = onboardingComplete ? 'Go to planner' : 'Resume onboarding';
   const message = onboardingComplete
     ? 'You already unlocked every calm tool. Jump back into the planner or reset the demo to experience the subscription flow again.'
-    : 'Subscription is active—finish onboarding to start building calm workouts, or reset the demo if you want to re-run the process.';
+    : 'Subscription is active - finish onboarding to start building calm workouts, or reset the demo if you want to re-run the process.';
 
   return `
     <section class="panel onboarding-panel">
       <span class="badge">Membership</span>
-      <h2>${onboardingComplete ? 'Membership active' : 'Almost there—complete setup'}</h2>
+      <h2>${onboardingComplete ? 'Membership active' : 'Almost there - complete setup'}</h2>
       <p class="onboarding-lede">${message}</p>
       <div class="onboarding-form" style="gap:12px;">
         <a class="primary-btn" href="${nextHref}" style="text-align:center;">${nextLabel}</a>
@@ -1736,13 +1671,13 @@ function attachPlanGeneratorEvents(root) {
         card.classList.remove('locked');
         card.classList.add('active');
         if (icon) {
-          icon.textContent = '🟢';
+          icon.textContent = '\u{1F7E2}';
         }
       } else {
         card.classList.add('locked');
         card.classList.remove('active');
         if (icon) {
-          icon.textContent = '🔒';
+          icon.textContent = '\u{1F512}';
         }
       }
     });
@@ -1758,7 +1693,7 @@ function attachPlanGeneratorEvents(root) {
       startBtn.disabled = true;
       startBtn.textContent = 'Workout in progress';
       if (todayStatus) {
-        todayStatus.textContent = 'Unlocked · move at your own pace.';
+        todayStatus.textContent = 'Unlocked - move at your own pace.';
       }
       if (streakEl) {
         const base = Number.parseInt(streakEl.getAttribute('data-base-streak') || '0', 10) || 0;

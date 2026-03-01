@@ -49,7 +49,7 @@ export function renderFooter() {
           ${renderLinkGroup('Legal', LEGAL_LINKS)}
         </div>
         <div class="chrome-footer-bottom">
-          <p>© ${year} AllAroundAthlete. Built for everyday consistency.</p>
+          <p>&copy; ${year} AllAroundAthlete. Built for everyday consistency.</p>
           <div class="chrome-footer-meta-links">
             <a class="chrome-footer-link" href="#/contact">Support</a>
             <a class="chrome-footer-link" href="#/privacy">Privacy</a>

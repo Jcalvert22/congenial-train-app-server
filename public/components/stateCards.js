@@ -62,6 +62,26 @@ export function showErrorCard(message = 'Something went wrong', buttonText = 'Ba
   });
 }
 
+export function renderPageShell(sections, options = {}) {
+  const { isLoading = false, loadingMessage = 'Loading...' } = options;
+  if (isLoading) {
+    return `
+      <section class="landing-page">
+        <div class="landing-container">
+          ${renderLoadingCard(loadingMessage)}
+        </div>
+      </section>
+    `;
+  }
+  return `
+    <section class="landing-page">
+      <div class="landing-container">
+        ${sections}
+      </div>
+    </section>
+  `;
+}
+
 export function wrapWithPageLoading(sections, loadingMessage = 'Loading...') {
   return `
     <section class="landing-page">

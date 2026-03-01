@@ -22,11 +22,11 @@ const HOW_IT_HELPS = [
 ];
 
 const SAMPLE_EXERCISES = [
-  { name: 'Goblet Squat', muscle: 'Legs', equipment: 'Dumbbell', icon: '🟢' },
-  { name: 'Assisted Row', muscle: 'Back', equipment: 'Cable / Band', icon: '🔵' },
-  { name: 'Incline Push-up', muscle: 'Chest', equipment: 'Bench', icon: '🟣' },
-  { name: 'Tall Kneeling Press', muscle: 'Shoulders', equipment: 'Dumbbell', icon: '🟡' },
-  { name: 'Deadbug Breathing', muscle: 'Core', equipment: 'Bodyweight', icon: '🟠' }
+  { name: 'Goblet Squat', muscle: 'Legs', equipment: 'Dumbbell', icon: '\u{1F7E2}' },
+  { name: 'Assisted Row', muscle: 'Back', equipment: 'Cable / Band', icon: '\u{1F535}' },
+  { name: 'Incline Push-up', muscle: 'Chest', equipment: 'Bench', icon: '\u{1F7E3}' },
+  { name: 'Tall Kneeling Press', muscle: 'Shoulders', equipment: 'Dumbbell', icon: '\u{1F7E1}' },
+  { name: 'Deadbug Breathing', muscle: 'Core', equipment: 'Bodyweight', icon: '\u{1F7E0}' }
 ];
 
 const FILTERS = [
@@ -83,7 +83,7 @@ function buildHero(profile, cta) {
             <article class="landing-card">
               <div class="landing-card-image">${exercise.icon}</div>
               <h3>${escapeHTML(exercise.name)}</h3>
-              <p class="landing-subtext">${escapeHTML(exercise.muscle)} · ${escapeHTML(exercise.equipment)}</p>
+              <p class="landing-subtext">${escapeHTML(exercise.muscle)} - ${escapeHTML(exercise.equipment)}</p>
             </article>
           `).join('')}
         </div>
@@ -100,7 +100,7 @@ function buildHowItHelps() {
       <div class="landing-grid">
         ${HOW_IT_HELPS.map(item => `
           <article class="landing-card">
-            <div class="landing-card-image">✷</div>
+            <div class="landing-card-image">&#x2737;</div>
             <h3>${escapeHTML(item.title)}</h3>
             <p>${escapeHTML(item.copy)}</p>
           </article>
@@ -120,7 +120,7 @@ function buildSampleCards() {
           <article class="landing-card">
             <div class="landing-card-image">${exercise.icon}</div>
             <h3>${escapeHTML(exercise.name)}</h3>
-            <p>${escapeHTML(exercise.muscle)} · ${escapeHTML(exercise.equipment)}</p>
+            <p>${escapeHTML(exercise.muscle)} - ${escapeHTML(exercise.equipment)}</p>
           </article>
         `).join('')}
       </div>

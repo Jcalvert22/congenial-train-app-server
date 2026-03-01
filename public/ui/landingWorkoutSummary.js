@@ -22,10 +22,10 @@ const HOW_IT_HELPS = [
 ];
 
 const SAMPLE_EXERCISES = [
-  { name: 'Goblet Squat', sets: '3 sets', reps: '10 reps', rest: 'Rest 60 sec', muscle: 'Legs', icon: '🟢' },
-  { name: 'Assisted Row', sets: '3 sets', reps: '12 reps', rest: 'Rest 60 sec', muscle: 'Back', icon: '🔵' },
-  { name: 'Incline Push-up', sets: '3 sets', reps: '8 reps', rest: 'Rest 75 sec', muscle: 'Chest', icon: '🟣' },
-  { name: 'Deadbug Breathing', sets: '2 sets', reps: '40 sec', rest: 'Rest 45 sec', muscle: 'Core', icon: '🟠' }
+  { name: 'Goblet Squat', sets: '3 sets', reps: '10 reps', rest: 'Rest 60 sec', muscle: 'Legs', icon: '\u{1F7E2}' },
+  { name: 'Assisted Row', sets: '3 sets', reps: '12 reps', rest: 'Rest 60 sec', muscle: 'Back', icon: '\u{1F535}' },
+  { name: 'Incline Push-up', sets: '3 sets', reps: '8 reps', rest: 'Rest 75 sec', muscle: 'Chest', icon: '\u{1F7E3}' },
+  { name: 'Deadbug Breathing', sets: '2 sets', reps: '40 sec', rest: 'Rest 45 sec', muscle: 'Core', icon: '\u{1F7E0}' }
 ];
 
 const BENEFITS = [
@@ -60,7 +60,7 @@ function buildHero(profile, cta) {
       <div>
         <p class="landing-subtext">Calm prep</p>
         <h1>Workout Summary</h1>
-        <p class="landing-subtext lead">Shows your full workout in a clear, confidence-building layout—so you know every rep, rest, and cue before you begin.</p>
+        <p class="landing-subtext lead">Shows your full workout in a clear, confidence-building layout - so you know every rep, rest, and cue before you begin.</p>
         <ul class="landing-list">
           <li>Current goal: <strong>${escapeHTML(goal)}</strong></li>
           <li>Equipment detected: <strong>${escapeHTML(equipment)}</strong></li>
@@ -71,7 +71,7 @@ function buildHero(profile, cta) {
         </div>
       </div>
       <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Today · Full Body Ease</p>
+        <p class="landing-subtext">Today - Full Body Ease</p>
         <div class="landing-actions">
           <span class="landing-chip">~38 min</span>
         </div>
@@ -79,7 +79,7 @@ function buildHero(profile, cta) {
           ${SAMPLE_EXERCISES.slice(0, 3).map(exercise => `
             <li>
               <span>${escapeHTML(exercise.name)}</span>
-              <small>${escapeHTML(exercise.sets)} · ${escapeHTML(exercise.reps)}</small>
+              <small>${escapeHTML(exercise.sets)} - ${escapeHTML(exercise.reps)}</small>
             </li>
           `).join('')}
         </ul>
@@ -97,7 +97,7 @@ function buildHowItHelps() {
       <div class="landing-grid">
         ${HOW_IT_HELPS.map(item => `
           <article class="landing-card">
-            <div class="landing-card-image">✧</div>
+            <div class="landing-card-image">&#x2727;</div>
             <h3>${escapeHTML(item.title)}</h3>
             <p>${escapeHTML(item.copy)}</p>
           </article>
@@ -114,15 +114,15 @@ function buildSampleSummary() {
         <div>
           <p class="landing-subtext">Sample summary preview</p>
           <h2>See the whole workout</h2>
-          <p>Each workout card shows your exercises, sets × reps, rest times, and estimated session length.</p>
-          <span class="landing-chip">Estimated time · ~38 min</span>
+          <p>Each workout card shows your exercises, sets x reps, rest times, and estimated session length.</p>
+          <span class="landing-chip">Estimated time - ~38 min</span>
         </div>
         <div class="landing-grid">
           ${SAMPLE_EXERCISES.map(exercise => `
             <article class="landing-card">
               <div class="landing-card-image">${exercise.icon}</div>
               <h3>${escapeHTML(exercise.name)}</h3>
-              <p>${escapeHTML(exercise.muscle)} · ${escapeHTML(exercise.sets)} · ${escapeHTML(exercise.reps)}</p>
+              <p>${escapeHTML(exercise.muscle)} - ${escapeHTML(exercise.sets)} - ${escapeHTML(exercise.reps)}</p>
               <span class="landing-chip">${escapeHTML(exercise.rest)}</span>
             </article>
           `).join('')}

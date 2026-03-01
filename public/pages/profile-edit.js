@@ -1,5 +1,7 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { getAuth, setAuth } from '../auth/state.js';
+import { setState } from '../logic/state.js';
+import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 
 const EXPERIENCE_OPTIONS = ['Beginner', 'Intermediate', 'Advanced'];
 const GOAL_OPTIONS = ['Strength', 'Hypertrophy', 'Fat Loss', 'General Fitness'];
@@ -41,6 +43,7 @@ function renderFormSection(user = {}) {
   const emailValue = user.email || '';
   const experienceValue = user.experienceLevel || EXPERIENCE_OPTIONS[0];
   const goalValue = user.goal || GOAL_OPTIONS[0];
+  const gymxietyEnabled = getGymxietyPreference();
   return `
     <section class="landing-section">
       <article class="landing-card">
@@ -64,6 +67,10 @@ function renderFormSection(user = {}) {
             <select class="landing-select" name="goal" required>
               ${renderSelectOptions(GOAL_OPTIONS, goalValue)}
             </select>
+          </label>
+          <label class="profile-toggle">
+            <input type="checkbox" id="gymxietyToggle" name="gymxietyMode" ${gymxietyEnabled ? 'checked' : ''}>
+            Gymxiety Mode (Beginner-friendly, confidence-focused workouts)
           </label>
           <div class="landing-actions landing-actions-stack landing-space-top-md">
             <button class="landing-button" type="submit">Save Changes</button>
@@ -101,6 +108,7 @@ export function attachProfileEditEvents(root) {
       const email = (formData.get('email') || '').toString().trim();
       const experience = (formData.get('experience') || '').toString().trim();
       const goal = (formData.get('goal') || '').toString().trim();
+      const gymxietyMode = Boolean(root.querySelector('#gymxietyToggle')?.checked);
       if (!name || !email || !experience || !goal) {
         window.alert('Please complete all required fields.');
         return;
@@ -111,7 +119,22 @@ export function attachProfileEditEvents(root) {
       auth.user.email = email;
       auth.user.experienceLevel = experience;
       auth.user.goal = goal;
+      auth.user.profile = { ...(auth.user.profile || {}), gymxietyMode };
+      auth.user.gymxietyMode = gymxietyMode;
       setAuth(auth);
+      setState(prev => {
+        prev.profile = {
+          ...prev.profile,
+          name,
+          email,
+          experience,
+          experienceLevel: experience.toLowerCase(),
+          goal,
+          gymxietyMode
+        };
+        return prev;
+      });
+      persistGymxietyPreference(gymxietyMode);
       window.location.hash = '#/profile';
     });
   }

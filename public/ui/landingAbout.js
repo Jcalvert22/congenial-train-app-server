@@ -31,7 +31,7 @@ function buildHero(cta) {
       <div class="landing-card emphasis" aria-hidden="true">
         <p class="landing-subtext">Soft visual</p>
         <h3>Structure without stress</h3>
-        <p>Planner · Library · Workout summaries</p>
+        <p>Planner - Library - Workout summaries</p>
         <div class="landing-stat-list">
           <div class="landing-stat">
             <strong>4</strong>
@@ -86,7 +86,7 @@ function buildFounderSection() {
     <section class="landing-section">
       <p class="landing-subtext">Founder story</p>
       <h2>Built for anyone who has ever felt out of place in the gym.</h2>
-      <p>AllAroundAthlete started after guiding friends who whispered, “I want to lift, but I am terrified of messing up.” We listened, removed the noise, and created a calm companion that keeps directions soft, specific, and encouraging.</p>
+      <p>AllAroundAthlete started after guiding friends who whispered, "I want to lift, but I am terrified of messing up." We listened, removed the noise, and created a calm companion that keeps directions soft, specific, and encouraging.</p>
     </section>
   `;
 }
@@ -109,7 +109,7 @@ function buildCtaSection(cta) {
     <section class="landing-section landing-cta">
       <p class="landing-subtext">Ready when you are</p>
       <h2>Start your beginner journey with us.</h2>
-      <p>Short workouts, simple cues, and gentle accountability—everything you need to build confidence.</p>
+      <p>Short workouts, simple cues, and gentle accountability - everything you need to build confidence.</p>
       <div class="landing-actions">
         <a class="landing-button" href="${cta.href}">${cta.label}</a>
         <a class="landing-button secondary" href="#/pricing">See pricing</a>

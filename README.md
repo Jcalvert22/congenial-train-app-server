@@ -1,8 +1,8 @@
 # All-Around Athlete MVC SPA
 
-Rebuilt from scratch for **CIS 486 · Spring 2026** to meet the full-stack MVC SPA requirements. The project ships a web-based routine planner that stores data in MongoDB, exposes a RESTful Express API, and renders a Bootstrap + jQuery single-page experience.
+Rebuilt from scratch for **CIS 486 - Spring 2026** to meet the full-stack MVC SPA requirements. The project ships a web-based routine planner that stores data in MongoDB, exposes a RESTful Express API, and renders a Bootstrap + jQuery single-page experience.
 
-## 🧱 Architecture & Stack
+## Architecture & Stack
 
 - **Frontend (View / SPA):** Normalize.css, Bootstrap 5, jQuery, jQuery UI, custom CSS in `styles/main.css`, single-page interactions powered by AJAX.
 - **Controller Layer:** Express routers + controllers in `src/controllers` orchestrate CRUD operations.
@@ -10,7 +10,7 @@ Rebuilt from scratch for **CIS 486 · Spring 2026** to meet the full-stack MVC S
 - **Server:** Node.js 20, Express middlewares (helmet, cors, morgan), dotenv config, SPA fallback route.
 - **Tooling:** nodemon for dev hot reload, GitHub Actions CI, Render dev deployment config, Dockerfile + GCP notes for production.
 
-## ✨ Features
+## Features
 
 - SPA interface that demonstrates **create, read, update, delete** directly against the REST API using POST, GET, PUT, DELETE.
 - MVC directory layout with separated models, controllers, routes, middleware, and utilities.
@@ -19,7 +19,7 @@ Rebuilt from scratch for **CIS 486 · Spring 2026** to meet the full-stack MVC S
 - Authorship + self-describing UI copy baked into the page header and footer.
 - Deployment scaffolding for Render (dev) and GCP (prod) plus CI/CD workflow.
 
-## 🚀 Getting Started
+## Getting Started
 
 1. **Install dependencies**
 	 ```bash
@@ -45,7 +45,7 @@ Rebuilt from scratch for **CIS 486 · Spring 2026** to meet the full-stack MVC S
 	 npm start
 	 ```
 
-## 📡 REST API
+## REST API
 
 | Method | Endpoint           | Description              |
 | ------ | ------------------ | ------------------------ |
@@ -67,12 +67,12 @@ Payload example:
 }
 ```
 
-## 🧪 Testing & CI/CD
+## Testing & CI/CD
 
 - `npm test` runs Node's native test runner over files in `tests/` (see `tests/health.test.js`).
 - `.github/workflows/ci.yml` installs dependencies, runs lint placeholder + tests on pushes/PRs targeting `main`.
 
-## ☁️ Deployment
+## Deployment
 
 | Target    | Location                | Notes |
 | --------- | ----------------------- | ----- |
@@ -91,7 +91,7 @@ Payload example:
 - Deploy to Cloud Run (or GCE) with `gcloud run deploy ...` using the reserved static IP detailed in `infra/gcp-deployment.md`.
 - Map `spa.yourdomain.com` through Cloud DNS to the static IP.
 
-## 📁 Project Layout
+## Project Layout
 
 ```
 src/
@@ -111,7 +111,7 @@ Dockerfile           Production container (GCP)
 infra/gcp-deployment.md  Static IP + DNS guide
 ```
 
-## 👤 Authorship & License
+## Authorship & License
 
 - Authored by **Jace Calvert** for the CIS 486 DevOps/MVC assignment.
 - Licensed under the MIT License (see `package.json`).

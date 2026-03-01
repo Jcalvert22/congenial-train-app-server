@@ -6,12 +6,27 @@ import { addWorkoutToHistory } from '../data/history.js';
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
-  wrapWithPageLoading,
-  revealPageContent
+  renderPageShell
 } from '../components/stateCards.js';
+import {
+  getGymxietyPreference,
+  resolveGymxietyFromPlan,
+  applyConfidenceAlternative
+} from '../utils/gymxiety.js';
+import { confidenceAlternativeMap } from '../data/confidenceAlternativeMap.js';
 
 const READY_DELAY_MS = 1000;
 const CARD_TRANSITION_MS = 220;
+const EXECUTION_GYMXIETY_CUES = [
+  'Keep chest tall.',
+  'Move slow and controlled.',
+  'Stop if anything feels sharp or painful.'
+];
+const DEFAULT_EXERCISE_SETS = '3 sets';
+const DEFAULT_EXERCISE_REPS = '10 reps';
+const DEFAULT_EXERCISE_REST = 'Rest 90 sec';
+const DEFAULT_EXERCISE_CONFIDENCE = 'Moderate';
+const DEFAULT_EXERCISE_INSTRUCTIONS = 'Move slowly, breathe through the hardest part, and stop if form slips.';
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -24,14 +39,28 @@ function getActiveWorkout(state) {
   return state.ui?.activeWorkout || state.ui?.plannerResult || null;
 }
 
-function formatRest(exercise) {
+function formatRest(exercise, options = {}) {
+  if (options.gymxietyMode) {
+    return exercise.rest || 'Rest 60-90 sec';
+  }
   if (exercise.rest) {
     return exercise.rest;
   }
   return exercise.usesWeight ? 'Rest 75-90 sec' : 'Rest 40-60 sec';
 }
 
-function renderHeader(status, firstName) {
+function canUseConfidenceAlternative(exercise) {
+  if (!exercise || exercise.confidenceApplied) {
+    return false;
+  }
+  if (exercise.confidenceAlternative) {
+    return true;
+  }
+  const source = exercise.baseExercise || exercise.exercise;
+  return Boolean(source && confidenceAlternativeMap[source]);
+}
+
+function renderHeader(status, firstName, gymxietyMode) {
   let title = 'Workout in Progress';
   let subtext = 'Follow each step at your own pace.';
   if (status === 'empty') {
@@ -44,12 +73,16 @@ function renderHeader(status, firstName) {
     title = 'Workout Complete!';
     subtext = 'Great job - you finished your routine.';
   }
+  const supportiveLead = gymxietyMode && status !== 'empty'
+    ? '<p class="supportive-text">Gymxiety Mode keeps everything calm, encouraging, and judgment-free.</p>'
+    : '';
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Guided session</span>
         <h1>${escapeHTML(title)}</h1>
         <p class="landing-subtext lead">${escapeHTML(subtext)}</p>
+        ${supportiveLead}
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Micro-reminder</p>
@@ -63,7 +96,7 @@ function renderNoWorkoutSection() {
   return renderEmptyStateCard({
     title: 'No Workout in Progress',
     message: 'We could not find an active routine. Generate a new calm session to begin.',
-    actionLabel: 'Generate a Workout',
+    actionLabel: 'Generate a New Workout',
     actionHref: '#/generate'
   });
 }
@@ -79,39 +112,111 @@ function renderReadySection() {
   `;
 }
 
-function renderExerciseCard(exercise, index, total) {
-  const instructions = exercise.description || 'Move slowly, keep breathing steady, and stop if form slips.';
-  const rest = formatRest(exercise);
+function normalizeExecutionExercise(row, index) {
+  if (!row || typeof row !== 'object') {
+    return {
+      id: index,
+      exercise: `Movement ${index + 1}`,
+      sets: DEFAULT_EXERCISE_SETS,
+      repRange: DEFAULT_EXERCISE_REPS,
+      reps: DEFAULT_EXERCISE_REPS,
+      rest: DEFAULT_EXERCISE_REST,
+      muscle: 'Full body',
+      equipment: 'Bodyweight',
+      description: DEFAULT_EXERCISE_INSTRUCTIONS,
+      instructions: DEFAULT_EXERCISE_INSTRUCTIONS,
+      confidence: DEFAULT_EXERCISE_CONFIDENCE,
+      supportiveCues: [],
+      usesWeight: false,
+      baseExercise: `Movement ${index + 1}`
+    };
+  }
+  return {
+    ...row,
+    id: row.id ?? index,
+    exercise: row.exercise || row.name || `Movement ${index + 1}`,
+    sets: row.sets || DEFAULT_EXERCISE_SETS,
+    repRange: row.repRange || row.reps || DEFAULT_EXERCISE_REPS,
+    reps: row.repRange || row.reps || DEFAULT_EXERCISE_REPS,
+    rest: row.rest,
+    muscle: row.muscle || 'Full body',
+    equipment: row.equipment || 'Bodyweight',
+    description: row.description || row.instructions || DEFAULT_EXERCISE_INSTRUCTIONS,
+    instructions: row.instructions || row.description || DEFAULT_EXERCISE_INSTRUCTIONS,
+    confidence: row.confidence || DEFAULT_EXERCISE_CONFIDENCE,
+    supportiveCues: Array.isArray(row.supportiveCues) ? row.supportiveCues : [],
+    usesWeight: Boolean(row.usesWeight),
+    baseExercise: row.baseExercise || row.exercise || row.name || `Movement ${index + 1}`
+  };
+}
+
+function normalizeExecutionExercises(rows = []) {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+  return rows.map((row, index) => normalizeExecutionExercise(row, index));
+}
+
+function renderExerciseCard(exercise, index, total, options = {}) {
+  const { gymxietyMode } = options;
+  const rest = formatRest(exercise, { gymxietyMode });
   const progressPercent = Math.round(((index + 1) / total) * 100);
-  return `
-    <section class="landing-section">
-      <article class="landing-card exercise-card" data-exercise-card>
+  const progressMarkup = gymxietyMode
+    ? `<p class="landing-subtext">Movement ${index + 1} of ${total}</p>`
+    : `
         <p class="execution-progress">Exercise ${index + 1} of ${total}</p>
         <div class="execution-progress-bar"><span style="width: ${progressPercent}%"></span></div>
+      `;
+  const supportiveIntro = gymxietyMode
+    ? '<p class="supportive-text">You\u2019re doing great - take your time and move with control.</p>'
+    : '';
+  const simplifiedCues = EXECUTION_GYMXIETY_CUES.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('');
+  const instructionsMarkup = gymxietyMode
+    ? simplifiedCues
+    : `<p>${escapeHTML(exercise.description || 'Move slowly, keep breathing steady, and stop if form slips.')}</p>`;
+  const extraCues = !gymxietyMode && Array.isArray(exercise.supportiveCues)
+    ? exercise.supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('')
+    : '';
+  const confidenceTag = `<span class="confidence-tag">Confidence: ${escapeHTML(exercise.confidence || 'Moderate')}</span>`;
+  const easierButton = canUseConfidenceAlternative(exercise)
+    ? `<button class="easy-version-btn" type="button" data-action="exercise-alt" data-exercise-index="${index}">Show easier version</button>`
+    : '';
+  return `
+    <section class="landing-section">
+      <article class="landing-card exercise-card fade-transition" data-exercise-card data-exercise-index="${index}">
+        ${progressMarkup}
         <h2 class="landing-card-title">${escapeHTML(exercise.exercise || 'Next movement')}</h2>
+        ${confidenceTag}
         <div class="execution-meta">
-          <strong>${escapeHTML(exercise.sets || '3 sets')} × ${escapeHTML(exercise.repRange || '8 reps')}</strong>
+          <strong>${escapeHTML(exercise.sets || '3 sets')} x ${escapeHTML(exercise.repRange || '8 reps')}</strong>
           <span>${escapeHTML(rest)}</span>
         </div>
-        <p>${escapeHTML(instructions)}</p>
+        ${supportiveIntro}
+        ${instructionsMarkup}
+        ${extraCues}
         <div class="landing-pill-list">
           <span class="landing-pill">${escapeHTML(exercise.muscle || 'Full body')}</span>
           <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
         </div>
+        ${easierButton}
       </article>
     </section>
   `;
 }
 
-function renderNavigationSection(index, total) {
+function renderNavigationSection(index, total, options = {}) {
+  const { gymxietyMode } = options;
   const isFirst = index === 0;
   const isLast = index === total - 1;
   const nextLabel = isLast ? 'Finish Workout' : 'Next Exercise';
   const nextState = isLast ? 'finish' : 'next';
+  const navLead = gymxietyMode
+    ? 'Pause whenever you need. Extra rest is always okay.'
+    : 'Stay calm between sets.';
   return `
     <section class="landing-section">
       <article class="landing-card execution-nav">
-        <p class="landing-subtext">Stay calm between sets.</p>
+        <p class="landing-subtext">${escapeHTML(navLead)}</p>
         <div class="landing-actions landing-actions-stack">
           <button class="landing-button secondary" type="button" data-action="prev-exercise" ${isFirst ? 'disabled' : ''}>Previous Exercise</button>
           <button class="landing-button" type="button" data-action="next-exercise" data-state="${nextState}">${nextLabel}</button>
@@ -179,11 +284,12 @@ function buildHistoryEntryPayload(state, options = {}) {
   if (!workout || !Array.isArray(workout.planRows) || !workout.planRows.length) {
     return null;
   }
+  const safeRows = normalizeExecutionExercises(workout.planRows);
   const profile = state.profile || {};
   const finishTimestamp = typeof options.finishTimestamp === 'number'
     ? options.finishTimestamp
     : Date.now();
-  const exercises = workout.planRows.map(row => ({
+  const exercises = safeRows.map(row => ({
     name: row.exercise,
     sets: row.sets,
     reps: row.repRange,
@@ -209,64 +315,87 @@ function buildHistoryEntryPayload(state, options = {}) {
 }
 
 export function renderWorkoutExecution(state) {
+  let isLoading = true;
   const workout = getActiveWorkout(state);
-  const exercises = Array.isArray(workout?.planRows) ? workout.planRows : [];
-  const total = exercises.length;
+  const normalizedExercises = normalizeExecutionExercises(Array.isArray(workout?.planRows) ? workout.planRows : []);
+  const total = normalizedExercises.length;
   const firstName = getFirstName(state);
+  const fallbackPreference = typeof state.profile?.gymxietyMode === 'boolean'
+    ? state.profile.gymxietyMode
+    : getGymxietyPreference();
+  const gymxietyMode = resolveGymxietyFromPlan(workout, fallbackPreference);
+  isLoading = false;
 
   if (workout && !Array.isArray(workout.planRows)) {
     const sections = `
-      ${renderHeader('empty', firstName)}
+      ${renderHeader('empty', firstName, gymxietyMode)}
       ${renderErrorStateCard({
         title: 'Workout looks corrupted',
         message: 'We had trouble reading that routine. Please generate a new workout to continue.',
-        actionLabel: 'Generate Workout',
+        actionLabel: 'Generate a New Workout',
         actionHref: '#/generate'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout...');
+    return renderPageShell(sections, { isLoading });
   }
 
   if (!total) {
     const sections = `
-      ${renderHeader('empty', firstName)}
+      ${renderHeader('empty', firstName, gymxietyMode)}
       ${renderNoWorkoutSection()}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout...');
+    return renderPageShell(sections, { isLoading });
   }
 
   if (state.ui?.activeWorkoutCompleted) {
     const savedEntry = state.ui?.activeWorkoutSavedEntry || buildHistoryEntryPayload(state);
     const sections = `
-      ${renderHeader('complete', firstName)}
+      ${renderHeader('complete', firstName, gymxietyMode)}
       ${renderCompletionSection(savedEntry)}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout...');
+    return renderPageShell(sections, { isLoading });
   }
 
   const introComplete = Boolean(state.ui?.activeWorkoutIntroComplete);
   if (!introComplete) {
     const sections = `
-      ${renderHeader('ready', firstName)}
+      ${renderHeader('ready', firstName, gymxietyMode)}
       ${renderReadySection()}
     `;
-    return wrapWithPageLoading(sections, 'Loading workout...');
+    return renderPageShell(sections, { isLoading });
   }
 
   const currentIndex = clamp(state.ui?.activeWorkoutIndex ?? 0, 0, total - 1);
-  const currentExercise = exercises[currentIndex];
+  const currentExercise = normalizedExercises[currentIndex];
+  if (!currentExercise) {
+    const sections = `
+      ${renderHeader('empty', firstName, gymxietyMode)}
+      ${renderErrorStateCard({
+        title: 'Exercise missing',
+        message: 'We could not load that specific movement. Generate a new workout to keep things steady.',
+        actionLabel: 'Generate a New Workout',
+        actionHref: '#/generate'
+      })}
+    `;
+    return renderPageShell(sections, { isLoading });
+  }
 
   const sections = `
-    ${renderHeader('in-progress', firstName)}
-    ${renderExerciseCard(currentExercise, currentIndex, total)}
-    ${renderNavigationSection(currentIndex, total)}
+    ${renderHeader('in-progress', firstName, gymxietyMode)}
+    ${renderExerciseCard(currentExercise, currentIndex, total, { gymxietyMode })}
+    ${renderNavigationSection(currentIndex, total, { gymxietyMode })}
   `;
 
-  return wrapWithPageLoading(sections, 'Loading workout...');
+  return renderPageShell(sections, { isLoading });
 }
 
 export function attachWorkoutExecutionEvents(root) {
-  revealPageContent(root);
+  const stateSnapshot = getState();
+  const fallbackPreference = typeof stateSnapshot.profile?.gymxietyMode === 'boolean'
+    ? stateSnapshot.profile.gymxietyMode
+    : getGymxietyPreference();
+  const activePlan = stateSnapshot.ui?.activeWorkout || stateSnapshot.ui?.plannerResult;
+  const gymxietyMode = resolveGymxietyFromPlan(activePlan, fallbackPreference);
   const readyCard = root.querySelector('[data-ready-card]');
   if (readyCard) {
     requestAnimationFrame(() => readyCard.classList.add('visible'));
@@ -287,6 +416,36 @@ export function attachWorkoutExecutionEvents(root) {
   if (exerciseCard) {
     requestAnimationFrame(() => exerciseCard.classList.add('visible'));
   }
+
+  const useConfidenceAlternative = index => {
+    let updatedRow = null;
+    let applied = false;
+    setState(prev => {
+      const activeWorkout = prev.ui?.activeWorkout;
+      if (!activeWorkout || !Array.isArray(activeWorkout.planRows)) {
+        return prev;
+      }
+      const nextRows = activeWorkout.planRows.map(row => ({ ...row }));
+      applied = applyConfidenceAlternative(nextRows, { index });
+      if (!applied) {
+        return prev;
+      }
+      updatedRow = nextRows[index];
+      const nextUi = {
+        ...prev.ui,
+        activeWorkout: { ...activeWorkout, planRows: nextRows }
+      };
+      if (nextUi.plannerResult && Array.isArray(nextUi.plannerResult.planRows)) {
+        const plannerRows = nextUi.plannerResult.planRows.map(row => ({ ...row }));
+        if (applyConfidenceAlternative(plannerRows, { index })) {
+          nextUi.plannerResult = { ...nextUi.plannerResult, planRows: plannerRows };
+        }
+      }
+      prev.ui = nextUi;
+      return prev;
+    });
+    return applied ? updatedRow : null;
+  };
 
   const shiftExercise = delta => {
     setState(prev => {
@@ -347,4 +506,38 @@ export function attachWorkoutExecutionEvents(root) {
       animateShift(1);
     });
   }
+
+  root.addEventListener('click', event => {
+    const trigger = event.target.closest('[data-action="exercise-alt"]');
+    if (!trigger) {
+      return;
+    }
+    event.preventDefault();
+    const buttonIndex = Number.parseInt(trigger.dataset.exerciseIndex, 10);
+    const fallbackIndex = clamp(getState().ui?.activeWorkoutIndex ?? 0, 0, (getState().ui?.activeWorkout?.planRows || []).length - 1);
+    const targetIndex = Number.isFinite(buttonIndex) ? buttonIndex : fallbackIndex;
+    const card = root.querySelector('[data-exercise-card]');
+    if (!card) {
+      return;
+    }
+    trigger.disabled = true;
+    card.classList.remove('visible');
+    window.setTimeout(() => {
+      const updatedRow = useConfidenceAlternative(targetIndex);
+      if (!updatedRow) {
+        trigger.disabled = false;
+        card.classList.add('visible');
+        return;
+      }
+      const latest = getState();
+      const refreshedPlan = latest.ui?.activeWorkout || latest.ui?.plannerResult;
+      const total = Array.isArray(refreshedPlan?.planRows) ? refreshedPlan.planRows.length : 0;
+      const nextMarkup = renderExerciseCard(updatedRow, targetIndex, total, { gymxietyMode });
+      card.outerHTML = nextMarkup;
+      const nextCard = root.querySelector(`[data-exercise-card][data-exercise-index="${targetIndex}"]`);
+      if (nextCard) {
+        requestAnimationFrame(() => nextCard.classList.add('visible'));
+      }
+    }, CARD_TRANSITION_MS);
+  });
 }

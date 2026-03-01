@@ -4,7 +4,7 @@ import { getAuth, logout } from '../auth/state.js';
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
-  wrapWithPageLoading,
+  renderPageShell,
   revealPageContent
 } from '../components/stateCards.js';
 
@@ -26,7 +26,7 @@ function renderHeader(displayName) {
   `;
 }
 
-function renderProfileCard({ name, email, experience, goal }) {
+function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
   return `
     <section class="landing-section">
       <article class="landing-card profile-card card-pop-in" data-profile-card>
@@ -40,6 +40,10 @@ function renderProfileCard({ name, email, experience, goal }) {
           <div>
             <p class="landing-subtext">Primary goal</p>
             <strong>${escapeHTML(goal)}</strong>
+          </div>
+          <div>
+            <p class="landing-subtext">Gymxiety Mode</p>
+            <strong>${gymxietyMode ? 'On' : 'Off'}</strong>
           </div>
         </div>
       </article>
@@ -89,8 +93,10 @@ function renderActionsSection() {
 }
 
 export function renderProfilePage(state = getState()) {
+  let isLoading = true;
   const profile = state.profile || {};
   const auth = getAuth();
+  isLoading = false;
   if (!auth?.user && !profile.name) {
     const sections = `
       ${renderHeader('Friend')}
@@ -101,12 +107,15 @@ export function renderProfilePage(state = getState()) {
         actionHref: '#/'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading profile...');
+    return renderPageShell(sections, { isLoading });
   }
   const displayName = auth.user?.name?.trim() || profile.name || 'Friend';
   const email = auth.user?.email?.trim() || profile.email || 'Email not set';
   const experience = profile.experience || 'Beginner';
   const goal = profile.goal || 'Build steady confidence';
+  const gymxietyMode = typeof profile.gymxietyMode === 'boolean'
+    ? profile.gymxietyMode
+    : Boolean(auth.user?.profile?.gymxietyMode);
 
   if (!profile.goal && !profile.experience) {
     const sections = `
@@ -118,12 +127,12 @@ export function renderProfilePage(state = getState()) {
         actionHref: '#/profile-edit'
       })}
     `;
-    return wrapWithPageLoading(sections, 'Loading profile...');
+    return renderPageShell(sections, { isLoading });
   }
 
   const sections = `
     ${renderHeader(displayName)}
-    ${renderProfileCard({ name: displayName, email, experience, goal })}
+    ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode })}
     ${renderPreferenceCard({
       equipment: profile.equipment,
       location: profile.location,
@@ -132,7 +141,7 @@ export function renderProfilePage(state = getState()) {
     ${renderActionsSection()}
   `;
 
-  return wrapWithPageLoading(sections, 'Loading profile...');
+  return renderPageShell(sections, { isLoading });
 }
 
 export function attachProfilePageEvents(root) {

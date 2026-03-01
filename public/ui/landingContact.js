@@ -84,7 +84,7 @@ function buildResponseSection() {
   return `
     <section class="landing-section">
       <p class="landing-subtext">Response time</p>
-      <h2>I usually reply within 24–48 hours.</h2>
+      <h2>I usually reply within 24-48 hours.</h2>
       <p>Expect a thoughtful, encouraging email with next steps, resources, or links into the app so you can keep moving forward.</p>
     </section>
   `;

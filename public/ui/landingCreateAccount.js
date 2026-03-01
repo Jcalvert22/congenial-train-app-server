@@ -3,6 +3,7 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 import { login } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
+import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 
 function buildHero() {
   return `
@@ -16,13 +17,13 @@ function buildHero() {
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Need help?</p>
         <h3>support@allaroundathlete.com</h3>
-        <p>Reach out anytime if you get stuck. A friendly reply arrives within 24–48 hours.</p>
+        <p>Reach out anytime if you get stuck. A friendly reply arrives within 24-48 hours.</p>
       </div>
     </header>
   `;
 }
 
-function buildFormSection() {
+function buildFormSection(gymxietyEnabled = false) {
   return `
     <section class="landing-section">
       <p class="landing-subtext">Setup</p>
@@ -36,8 +37,25 @@ function buildFormSection() {
           <span class="landing-subtext">Email</span>
           <input type="email" name="email" placeholder="you@example.com" required>
         </label>
-        <div class="landing-card landing-grid-span">
-          <p>Your information is safe and never shared. We only use it to personalize your plan.</p>
+        <div class="landing-card landing-grid-span landing-gymxiety-card">
+          <div>
+            <p class="landing-subtext">Optional calm layer</p>
+            <h3>Gymxiety Mode</h3>
+            <p>Flip this on whenever you want the interface to slow down, swap in softer moves, and keep reminders gentle.</p>
+            <ul class="landing-list landing-list-check landing-gymxiety-list">
+              <li>Confidence-first exercise swaps</li>
+              <li>Reassuring cues before every set</li>
+              <li>Timers that whisper instead of shout</li>
+            </ul>
+          </div>
+          <div class="landing-toggle-wrap">
+            <span class="landing-subtext" data-gymxiety-create-status>${gymxietyEnabled ? 'Gentle mode already on' : 'Toggle it on anytime'}</span>
+            <label class="landing-toggle" aria-label="Enable Gymxiety Mode">
+              <input type="checkbox" name="gymxietyMode" value="1" data-gymxiety-create-toggle ${gymxietyEnabled ? 'checked' : ''}>
+              <span class="landing-toggle-track" aria-hidden="true"></span>
+              <span class="landing-toggle-thumb" aria-hidden="true"></span>
+            </label>
+          </div>
         </div>
         <button class="landing-button landing-grid-span" type="submit">Create Account</button>
       </form>
@@ -65,12 +83,13 @@ export function renderCreateAccount(options = {}) {
     return { html: '', afterRender: () => {} };
   }
   ensureLandingStyles();
+  const gymxietyEnabled = getGymxietyPreference();
 
   const html = `
     <section class="landing-page">
       <div class="landing-container">
         ${buildHero()}
-        ${buildFormSection()}
+        ${buildFormSection(gymxietyEnabled)}
         ${buildCtaSection()}
       </div>
       ${includeFooter ? renderFooter() : ''}
@@ -79,13 +98,27 @@ export function renderCreateAccount(options = {}) {
 
   const afterRender = root => {
     const form = root.querySelector('[data-form="create-account"]');
+    const gymxietyToggle = root.querySelector('[data-gymxiety-create-toggle]');
+    const gymxietyStatus = root.querySelector('[data-gymxiety-create-status]');
+
+    if (gymxietyToggle && gymxietyStatus) {
+      gymxietyToggle.addEventListener('change', () => {
+        gymxietyStatus.textContent = gymxietyToggle.checked
+          ? 'Gentle mode already on'
+          : 'Toggle it on anytime';
+      });
+    }
+
     if (form) {
       form.addEventListener('submit', event => {
         event.preventDefault();
         const formData = new FormData(form);
         const name = formData.get('name')?.toString().trim() || 'New Member';
         const email = formData.get('email')?.toString().trim() || '';
-        login({ name, email });
+        const gymxietyMode = Boolean(formData.get('gymxietyMode'));
+        const profile = { gymxietyMode };
+        login({ name, email, profile });
+        persistGymxietyPreference(gymxietyMode);
         window.location.hash = '#/welcome';
       });
     }
