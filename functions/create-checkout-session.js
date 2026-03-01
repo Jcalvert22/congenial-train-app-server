@@ -1,5 +1,3 @@
-import Stripe from 'stripe';
-
 function jsonResponse(body, init = {}) {
   const headers = new Headers(init.headers || {});
   headers.set('Content-Type', 'application/json');
@@ -17,6 +15,30 @@ function assertEnv(env) {
   if (missing.length) {
     throw new Error(`Missing environment variables: ${missing.join(', ')}`);
   }
+}
+
+async function createStripeCheckoutSession(env, priceId) {
+  const params = new URLSearchParams();
+  params.append('mode', 'subscription');
+  params.append('success_url', `${env.APP_URL}/checkout/success`);
+  params.append('cancel_url', `${env.APP_URL}/checkout/cancel`);
+  params.append('line_items[0][price]', priceId);
+  params.append('line_items[0][quantity]', '1');
+
+  const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error?.message || 'Stripe API error');
+  }
+  return result;
 }
 
 export async function onRequestPost(context) {
@@ -45,23 +67,8 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Unsupported price selection.' }, { status: 400 });
   }
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-    apiVersion: '2023-10-16'
-  });
-
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      success_url: `${env.APP_URL}/checkout/success`,
-      cancel_url: `${env.APP_URL}/checkout/cancel`,
-      line_items: [
-        {
-          price: selectedPriceId,
-          quantity: 1
-        }
-      ]
-    });
-
+    const session = await createStripeCheckoutSession(env, selectedPriceId);
     return jsonResponse({ url: session.url });
   } catch (error) {
     console.error('Stripe checkout error', error);

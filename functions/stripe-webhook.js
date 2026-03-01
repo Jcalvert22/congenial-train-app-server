@@ -1,6 +1,3 @@
-import Stripe from 'stripe';
-
-const STRIPE_API_VERSION = '2023-10-16';
 const SUPABASE_TABLE = 'profiles';
 
 function textResponse(body, init = {}) {
@@ -52,6 +49,77 @@ async function patchSupabase(env, filter, payload) {
     const errorText = await response.text();
     throw new Error(`Supabase update failed (${response.status}): ${errorText}`);
   }
+}
+
+function hexToUint8Array(hex) {
+  if (!hex || hex.length % 2 !== 0) {
+    return null;
+  }
+  const array = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < array.length; i += 1) {
+    const byte = hex.substr(i * 2, 2);
+    const value = parseInt(byte, 16);
+    if (Number.isNaN(value)) {
+      return null;
+    }
+    array[i] = value;
+  }
+  return array;
+}
+
+function parseStripeSignature(signatureHeader) {
+  return signatureHeader.split(',').reduce(
+    (acc, part) => {
+      const [key, value] = part.split('=');
+      if (!key || !value) {
+        return acc;
+      }
+      if (key === 't') {
+        acc.timestamp = value;
+      } else {
+        acc.signatures[key] = acc.signatures[key] || [];
+        acc.signatures[key].push(value);
+      }
+      return acc;
+    },
+    { timestamp: null, signatures: {} }
+  );
+}
+
+async function verifyStripeSignature(body, signatureHeader, secret) {
+  if (!signatureHeader || !secret) {
+    return false;
+  }
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) {
+    throw new Error('SubtleCrypto not available in this runtime');
+  }
+  const parsed = parseStripeSignature(signatureHeader);
+  const signatures = parsed.signatures.v1 || [];
+  if (!parsed.timestamp || !signatures.length) {
+    return false;
+  }
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const signingKey = await subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+  const payload = encoder.encode(`${parsed.timestamp}.${body}`);
+  for (const signature of signatures) {
+    const signatureBytes = hexToUint8Array(signature);
+    if (!signatureBytes) {
+      continue;
+    }
+    const verified = await subtle.verify('HMAC', signingKey, signatureBytes, payload);
+    if (verified) {
+      return true;
+    }
+  }
+  return false;
 }
 
 async function handleCheckoutSessionCompleted(session, env) {
@@ -109,7 +177,6 @@ async function routeEvent(event, env) {
       await handleSessionExpired(event.data.object, env);
       break;
     default:
-      // Ignore unsupported event types
       break;
   }
 }
@@ -123,19 +190,24 @@ export async function onRequestPost(context) {
     return textResponse('Server misconfiguration', { status: 500 });
   }
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION });
-  const signature = request.headers.get('stripe-signature');
+  const signature =
+    request.headers.get('stripe-signature') || request.headers.get('Stripe-Signature');
   if (!signature) {
     return textResponse('Missing signature.', { status: 400 });
   }
 
   const body = await request.text();
+  const verified = await verifyStripeSignature(body, signature, env.STRIPE_WEBHOOK_SECRET);
+  if (!verified) {
+    return textResponse('Invalid signature.', { status: 400 });
+  }
+
   let event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
+    event = JSON.parse(body);
   } catch (error) {
-    console.error('Stripe signature verification failed', error);
-    return textResponse('Invalid signature.', { status: 400 });
+    console.error('Invalid JSON payload received from Stripe', error);
+    return textResponse('Invalid payload.', { status: 400 });
   }
 
   try {
