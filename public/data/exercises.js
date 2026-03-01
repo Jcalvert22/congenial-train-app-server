@@ -1,820 +1,484 @@
-export const MUSCLE_GROUPS = [
-  'Upper Chest',
-  'Chest',
-  'Shoulders',
-  'Arms',
-  'Back',
-  'Abs',
-  'Legs',
-  'Glutes',
-  'Core',
-  'Full Body',
-  'Conditioning'
+export const GENERAL_EQUIPMENT = [
+  'Bodyweight',
+  'Dumbbells',
+  'Cables',
+  'Bench',
+  'Squat Rack',
+  'Bands',
+  'Cardio Machines'
 ];
 
+export const MACHINE_EQUIPMENT = [
+  'Chest Press Machine',
+  'Pec Deck Machine',
+  'Lat Pulldown Machine',
+  'Seated Row Machine',
+  'Leg Press Machine',
+  'Hamstring Curl Machine',
+  'Ab Curl Machine',
+  'Rotary Torso Machine',
+  'Assisted Dip Machine',
+  'Pull-Up Bar (Bodyweight)'
+];
+
+export const EQUIPMENT_ETIQUETTE = {
+  'Chest Press Machine': "Adjust the seat - it's normal.",
+  'Pec Deck Machine': 'Set the pads where you need them - everyone adjusts this one.',
+  'Lat Pulldown Machine': 'Keep the bar steady - no need to lean back far.',
+  'Seated Row Machine': 'Sit tall and pull smoothly - no rushing needed.',
+  'Leg Press Machine': 'Adjust the seat depth so it feels comfortable.',
+  'Hamstring Curl Machine': 'Make sure the pad sits just above your ankles.',
+  'Ab Curl Machine': 'Use a light weight and move slow.',
+  'Rotary Torso Machine': 'Choose a small range of motion - no need to twist far.',
+  'Assisted Dip Machine': 'Pick a weight that helps you.',
+  'Pull-Up Bar (Bodyweight)': 'Give others a little space when possible.',
+  Dumbbells: 'Step back from the rack before lifting.',
+  Cables: "Reset the attachment when you're done.",
+  Bench: 'Try not to block the mirror behind you.',
+  'Squat Rack': "Take your time setting up - you're allowed to.",
+  Bands: 'Secure the anchor so it stays safe for others.',
+  'Cardio Machines': 'Step off to the side if you need a break.',
+  Bodyweight: 'Give others a little space when possible.'
+};
+
+export const GYMXIETY_ETIQUETTE = {
+  Machines: "It's okay to take your time adjusting the seat.",
+  Dumbbells: "Find a small space - you don't need much room.",
+  'Squat Rack': 'You belong here. Everyone starts somewhere.',
+  Bench: "It's okay to move the bench a little."
+};
+
+export const EQUIPMENT_LIST = [...GENERAL_EQUIPMENT, ...MACHINE_EQUIPMENT];
+export const FALLBACK_EQUIPMENT = ['Bodyweight', 'Dumbbells', 'Cables'];
+export const MUSCLE_GROUPS = ['Chest', 'Back', 'Arms', 'Legs', 'Glutes', 'Core', 'Cardio'];
+
 export const EXERCISES = [
+  // Chest
   {
-    name: 'Incline Dumbbell Press',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Upper Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lie on an incline bench and press dumbbells upward.',
-    video: ''
-  },
-  {
-    name: 'Incline Push-up',
-    equipment: ['Bench', 'Bodyweight'],
-    muscle_group: 'Upper Chest',
+    name: 'Chest Press Machine',
+    equipment: ['Chest Press Machine'],
+    muscle_group: 'Chest',
     movement_pattern: 'Horizontal Push',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Place hands on a bench, keep hips level, and press away from the surface.',
-    video: ''
-  },
-  {
-    name: 'Push-up',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Start in a plank, lower until your chest nearly touches the floor, then press back up at a steady pace.',
-    video: ''
-  },
-  {
-    name: 'Bench Press',
-    equipment: ['Bench', 'Barbell'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lie on a flat bench, lower the bar to your chest, then press up while keeping feet planted.',
-    video: ''
+    etiquette_tip: "Adjust the seat - it's normal."
   },
   {
     name: 'Pec Deck Fly',
-    equipment: ['Pec Deck'],
+    equipment: ['Pec Deck Machine'],
     muscle_group: 'Chest',
     movement_pattern: 'Horizontal Push',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Sit tall at the machine, bring the arms together in front of the chest, then return slowly.',
-    video: ''
+    etiquette_tip: 'Set the pads where you need them - everyone adjusts this one.'
   },
   {
     name: 'Cable Chest Fly',
     equipment: ['Cables'],
     muscle_group: 'Chest',
     movement_pattern: 'Horizontal Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Step forward with staggered stance, hug the handles together in a wide arc, then control back.',
-    video: ''
-  },
-  {
-    name: 'Shoulder Press',
-    equipment: ['Shoulder Press Machine'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Press the machine handles overhead with elbows tracking under wrists, then lower to ear level.',
-    video: ''
+    etiquette_tip: 'Step a little forward so the cable lane stays clear.'
   },
   {
-    name: 'Lateral Raise',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Raise dumbbells to the side with a soft elbow until shoulder height, then lower slowly.',
-    video: ''
-  },
-  {
-    name: 'Front Raise',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lift dumbbells in front to shoulder height, pause briefly, then lower with control.',
-    video: ''
-  },
-  {
-    name: 'Bicep Curl',
-    equipment: ['Dumbbells', 'Cables', 'Preacher Curl'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
+    name: 'Kneeling Push-Up',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Curl the weight up while keeping elbows tucked to your sides, then lower slowly.',
-    video: ''
+    etiquette_tip: 'Use a mat and leave space for others nearby.'
   },
   {
-    name: 'Triceps Pushdown',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'With elbows pinned by your ribs, press the rope or bar downward and control the return.',
-    video: ''
-  },
-  {
-    name: 'Hammer Curl',
+    name: 'Dumbbell Floor Press',
     equipment: ['Dumbbells'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Curl dumbbells with palms facing each other, pausing briefly at the top.',
-    video: ''
-  },
-  {
-    name: 'Overhead Triceps Extension',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
     intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Press a dumbbell overhead, bend elbows to lower it behind the head, then extend back up.',
-    video: ''
+    gymxiety_safe: true,
+    etiquette_tip: 'Claim a corner of the floor so walkways stay open.'
   },
+
+  // Back
   {
-    name: 'Lat Pulldown',
-    equipment: ['Lat Pulldown', 'Cables'],
+    name: 'Lat Pulldown Machine',
+    equipment: ['Lat Pulldown Machine'],
     muscle_group: 'Back',
     movement_pattern: 'Vertical Pull',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Pull the bar toward the collarbone while keeping chest tall, then control back up.',
-    video: ''
+    etiquette_tip: 'Keep the bar steady - no need to lean back far.'
   },
   {
-    name: 'Seated Row',
+    name: 'Seated Row Machine',
+    equipment: ['Seated Row Machine'],
+    muscle_group: 'Back',
+    movement_pattern: 'Horizontal Pull',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Sit tall and pull smoothly - no rushing needed.'
+  },
+  {
+    name: 'Single-Arm Dumbbell Row',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Back',
+    movement_pattern: 'Horizontal Pull',
+    intimidation_level: 'moderate',
+    gymxiety_safe: true,
+    etiquette_tip: 'Re-rack the dumbbell before wiping the bench.'
+  },
+  {
+    name: 'Band Row',
+    equipment: ['Bands'],
+    muscle_group: 'Back',
+    movement_pattern: 'Horizontal Pull',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Unclip the band so the anchor point is free when you finish.'
+  },
+  {
+    name: 'Pull-Up Bar Hang',
+    equipment: ['Pull-Up Bar (Bodyweight)'],
+    muscle_group: 'Back',
+    movement_pattern: 'Vertical Pull',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    etiquette_tip: 'Give others a little space when possible.'
+  },
+  {
+    name: 'Cable Face Pull',
     equipment: ['Cables'],
     muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
+    movement_pattern: 'Accessory',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Sit upright, pull handles toward the torso, pause, then extend arms forward with control.',
-    video: ''
+    etiquette_tip: 'Lower the rope gently and reset the height when done.'
   },
+
+  // Arms
   {
-    name: 'Dumbbell Row',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'With one hand on a bench, row the dumbbell toward your hip while keeping hips level.',
-    video: ''
-  },
-  {
-    name: 'Crunch',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
+    name: 'Cable Biceps Curl',
+    equipment: ['Cables'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Accessory',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Curl shoulders toward hips on the floor or mat, exhaling through the lift.',
-    video: ''
+    etiquette_tip: 'Share the cable by alternating if someone is waiting.'
   },
   {
-    name: 'Plank',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Hold a straight line from head to heels on forearms, bracing the core and glutes.',
-    video: ''
-  },
-  {
-    name: 'Leg Raise',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lie on a flat surface, lift legs toward the ceiling with control, then lower without arching the back.',
-    video: ''
-  },
-  {
-    name: 'Squat',
-    equipment: ['Squat Rack', 'Barbell'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lower hips back and down until thighs are parallel, then stand tall while keeping knees tracking toes.',
-    video: ''
-  },
-  {
-    name: 'Leg Extension',
-    equipment: ['Leg Extension'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Leg Extension',
+    name: 'Dumbbell Hammer Curl',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Accessory',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Extend knees to lift the pad, pause briefly, then lower under control.',
-    video: ''
+    etiquette_tip: 'Carry the dumbbells a few steps from the rack before curling.'
   },
   {
-    name: 'Hamstring Curl',
-    equipment: ['Hamstring Curl'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Leg Curl',
+    name: 'Cable Triceps Pushdown',
+    equipment: ['Cables'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Accessory',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Curl heels toward the glutes against the pad and return slowly.',
-    video: ''
+    etiquette_tip: 'Set the pin back to a lighter weight for the next lifter.'
   },
   {
-    name: 'Calf Raise',
-    equipment: ['Dumbbells', 'Bench'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Calf Raise',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Stand on an elevated surface, rise onto toes, pause, then lower your heels below the platform.',
-    video: ''
-  },
-  {
-    name: 'Treadmill Walk',
-    equipment: ['Treadmill'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Walk at a steady, conversational pace while keeping posture tall.',
-    video: ''
-  },
-  {
-    name: 'Stair Stepper',
-    equipment: ['Stair Stepper'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Climb rotating stairs with light pressure on the rails and smooth steps.',
-    video: ''
-  },
-  {
-    name: 'Bike Ride',
-    equipment: ['Cardio Bike'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Pedal at a steady pace focusing on relaxed breathing.',
-    video: ''
-  },
-  {
-    name: 'Leg Press',
-    equipment: ['Machine'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Set feet shoulder-width on the sled, lower under control, then press back up.'
-  },
-  {
-    name: 'Glute-Focused Leg Press',
-    equipment: ['Machine'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Squat',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Place feet high and wide on the platform, lower slowly, and drive through heels.'
-  },
-  {
-    name: 'Smith Machine Box Squat',
-    equipment: ['Smith Machine', 'Bench'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Sit back to a box under the smith bar, lightly tap, then stand tall.'
-  },
-  {
-    name: 'Goblet Split Squat',
-    equipment: ['Dumbbells', 'Bench'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Hold a dumbbell at the chest, drop the back knee slowly, and stand up with control.'
-  },
-  {
-    name: 'TRX Assisted Squat',
-    equipment: ['Suspension Trainer'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Hold the straps, sit back into a squat, and use the handles lightly for balance.'
-  },
-  {
-    name: 'Bodyweight Step-Up',
+    name: 'Bench Triceps Dip',
     equipment: ['Bench'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
+    muscle_group: 'Arms',
+    movement_pattern: 'Accessory',
     intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Step onto a low box, press through the front heel, then lower with control.'
+    gymxiety_safe: true,
+    etiquette_tip: 'Leave room behind the bench so people can walk by.'
   },
   {
-    name: 'Dumbbell Step-Up',
-    equipment: ['Bench', 'Dumbbells'],
+    name: 'Assisted Dip Machine',
+    equipment: ['Assisted Dip Machine'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Accessory',
+    intimidation_level: 'moderate',
+    gymxiety_safe: true,
+    etiquette_tip: 'Pick a weight that helps you.'
+  },
+
+  // Legs
+  {
+    name: 'Leg Press Machine',
+    equipment: ['Leg Press Machine'],
     muscle_group: 'Legs',
     movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Hold light bells at sides, step up to the bench, and bring the trail leg up softly.'
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Adjust the seat depth so it feels comfortable.'
   },
   {
-    name: 'Dumbbell Romanian Deadlift',
+    name: 'Hamstring Curl Machine',
+    equipment: ['Hamstring Curl Machine'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Hinge',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Make sure the pad sits just above your ankles.'
+  },
+  {
+    name: 'Goblet Squat',
     equipment: ['Dumbbells'],
     muscle_group: 'Legs',
-    movement_pattern: 'Hinge',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Hinge at the hips with soft knees, slide bells down thighs, then squeeze glutes to stand.'
-  },
-  {
-    name: 'Smith Machine Romanian Deadlift',
-    equipment: ['Smith Machine'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Hinge',
+    movement_pattern: 'Squat',
     intimidation_level: 'moderate',
     gymxiety_safe: true,
-    howto: 'Stand under the smith bar, hinge with a flat back, and press hips forward to rise.'
+    etiquette_tip: 'Set the dumbbell down softly so the floor stays clear.'
+  },
+  {
+    name: 'Step-Up',
+    equipment: ['Bench'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Lunge',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Return the bench to flat once you finish stepping.'
+  },
+  {
+    name: 'Bodyweight Split Squat',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Lunge',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Face one direction so you do not block traffic.'
+  },
+  {
+    name: 'Rack Supported Squat Hold',
+    equipment: ['Squat Rack'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Squat',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    etiquette_tip: 'Share the rack by stepping aside during rest.'
+  },
+  {
+    name: 'Banded Terminal Knee Extension',
+    equipment: ['Bands'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Accessory',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Step slightly to the side so the stretched band is not a trip hazard.'
+  },
+
+  // Glutes
+  {
+    name: 'Glute Bridge',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Glutes',
+    movement_pattern: 'Hinge',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Use a mat or towel and wipe it down afterward.'
   },
   {
     name: 'Cable Pull-Through',
     equipment: ['Cables'],
     muscle_group: 'Glutes',
     movement_pattern: 'Hinge',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Face away from the stack, hinge back with the rope between the legs, then stand tall.'
-  },
-  {
-    name: 'Hip Thrust Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Brace the upper back on the pad, drive hips up, and pause at the top before lowering.'
-  },
-  {
-    name: 'Stability Ball Glute Bridge',
-    equipment: ['Stability Ball'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
     intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Lie on the floor with calves on the ball, lift hips until aligned, then lower slowly.'
+    gymxiety_safe: true,
+    etiquette_tip: 'Face away from the stack so the cable path stays open.'
   },
   {
-    name: 'Frog Pump',
-    equipment: ['Bodyweight'],
+    name: 'Band Monster Walk',
+    equipment: ['Bands'],
     muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
+    movement_pattern: 'Carry',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Lie on the floor with soles together, squeeze glutes to lift hips repeatedly.'
+    etiquette_tip: 'Pick a short lane and turn around instead of wandering.'
   },
   {
-    name: 'Back Extension Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Back',
+    name: 'Dumbbell Romanian Deadlift',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Glutes',
     movement_pattern: 'Hinge',
     intimidation_level: 'moderate',
     gymxiety_safe: true,
-    howto: 'Set the pad at hip level, lower the torso slowly, then extend to neutral.'
+    etiquette_tip: 'Set dumbbells down quietly before resetting your grip.'
   },
-  {
-    name: 'Cable Kickback',
-    equipment: ['Cables'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Attach an ankle cuff, kick the leg back with a soft knee, then return with control.'
-  },
-  {
-    name: 'Standing Cable Hip Abduction',
-    equipment: ['Cables'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Stand tall, sweep the strapped leg out to the side slowly, and resist on the return.'
-  },
-  {
-    name: 'Mini Band Monster Walk',
-    equipment: ['Mini Bands'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Glutes',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Place a loop above knees, sit into a mini squat, and step laterally with tension.'
-  },
-  {
-    name: 'Chest Press Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Sit tall, press the handles forward, and return until elbows are just past the torso.'
-  },
-  {
-    name: 'Incline Chest Press Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Upper Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Set the backrest upright, press handles on an upward path, and lower slowly.'
-  },
-  {
-    name: 'Seated Cable Chest Press',
-    equipment: ['Cables', 'Bench'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Sit with handles at chest height, press forward together, and reset with control.'
-  },
-  {
-    name: 'Knee Push-up',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Lower the chest toward the floor from the knees, then push the ground away.'
-  },
-  {
-    name: 'Smith Machine Push-up',
-    equipment: ['Smith Machine'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Place hands on the fixed bar, body in a plank, lower slowly, and press back up.'
-  },
-  {
-    name: 'Seated Row Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Sit tall, pull handles toward the ribs, pause, then extend arms without shrugging.'
-  },
-  {
-    name: 'Chest-Supported Row',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Lie face down on an incline bench and row dumbbells toward the hips.'
-  },
-  {
-    name: 'Cable Row (Neutral Grip)',
-    equipment: ['Cables'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Use a neutral handle, pull to the belly button, then reach forward under control.'
-  },
-  {
-    name: 'Straight-Arm Pulldown',
-    equipment: ['Cables'],
-    muscle_group: 'Back',
-    movement_pattern: 'Vertical Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Keep arms straight, pull the bar to thighs while squeezing lats, and return slowly.'
-  },
-  {
-    name: 'Assisted Pull-Up Machine',
-    equipment: ['Machine'],
-    muscle_group: 'Back',
-    movement_pattern: 'Vertical Pull',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Set assistance, pull the body upward with a proud chest, then lower steadily.'
-  },
-  {
-    name: 'Single-Arm Cable Row',
-    equipment: ['Cables'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Stagger your stance, row one handle toward the rib cage, and resist rotation.'
-  },
-  {
-    name: 'Machine Shoulder Press',
-    equipment: ['Machine'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Press handles overhead with elbows under wrists, then lower to ear level.'
-  },
-  {
-    name: 'Seated Dumbbell Shoulder Press',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Sit upright, press bells overhead with control, and lower until elbows are at 90 degrees.'
-  },
-  {
-    name: 'Cable Lateral Raise',
-    equipment: ['Cables'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Vertical Push',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Stand beside a low pulley and sweep the arm out to shoulder height.'
-  },
-  {
-    name: 'Supported Rear Delt Fly',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Chest on an incline bench, raise arms out wide to squeeze the rear shoulders.'
-  },
-  {
-    name: 'Face Pull',
-    equipment: ['Cables'],
-    muscle_group: 'Shoulders',
-    movement_pattern: 'Horizontal Pull',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Use a rope at eye level, pull toward the face with elbows high, and pause.'
-  },
-  {
-    name: 'Cable Biceps Curl',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Stand tall, curl the straight bar to the shoulders, and lower with control.'
-  },
-  {
-    name: 'Seated Dumbbell Curl',
-    equipment: ['Bench', 'Dumbbells'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Sit upright with back support, curl bells while keeping elbows tucked.'
-  },
-  {
-    name: 'Cable Hammer Curl',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Grip the rope with thumbs up, curl toward the shoulders, then lower steadily.'
-  },
-  {
-    name: 'Rope Overhead Triceps Extension',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Face away from the stack, extend the rope overhead, and control the stretch behind the head.'
-  },
-  {
-    name: 'Cable Triceps Kickback',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Arms',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Hinge slightly, tuck the elbow, and extend the handle back until the arm is straight.'
-  },
+
+  // Core
   {
     name: 'Dead Bug',
     equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
+    muscle_group: 'Core',
     movement_pattern: 'Core',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Lie on the back, lower opposite arm and leg slowly while keeping ribs down.'
+    etiquette_tip: 'Stay centered on your mat so others have room.'
   },
   {
-    name: 'Bird Dog',
+    name: 'Plank',
     equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
+    muscle_group: 'Core',
     movement_pattern: 'Core',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'From hands and knees, reach opposite arm and leg long without twisting.'
-  },
-  {
-    name: 'Pallof Press',
-    equipment: ['Cables', 'Resistance Bands'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Stand perpendicular to the anchor, press the handle forward, resisting rotation.'
-  },
-  {
-    name: 'Machine Crunch',
-    equipment: ['Machine'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Set the seat, curl the torso forward against the pad, then return slowly.'
-  },
-  {
-    name: 'Cable Crunch',
-    equipment: ['Cables'],
-    muscle_group: 'Abs',
-    movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    howto: 'Kneel with a rope overhead, pull ribs toward hips, and control the ascent.'
+    etiquette_tip: 'Roll out a mat and keep your space tidy.'
   },
   {
     name: 'Side Plank',
     equipment: ['Bodyweight'],
-    muscle_group: 'Abs',
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Face one direction so walkways stay open.'
+  },
+  {
+    name: 'Mountain Climbers',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Core',
     movement_pattern: 'Core',
     intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Stack feet, lift hips off the floor, and hold a straight line from head to heels.'
+    gymxiety_safe: true,
+    etiquette_tip: 'Stay in one lane so no one has to step over you.'
   },
   {
-    name: 'Stability Ball Plank',
-    equipment: ['Stability Ball'],
-    muscle_group: 'Abs',
+    name: 'Bird Dog',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Core',
     movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Place forearms on the ball, brace the core, and hold without letting hips sag.'
-  },
-  {
-    name: 'Treadmill Incline Walk',
-    equipment: ['Treadmill'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
     intimidation_level: 'low',
     gymxiety_safe: true,
-    howto: 'Set a light incline and walk at a conversational pace for steady cardio.'
+    etiquette_tip: 'Choose a lane on the turf so you are not blocking anyone.'
   },
   {
-    name: 'Row Machine Easy Pace',
-    equipment: ['Rowing Machine'],
-    muscle_group: 'Back',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Row with a smooth rhythm, focusing on long strokes and relaxed breathing.'
-  },
-  {
-    name: 'Recumbent Bike Ride',
-    equipment: ['Recumbent Bike'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Sit back in the seat, keep light tension on the pedals, and spin comfortably.'
-  },
-  {
-    name: 'Light Elliptical Glide',
-    equipment: ['Elliptical'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    howto: 'Maintain an easy stride on the elliptical, keeping heels flat and posture tall.'
-  },
-  {
-    name: 'Suitcase Carry',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Abs',
+    name: 'Hollow Hold',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Core',
     movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    howto: 'Hold a single dumbbell at your side and walk slowly while keeping the torso upright.'
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Use a mat and lower slowly so it stays quiet.'
+  },
+  {
+    name: 'Bicycle Crunches',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Keep the motion compact so you do not kick nearby people.'
+  },
+  {
+    name: 'Flutter Kicks',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Stay on your mat and keep shoes away from others.'
+  },
+  {
+    name: 'Pallof Press',
+    equipment: ['Cables'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Stand perpendicular to the stack so the cable lane is clear.'
+  },
+  {
+    name: 'Plank on Bench',
+    equipment: ['Bench'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Leave enough space behind the bench for people to pass.'
+  },
+  {
+    name: 'Ab Curl Machine Crunch',
+    equipment: ['Ab Curl Machine'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Use a light weight and move slow.'
+  },
+  {
+    name: 'Rotary Torso Machine Twist',
+    equipment: ['Rotary Torso Machine'],
+    muscle_group: 'Core',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Choose a small range of motion - no need to twist far.'
+  },
+
+  // Cardio
+  {
+    name: 'Low-Impact March',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Cardio',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Face the same direction so others can pass behind you.'
+  },
+  {
+    name: 'Treadmill Walk',
+    equipment: ['Cardio Machines'],
+    muscle_group: 'Cardio',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Step off to the side if you need a break.'
+  },
+  {
+    name: 'Bike',
+    equipment: ['Cardio Machines'],
+    muscle_group: 'Cardio',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Towel off the seat and handles before leaving.'
+  },
+  {
+    name: 'Elliptical Glide',
+    equipment: ['Cardio Machines'],
+    muscle_group: 'Cardio',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Let others know if you will return before you step away.'
+  },
+  {
+    name: 'Rower',
+    equipment: ['Cardio Machines'],
+    muscle_group: 'Cardio',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    etiquette_tip: 'Slide the seat forward and wipe the handle when done.'
   }
 ];
 
-const BASE_EQUIPMENT = [
-  'Bench',
-  'Dumbbells',
-  'Bodyweight',
-  'Bodyweight Only',
-  'Cables',
-  'Resistance Bands',
-  'Mini Bands',
-  'Suspension Trainer',
-  'Smith Machine',
-  'Squat Rack',
-  'Machine',
-  'Leg Extension',
-  'Hamstring Curl',
-  'Pec Deck',
-  'Shoulder Press',
-  'Lat Pulldown',
-  'Seated Row',
-  'Preacher Curl',
-  'Stability Ball',
-  'Treadmill',
-  'Cardio Bike',
-  'Rowing Machine',
-  'Recumbent Bike',
-  'Elliptical',
-  'Stair Stepper'
+const DEFAULT_WORKOUT_NAMES = [
+  'Goblet Squat',
+  'Bodyweight Split Squat',
+  'Cable Chest Fly',
+  'Single-Arm Dumbbell Row',
+  'Cable Biceps Curl',
+  'Cable Triceps Pushdown',
+  'Glute Bridge',
+  'Dead Bug',
+  'Low-Impact March'
 ];
 
-const BASE_EQUIPMENT_SET = new Set(BASE_EQUIPMENT.map(item => item.toLowerCase()));
+export const DEFAULT_BEGINNER_WORKOUT = DEFAULT_WORKOUT_NAMES
+  .map(name => EXERCISES.find(exercise => exercise.name === name))
+  .filter(Boolean);
 
-const EXTRA_EQUIPMENT = Array.from(
-  new Set(
-    EXERCISES.flatMap(exercise => {
-      if (Array.isArray(exercise.equipment)) {
-        return exercise.equipment;
-      }
-      if (exercise.equipment) {
-        return [exercise.equipment];
-      }
-      return [];
-    })
-      .map(item => item.trim())
-      .filter(Boolean)
-  )
-)
-  .filter(item => !BASE_EQUIPMENT_SET.has(item.toLowerCase()))
-  .sort((a, b) => a.localeCompare(b));
-
-export const EQUIPMENT_LIST = [...BASE_EQUIPMENT, ...EXTRA_EQUIPMENT];
-
-export const BEGINNER_EQUIPMENT = [
-  'Dumbbells',
-  'Bench',
-  'Bodyweight Only',
-  'Resistance Bands',
-  'Pull-up Bar',
-  'Stationary Bike',
-  'Treadmill',
-  'Kettlebell',
-  'StepMill',
-  'Jump Rope',
-  'Foam Roller',
-  'Stability Ball',
-  'Mini Bands',
-  'Push-up Handles',
-  'Grip Trainer',
-  'Medicine Ball',
-  'Ab Wheel',
-  'Parallettes',
-  'Suspension Trainer',
-  'Roman Chair',
-  'Hyperextension Bench',
-  'Stepper',
-  'Elliptical',
-  'Rowing Machine',
-  'Weighted Vest',
-  'Ankle Weights',
-  'Bosu Ball'
-];
-
+export const BEGINNER_EQUIPMENT = [...EQUIPMENT_LIST];
 export const BEGINNER_MUSCLES = [...MUSCLE_GROUPS];
-
-export const BASIC_EXERCISES = [
-  { name: 'Push-up', equipment: ['Bodyweight'], muscle_group: 'Chest' },
-  { name: 'Squat', equipment: ['Bodyweight', 'Barbell', 'Dumbbells'], muscle_group: 'Legs' },
-  { name: 'Bench Press', equipment: ['Barbell', 'Bench', 'Dumbbells'], muscle_group: 'Chest' },
-  { name: 'Deadlift', equipment: ['Barbell', 'Dumbbells'], muscle_group: 'Back' },
-  { name: 'Pull-up', equipment: ['Pull-up Bar'], muscle_group: 'Back' },
-  { name: 'Kettlebell Swing', equipment: ['Kettlebell'], muscle_group: 'Legs' },
-  { name: 'Banded Row', equipment: ['Resistance Bands'], muscle_group: 'Back' },
-  { name: 'Running', equipment: ['Treadmill'], muscle_group: 'Legs' },
-  { name: 'Cycling', equipment: ['Stationary Bike'], muscle_group: 'Legs' }
-];

@@ -1,7 +1,9 @@
 import { startApp } from './ui/screens.js';
+import { initializeDislikedExercises } from './utils/dislikedExercises.js';
 
 function bootstrap() {
   try {
+    initializeDislikedExercises();
     startApp();
   } catch (error) {
     console.error('Failed to start AllAroundAthlete', error);

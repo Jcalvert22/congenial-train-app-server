@@ -1,8 +1,10 @@
 import { escapeHTML, clamp } from '../utils/helpers.js';
 import { getState, setState } from '../logic/state.js';
-import { recordWorkoutCompletion } from '../logic/workout.js';
+import { recordWorkoutCompletion, handlePlanFeedback } from '../logic/workout.js';
 import { getAuth } from '../auth/state.js';
 import { addWorkoutToHistory } from '../data/history.js';
+import { addSavedWorkout } from '../utils/savedWorkouts.js';
+import { buildSavedWorkoutPayload } from './summary.js';
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
@@ -14,6 +16,7 @@ import {
   applyConfidenceAlternative
 } from '../utils/gymxiety.js';
 import { confidenceAlternativeMap } from '../data/confidenceAlternativeMap.js';
+import { getExerciseEtiquetteLines } from '../utils/etiquette.js';
 
 const READY_DELAY_MS = 1000;
 const CARD_TRANSITION_MS = 220;
@@ -22,6 +25,16 @@ const EXECUTION_GYMXIETY_CUES = [
   'Move slow and controlled.',
   'Stop if anything feels sharp or painful.'
 ];
+const EXECUTION_FEEDBACK_CHOICES = [
+  { value: 'too_easy', label: 'Too easy', intent: 'easy' },
+  { value: 'perfect', label: 'Perfect', intent: 'steady' },
+  { value: 'too_hard', label: 'Too difficult', intent: 'hard' }
+];
+const EXECUTION_FEEDBACK_MESSAGES = {
+  too_easy: 'Got it. We will gently nudge this move harder next time.',
+  perfect: 'Nice. We will keep this prescription steady.',
+  too_hard: 'Thanks. We will ease this exercise the next time it shows up.'
+};
 const DEFAULT_EXERCISE_SETS = '3 sets';
 const DEFAULT_EXERCISE_REPS = '10 reps';
 const DEFAULT_EXERCISE_REST = 'Rest 90 sec';
@@ -128,7 +141,8 @@ function normalizeExecutionExercise(row, index) {
       confidence: DEFAULT_EXERCISE_CONFIDENCE,
       supportiveCues: [],
       usesWeight: false,
-      baseExercise: `Movement ${index + 1}`
+      baseExercise: `Movement ${index + 1}`,
+      timeBased: false
     };
   }
   return {
@@ -146,7 +160,9 @@ function normalizeExecutionExercise(row, index) {
     confidence: row.confidence || DEFAULT_EXERCISE_CONFIDENCE,
     supportiveCues: Array.isArray(row.supportiveCues) ? row.supportiveCues : [],
     usesWeight: Boolean(row.usesWeight),
-    baseExercise: row.baseExercise || row.exercise || row.name || `Movement ${index + 1}`
+    baseExercise: row.baseExercise || row.exercise || row.name || `Movement ${index + 1}`,
+    timeBased: Boolean(row.timeBased),
+    etiquetteTip: row.etiquetteTip || row.etiquette_tip || ''
   };
 }
 
@@ -158,9 +174,10 @@ function normalizeExecutionExercises(rows = []) {
 }
 
 function renderExerciseCard(exercise, index, total, options = {}) {
-  const { gymxietyMode } = options;
+  const { gymxietyMode, feedbackChoice = '', feedbackKey } = options;
   const rest = formatRest(exercise, { gymxietyMode });
   const progressPercent = Math.round(((index + 1) / total) * 100);
+  const exerciseId = feedbackKey || String(exercise.id ?? index);
   const progressMarkup = gymxietyMode
     ? `<p class="landing-subtext">Movement ${index + 1} of ${total}</p>`
     : `
@@ -177,8 +194,38 @@ function renderExerciseCard(exercise, index, total, options = {}) {
   const extraCues = !gymxietyMode && Array.isArray(exercise.supportiveCues)
     ? exercise.supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('')
     : '';
+  const etiquetteLines = getExerciseEtiquetteLines(exercise, { gymxietyMode });
+  const etiquetteMarkup = etiquetteLines.length
+    ? etiquetteLines.map(line => `<p class="supportive-text">${escapeHTML(line)}</p>`).join('')
+    : '';
   const confidenceTag = `<span class="confidence-tag">Confidence: ${escapeHTML(exercise.confidence || 'Moderate')}</span>`;
   const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(exercise.muscle || 'Full body')}</p>`;
+  const feedbackButtons = EXECUTION_FEEDBACK_CHOICES
+    .map(choice => {
+      const isSelected = feedbackChoice === choice.value ? ' is-selected' : '';
+      return `
+        <button class="execution-feedback-btn${isSelected}" type="button"
+          data-action="exercise-feedback"
+          data-choice="${escapeHTML(choice.value)}"
+          data-exercise-id="${escapeHTML(exerciseId)}"
+          data-intent="${escapeHTML(choice.intent)}">
+          ${escapeHTML(choice.label)}
+        </button>
+      `;
+    })
+    .join('');
+  const feedbackStatusCopy = feedbackChoice ? EXECUTION_FEEDBACK_MESSAGES[feedbackChoice] : '';
+  const feedbackControls = `
+    <div class="execution-feedback" data-feedback-group="${escapeHTML(exerciseId)}">
+      <p class="landing-subtext">How did that feel?</p>
+      <div class="execution-feedback-actions">
+        ${feedbackButtons}
+      </div>
+      <p class="supportive-text execution-feedback-status"${feedbackStatusCopy ? '' : ' hidden'} data-feedback-status>
+        ${feedbackStatusCopy ? escapeHTML(feedbackStatusCopy) : ''}
+      </p>
+    </div>
+  `;
   const easierButton = canUseConfidenceAlternative(exercise)
     ? `<button class="easy-version-btn" type="button" data-action="exercise-alt" data-exercise-index="${index}">Show easier version</button>`
     : '';
@@ -195,11 +242,13 @@ function renderExerciseCard(exercise, index, total, options = {}) {
         ${supportiveIntro}
         ${instructionsMarkup}
         ${extraCues}
+        ${etiquetteMarkup}
         ${muscleLabel}
         <div class="landing-pill-list">
           <span class="landing-pill">${escapeHTML(exercise.muscle || 'Full body')}</span>
           <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
         </div>
+        ${feedbackControls}
         ${easierButton}
       </article>
     </section>
@@ -254,10 +303,12 @@ function renderCompletionSection(entry) {
           </div>
         </div>
         <div class="landing-actions landing-actions-stack execution-complete-actions landing-space-top-md">
+          <button class="landing-button" type="button" data-action="save-completed-workout">Save Workout</button>
           <a class="landing-button" href="#/dashboard">Back to Dashboard</a>
           <a class="landing-button secondary" href="#/history">View Workout History</a>
           <a class="landing-button secondary" href="#/generate">Generate Another Workout</a>
         </div>
+        <p class="supportive-text completion-save-feedback" data-completion-save-feedback hidden>Saved for later. Check it on the History screen anytime.</p>
       </article>
     </section>
   `;
@@ -281,6 +332,14 @@ function calculateDurationMinutes(startedAt, finishTimestamp, planRows) {
   return estimateFallbackDuration(planRows);
 }
 
+function inferTimeBasedFromRow(row) {
+  if (typeof row?.timeBased === 'boolean') {
+    return row.timeBased;
+  }
+  const value = (row?.repRange || row?.reps || '').toString().toLowerCase();
+  return /sec|second|hold|walk|carry|march|bike|row|ride/.test(value);
+}
+
 function buildHistoryEntryPayload(state, options = {}) {
   const workout = state.ui?.activeWorkout;
   if (!workout || !Array.isArray(workout.planRows) || !workout.planRows.length) {
@@ -296,7 +355,8 @@ function buildHistoryEntryPayload(state, options = {}) {
     sets: row.sets,
     reps: row.repRange,
     rest: formatRest(row),
-    instructions: row.description || 'Move smoothly and keep breathing steady.'
+    instructions: row.description || 'Move smoothly and keep breathing steady.',
+    timeBased: inferTimeBasedFromRow(row)
   }));
   const uniqueId = `hist-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const durationMinutes = calculateDurationMinutes(
@@ -321,6 +381,7 @@ export function renderWorkoutExecution(state) {
   const workout = getActiveWorkout(state);
   const normalizedExercises = normalizeExecutionExercises(Array.isArray(workout?.planRows) ? workout.planRows : []);
   const total = normalizedExercises.length;
+  const feedbackSelections = state.ui?.activeWorkoutFeedback || {};
   const firstName = getFirstName(state);
   const fallbackPreference = typeof state.profile?.gymxietyMode === 'boolean'
     ? state.profile.gymxietyMode
@@ -382,9 +443,14 @@ export function renderWorkoutExecution(state) {
     return renderPageShell(sections, { isLoading });
   }
 
+  const exerciseKey = String(currentExercise.id ?? currentIndex);
   const sections = `
     ${renderHeader('in-progress', firstName, gymxietyMode)}
-    ${renderExerciseCard(currentExercise, currentIndex, total, { gymxietyMode })}
+    ${renderExerciseCard(currentExercise, currentIndex, total, {
+      gymxietyMode,
+      feedbackChoice: feedbackSelections[exerciseKey],
+      feedbackKey: exerciseKey
+    })}
     ${renderNavigationSection(currentIndex, total, { gymxietyMode })}
   `;
 
@@ -418,6 +484,56 @@ export function attachWorkoutExecutionEvents(root) {
   if (exerciseCard) {
     requestAnimationFrame(() => exerciseCard.classList.add('visible'));
   }
+
+  const completionSaveButton = root.querySelector('[data-action="save-completed-workout"]');
+  if (completionSaveButton) {
+    const feedbackNote = root.querySelector('[data-completion-save-feedback]');
+    completionSaveButton.addEventListener('click', () => {
+      const latest = getState();
+      const plan = latest.ui?.activeWorkout || latest.ui?.plannerResult;
+      const payload = buildSavedWorkoutPayload(plan, latest.profile || {});
+      if (!payload) {
+        console.warn('No workout available to save.');
+        return;
+      }
+      addSavedWorkout(payload);
+      completionSaveButton.disabled = true;
+      completionSaveButton.textContent = 'Saved Workout';
+      if (feedbackNote) {
+        feedbackNote.hidden = false;
+      }
+    });
+  }
+
+  const updateFeedbackUi = (exerciseId, choice) => {
+    if (!exerciseId) {
+      return;
+    }
+    const groups = root.querySelectorAll('[data-feedback-group]');
+    let targetGroup = null;
+    groups.forEach(group => {
+      if (group.dataset.feedbackGroup === exerciseId) {
+        targetGroup = group;
+      }
+    });
+    if (!targetGroup) {
+      return;
+    }
+    const buttons = targetGroup.querySelectorAll('[data-action="exercise-feedback"]');
+    buttons.forEach(button => {
+      button.classList.toggle('is-selected', button.dataset.choice === choice);
+    });
+    const statusEl = targetGroup.querySelector('[data-feedback-status]');
+    if (statusEl) {
+      if (choice && EXECUTION_FEEDBACK_MESSAGES[choice]) {
+        statusEl.textContent = EXECUTION_FEEDBACK_MESSAGES[choice];
+        statusEl.hidden = false;
+      } else {
+        statusEl.textContent = '';
+        statusEl.hidden = true;
+      }
+    }
+  };
 
   const useConfidenceAlternative = index => {
     let updatedRow = null;
@@ -487,6 +603,7 @@ export function attachWorkoutExecutionEvents(root) {
       prev.ui.activeWorkoutCompleted = true;
       prev.ui.activeWorkoutSavedEntry = entry;
       prev.ui.activeWorkoutStartedAt = null;
+      prev.ui.activeWorkoutFeedback = {};
       return prev;
     });
   };
@@ -510,31 +627,68 @@ export function attachWorkoutExecutionEvents(root) {
   }
 
   root.addEventListener('click', event => {
-    const trigger = event.target.closest('[data-action="exercise-alt"]');
-    if (!trigger) {
+    const feedbackTrigger = event.target.closest('[data-action="exercise-feedback"]');
+    if (feedbackTrigger) {
+      event.preventDefault();
+      const exerciseId = feedbackTrigger.dataset.exerciseId;
+      const choice = feedbackTrigger.dataset.choice;
+      if (!exerciseId || !choice) {
+        return;
+      }
+      const latest = getState();
+      const previousChoice = latest.ui?.activeWorkoutFeedback?.[exerciseId] || '';
+      if (previousChoice === choice) {
+        updateFeedbackUi(exerciseId, choice);
+        return;
+      }
+      if (previousChoice && previousChoice !== 'perfect' && previousChoice !== choice) {
+        const reverseChoice = previousChoice === 'too_easy' ? 'too_hard' : 'too_easy';
+        handlePlanFeedback({ [exerciseId]: reverseChoice });
+      }
+      if (choice !== 'perfect') {
+        handlePlanFeedback({ [exerciseId]: choice });
+      }
+      setState(prev => {
+        const nextFeedback = { ...(prev.ui?.activeWorkoutFeedback || {}) };
+        nextFeedback[exerciseId] = choice;
+        prev.ui = { ...prev.ui, activeWorkoutFeedback: nextFeedback };
+        return prev;
+      });
+      updateFeedbackUi(exerciseId, choice);
+      return;
+    }
+
+    const confidenceTrigger = event.target.closest('[data-action="exercise-alt"]');
+    if (!confidenceTrigger) {
       return;
     }
     event.preventDefault();
-    const buttonIndex = Number.parseInt(trigger.dataset.exerciseIndex, 10);
+    const buttonIndex = Number.parseInt(confidenceTrigger.dataset.exerciseIndex, 10);
     const fallbackIndex = clamp(getState().ui?.activeWorkoutIndex ?? 0, 0, (getState().ui?.activeWorkout?.planRows || []).length - 1);
     const targetIndex = Number.isFinite(buttonIndex) ? buttonIndex : fallbackIndex;
     const card = root.querySelector('[data-exercise-card]');
     if (!card) {
       return;
     }
-    trigger.disabled = true;
+    confidenceTrigger.disabled = true;
     card.classList.remove('visible');
     window.setTimeout(() => {
       const updatedRow = useConfidenceAlternative(targetIndex);
       if (!updatedRow) {
-        trigger.disabled = false;
+        confidenceTrigger.disabled = false;
         card.classList.add('visible');
         return;
       }
       const latest = getState();
       const refreshedPlan = latest.ui?.activeWorkout || latest.ui?.plannerResult;
       const total = Array.isArray(refreshedPlan?.planRows) ? refreshedPlan.planRows.length : 0;
-      const nextMarkup = renderExerciseCard(updatedRow, targetIndex, total, { gymxietyMode });
+      const feedbackSelections = latest.ui?.activeWorkoutFeedback || {};
+      const exerciseId = String(updatedRow.id ?? targetIndex);
+      const nextMarkup = renderExerciseCard(updatedRow, targetIndex, total, {
+        gymxietyMode,
+        feedbackChoice: feedbackSelections[exerciseId],
+        feedbackKey: exerciseId
+      });
       card.outerHTML = nextMarkup;
       const nextCard = root.querySelector(`[data-exercise-card][data-exercise-index="${targetIndex}"]`);
       if (nextCard) {

@@ -16,7 +16,8 @@ import {
   createPlannerPlan,
   storePlannerResult,
   handlePlanFeedback,
-  recordWorkoutCompletion
+  recordWorkoutCompletion,
+  resolvePlanFocus
 } from '../logic/workout.js';
 import {
   escapeHTML,
@@ -36,8 +37,8 @@ import { renderStartTrial } from './landingStartTrial.js';
 import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
 import { renderWorkoutExecution, attachWorkoutExecutionEvents } from '../pages/workout-execution.js';
-import { renderHistoryDetails, attachHistoryDetailsEvents } from '../pages/history-details.js';
 import { renderHistoryPage, attachHistoryPageEvents } from '../pages/history.js';
+import { renderWorkoutDetailPage, attachWorkoutDetailEvents } from '../pages/workout-detail.js';
 import { renderProfilePage, attachProfilePageEvents } from '../pages/profile.js';
 import { renderProfileEdit, attachProfileEditEvents } from '../pages/profile-edit.js';
 import { renderFooter } from './footer.js';
@@ -850,7 +851,7 @@ function resolveRoute(hash, state, auth) {
       navigateTo('history');
       return null;
     }
-    return protectRoute(() => ({ html: renderHistoryDetails(id), afterRender: attachHistoryDetailsEvents }));
+    return protectRoute(() => ({ html: renderWorkoutDetailPage(id), afterRender: attachWorkoutDetailEvents }));
   }
   switch (hash) {
     case '#/':
@@ -1219,16 +1220,32 @@ function renderPlanner(state) {
   return renderAppPage(sections);
 }
 
+function isTimeBasedRow(row) {
+  if (typeof row?.timeBased === 'boolean') {
+    return row.timeBased;
+  }
+  const value = (row?.repRange || '').toString().toLowerCase();
+  return /sec|second|hold|walk|carry|march|bike|row|ride/.test(value);
+}
+
 function renderPlannerResult(result) {
   if (!result) {
     return '';
   }
   const planRows = result.planRows || [];
   const summary = result.summary || { movementCount: 0, focus: [], repRange: '', setsPerExercise: '', mode: '' };
+  const requestedMuscles = Array.isArray(result.meta?.requestedMuscles)
+    ? result.meta.requestedMuscles.filter(Boolean)
+    : [];
+  const focusSource = requestedMuscles.length
+    ? requestedMuscles
+    : resolvePlanFocus(planRows, summary.focus || [], 0);
+  const focusList = Array.from(new Set(focusSource.map(item => item.trim()).filter(Boolean)));
+  const focusLabel = focusList.length ? focusList.join(', ') : 'General';
 
   const summaryCards = [
     { label: 'Movements', value: summary.movementCount || 0 },
-    { label: 'Focus', value: summary.focus?.slice(0, 2).map(escapeHTML).join(', ') || 'General' },
+    { label: 'Focus', value: focusLabel },
     { label: 'Intensity', value: `${escapeHTML(summary.repRange || '')} - ${escapeHTML(summary.setsPerExercise || '')}` },
     { label: 'Mode', value: summary.mode || 'Calm builder' }
   ].map(card => `
@@ -1244,7 +1261,7 @@ function renderPlannerResult(result) {
           <h3>${escapeHTML(row.exercise)}</h3>
           <p class="landing-subtext">${escapeHTML(row.muscle)} - ${escapeHTML(row.equipment)}</p>
           <ul class="landing-list">
-            <li>Reps: ${escapeHTML(row.repRange)}</li>
+            <li>${isTimeBasedRow(row) ? 'Time' : 'Reps'}: ${escapeHTML(row.repRange)}</li>
             <li>Sets: ${escapeHTML(row.sets)}</li>
             <li>${escapeHTML(row.description)}</li>
           </ul>
