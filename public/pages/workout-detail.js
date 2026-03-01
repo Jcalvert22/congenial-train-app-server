@@ -1,6 +1,8 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { findSavedWorkout, removeSavedWorkout } from '../utils/savedWorkouts.js';
 import { renderErrorStateCard, renderPageShell } from '../components/stateCards.js';
+import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
+import { machineIcons } from '../data/machineIcons.js';
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -9,6 +11,9 @@ const GOAL_LABELS = {
   weight_loss: 'Weight Loss',
   general: 'General Fitness'
 };
+
+const DEFAULT_SET_LABEL = '3 sets';
+const DEFAULT_REST_LABEL = 'Rest 60 sec';
 
 function formatGoal(goal) {
   if (!goal) {
@@ -34,37 +39,57 @@ function formatDateLabel(dateValue) {
   });
 }
 
+function formatDurationLabel(entry) {
+  const explicitMinutes = Number(entry?.durationMinutes);
+  if (Number.isFinite(explicitMinutes) && explicitMinutes > 0) {
+    return `${explicitMinutes} min`;
+  }
+  const count = Array.isArray(entry?.exercises)
+    ? entry.exercises.length
+    : Array.isArray(entry?.planRows)
+      ? entry.planRows.length
+      : 0;
+  if (!count) {
+    return '~15 min';
+  }
+  const estimated = Math.max(10, Math.round(count * 6));
+  return `~${estimated} min`;
+}
+
+function formatMuscleGroups(entry) {
+  if (Array.isArray(entry?.selectedMuscleGroups) && entry.selectedMuscleGroups.length) {
+    return entry.selectedMuscleGroups.join(', ');
+  }
+  const exercise = Array.isArray(entry?.exercises) ? entry.exercises.find(item => item?.muscle_group) : null;
+  return exercise?.muscle_group || 'Full body mix';
+}
+
 function renderHeader(dateLabel, goalLabel) {
   return `
-    <header class="landing-hero">
-      <div class="landing-hero-content">
-        <span class="landing-tag">Saved workout</span>
-        <h1>Workout Details</h1>
-        <p class="landing-subtext lead">Saved on ${escapeHTML(dateLabel)} · Goal: ${escapeHTML(goalLabel)}</p>
-      </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Reminder</p>
-        <p>Use saved workouts on days you want zero planning—just tap start and move.</p>
-      </div>
-    </header>
+    <section class="landing-section history-detail-header">
+      <span class="landing-tag">Saved workout</span>
+      <h1>Workout Details</h1>
+      <p class="landing-subtext lead">Saved on ${escapeHTML(dateLabel)} · Goal: ${escapeHTML(goalLabel)}</p>
+    </section>
   `;
 }
 
 function renderSummary(entry) {
   const equipment = Array.isArray(entry?.selectedEquipment) && entry.selectedEquipment.length
     ? entry.selectedEquipment.join(', ')
-    : 'Bodyweight only';
+    : '';
+  const muscleGroups = formatMuscleGroups(entry);
+  const durationLabel = formatDurationLabel(entry);
   const stats = [
-    { label: 'Goal', value: formatGoal(entry?.selectedGoal) },
+    { label: 'Duration', value: durationLabel },
     { label: 'Equipment', value: equipment },
-    { label: 'Gymxiety Mode', value: entry?.gymxietyMode ? 'On' : 'Off' },
-    { label: 'Exercises', value: `${Array.isArray(entry?.exercises) ? entry.exercises.length : 0} moves` }
-  ];
+    { label: 'Muscles', value: muscleGroups }
+  ].filter(stat => stat.value);
   return `
-    <section class="landing-section">
+    <section class="landing-section history-overview-section">
       <p class="landing-subtext">Overview</p>
-      <article class="landing-card">
-        <div class="landing-grid landing-grid-two">
+      <article class="landing-card summary-overview-card history-overview-card">
+        <div class="history-overview-grid">
           ${stats.map(stat => `
             <div>
               <p class="landing-subtext">${escapeHTML(stat.label)}</p>
@@ -82,23 +107,30 @@ function renderExerciseCard(exercise) {
     return '';
   }
   const name = exercise.name || 'Exercise';
-  const sets = exercise.sets || '3 sets';
+  const sets = exercise.sets || DEFAULT_SET_LABEL;
   const reps = exercise.reps || '';
-  const time = exercise.time || '';
-  const rest = exercise.rest || 'Rest 45-60 sec';
-  const confidence = exercise.confidence || 'Moderate';
-  const etiquette = exercise.etiquette_tip || '';
-  const prescriptionLabel = time ? `Time: ${time}` : `Reps: ${reps || '—'}`;
+  const rest = exercise.rest || DEFAULT_REST_LABEL;
+  const confidence = exercise.confidence || '';
+  const muscle = exercise.muscle_group || 'Full body';
+  const equipment = exercise.equipment || 'Bodyweight';
+  const iconMarkup = buildExerciseIconMarkup(
+    { exerciseName: name, muscle, equipment },
+    machineIcons
+  );
+  const prescription = reps ? `${sets} · ${reps}` : sets;
   return `
-    <article class="landing-card">
-      <h3>${escapeHTML(name)}</h3>
-      <p class="landing-subtext">${escapeHTML(sets)} · ${escapeHTML(prescriptionLabel)} · ${escapeHTML(rest)}</p>
-      <div class="landing-pill-list landing-space-top-xs">
-        <span class="landing-pill">${escapeHTML(exercise.muscle_group || 'Full body')}</span>
-        <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
-        <span class="landing-pill">Confidence: ${escapeHTML(confidence)}</span>
+    <article class="landing-card history-exercise-card">
+      <div class="history-exercise-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
+      <div class="history-exercise-text">
+        <h3>${escapeHTML(name)}</h3>
+        <p class="landing-subtext">${escapeHTML(prescription)} · ${escapeHTML(rest)}</p>
+        <div class="history-exercise-meta">
+          <span>${escapeHTML(muscle)}</span>
+          <span>${escapeHTML(equipment)}</span>
+          ${confidence ? `<span>Confidence: ${escapeHTML(confidence)}</span>` : ''}
+        </div>
+        ${exercise.etiquette_tip ? `<p class="supportive-text history-exercise-etiquette">${escapeHTML(exercise.etiquette_tip)}</p>` : ''}
       </div>
-      ${etiquette ? `<p class="supportive-text landing-space-top-xs">${escapeHTML(etiquette)}</p>` : ''}
     </article>
   `;
 }
@@ -107,17 +139,17 @@ function renderExercisesSection(entry) {
   const list = Array.isArray(entry?.exercises) ? entry.exercises : [];
   if (!list.length) {
     return `
-      <section class="landing-section">
-        <article class="landing-card">
-          <p>No exercises were stored with this workout.</p>
+      <section class="landing-section history-exercises">
+        <article class="landing-card history-exercise-card empty">
+          <p class="supportive-text">No exercises were saved with this workout.</p>
         </article>
       </section>
     `;
   }
   return `
-    <section class="landing-section">
+    <section class="landing-section history-exercises">
       <p class="landing-subtext">Exercises</p>
-      <div class="landing-grid">
+      <div class="history-exercise-list">
         ${list.map(renderExerciseCard).join('')}
       </div>
     </section>
@@ -126,11 +158,11 @@ function renderExercisesSection(entry) {
 
 function renderActions(entry) {
   return `
-    <section class="landing-section" data-workout-detail-root data-workout-id="${escapeHTML(entry.id)}">
-      <div class="landing-actions landing-actions-stack">
-        <a class="landing-button" href="#/history">Back to History</a>
-        <a class="landing-button secondary" href="#/generate">Generate a Fresh Workout</a>
-        <button class="landing-button secondary" type="button" data-action="delete-saved-workout">Delete Saved Workout</button>
+    <section class="landing-section history-detail-actions" data-workout-detail-root data-workout-id="${escapeHTML(entry.id)}">
+      <a class="landing-button history-back-button" href="#/history">Back to History</a>
+      <div class="history-detail-links">
+        <a class="supportive-link" href="#/generate">Generate a Fresh Workout</a>
+        <button class="supportive-link danger" type="button" data-action="delete-saved-workout">Delete Saved Workout</button>
       </div>
     </section>
   `;

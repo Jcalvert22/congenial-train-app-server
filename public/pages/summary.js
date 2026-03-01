@@ -17,23 +17,8 @@ import { getDislikedExercises, addDislikedExercise } from '../utils/dislikedExer
 import { applyGoalPrescription } from '../utils/generateWorkout.js';
 import { collectEquipmentEtiquette, getExerciseEtiquetteLines } from '../utils/etiquette.js';
 import { addSavedWorkout, generateSavedWorkoutId } from '../utils/savedWorkouts.js';
-
-const MUSCLE_ICONS = {
-  Chest: '\u{1F9E1}',
-  Back: '\u{1F499}',
-  Legs: '\u{1F49A}',
-  Shoulders: '\u{1F49B}',
-  Arms: '\u{1F4AA}',
-  Abs: '\u{1F300}'
-};
-
-function getExerciseIcon(targetMuscle = '') {
-  const normalized = targetMuscle?.toString().trim();
-  if (normalized && MUSCLE_ICONS[normalized]) {
-    return MUSCLE_ICONS[normalized];
-  }
-  return '\u{1F3CB}\uFE0F';
-}
+import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
+import { machineIcons } from '../data/machineIcons.js';
 
 const GYMXIETY_SUPPORTIVE_CUES = [
   'Choose a weight that feels comfortable.',
@@ -385,11 +370,19 @@ function renderExerciseCard(row, index, options = {}) {
   const easierLink = canSwap
     ? `<button class="easier-btn" type="button" data-action="confidence-alt" data-exercise-index="${index}">Need an easier version?</button>`
     : '';
+  const iconMarkup = buildExerciseIconMarkup(
+    { exerciseName, muscle, equipment },
+    machineIcons
+  );
   return `
     <article class="landing-card fade-transition" data-exercise-card data-exercise-index="${index}">
-      <div class="landing-card-image" aria-hidden="true">${getExerciseIcon(muscle)}</div>
-      <h3>${escapeHTML(exerciseName)}</h3>
-      <p class="landing-subtext">${escapeHTML(sets)} x ${escapeHTML(reps)} - ${escapeHTML(restLabel)}</p>
+      <div class="exercise-card-header">
+        <div class="landing-card-image exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
+        <div class="exercise-card-header-text">
+          <h3>${escapeHTML(exerciseName)}</h3>
+          <p class="landing-subtext">${escapeHTML(sets)} x ${escapeHTML(reps)} · ${escapeHTML(restLabel)}</p>
+        </div>
+      </div>
       ${confidenceTag}
       <p>${escapeHTML(instructions)}</p>
       ${supportiveCopy}
@@ -614,15 +607,26 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
   const confidence = gymxietyMode
     ? `<span class="confidence-tag">${escapeHTML(row.confidence || 'Moderate')}</span>`
     : '';
+  const iconMarkup = buildExerciseIconMarkup(
+    {
+      exerciseName: row.exercise,
+      muscle: row.muscle,
+      equipment: row.equipment
+    },
+    machineIcons
+  );
   return `
     <button class="swap-option-card" type="button" data-swap-option="${index}">
-      <div class="swap-option-header">
-        <h4>${escapeHTML(row.exercise)}</h4>
-        ${confidence}
+      <div class="swap-option-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
+      <div class="swap-option-body">
+        <div class="swap-option-header">
+          <h4>${escapeHTML(row.exercise)}</h4>
+          ${confidence}
+        </div>
+        <p class="swap-option-meta">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
+        <p class="swap-option-prescription">${escapeHTML(row.sets)}</p>
+        <p class="swap-option-prescription">${escapeHTML(repDetails)}</p>
       </div>
-      <p class="swap-option-meta">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
-      <p class="swap-option-prescription">${escapeHTML(row.sets)}</p>
-      <p class="swap-option-prescription">${escapeHTML(repDetails)}</p>
     </button>
   `;
 }

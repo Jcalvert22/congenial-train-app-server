@@ -17,6 +17,8 @@ import {
 } from '../utils/gymxiety.js';
 import { confidenceAlternativeMap } from '../data/confidenceAlternativeMap.js';
 import { getExerciseEtiquetteLines } from '../utils/etiquette.js';
+import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
+import { machineIcons } from '../data/machineIcons.js';
 
 const READY_DELAY_MS = 1000;
 const CARD_TRANSITION_MS = 220;
@@ -176,14 +178,23 @@ function normalizeExecutionExercises(rows = []) {
 function renderExerciseCard(exercise, index, total, options = {}) {
   const { gymxietyMode, feedbackChoice = '', feedbackKey } = options;
   const rest = formatRest(exercise, { gymxietyMode });
-  const progressPercent = Math.round(((index + 1) / total) * 100);
   const exerciseId = feedbackKey || String(exercise.id ?? index);
-  const progressMarkup = gymxietyMode
-    ? `<p class="landing-subtext">Movement ${index + 1} of ${total}</p>`
-    : `
-        <p class="execution-progress">Exercise ${index + 1} of ${total}</p>
-        <div class="execution-progress-bar"><span style="width: ${progressPercent}%"></span></div>
-      `;
+  const muscle = exercise.muscle || 'Full body';
+  const exerciseName = exercise.exercise || 'Next movement';
+  const iconMarkup = buildExerciseIconMarkup(
+    {
+      exerciseName,
+      muscle,
+      equipment: exercise.equipment
+    },
+    machineIcons
+  );
+  const setsLabel = exercise.sets || DEFAULT_EXERCISE_SETS;
+  const repsLabel = exercise.repRange || exercise.reps || DEFAULT_EXERCISE_REPS;
+  const isTimeBased = Boolean(exercise.timeBased);
+  const primaryPrescription = isTimeBased ? repsLabel : setsLabel;
+  const secondaryPrescription = isTimeBased ? setsLabel : repsLabel;
+  const prescriptionLabel = isTimeBased ? 'Time or Distance' : 'Sets & Reps';
   const supportiveIntro = gymxietyMode
     ? '<p class="supportive-text">You\u2019re doing great - take your time and move with control.</p>'
     : '';
@@ -195,11 +206,26 @@ function renderExerciseCard(exercise, index, total, options = {}) {
     ? exercise.supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('')
     : '';
   const etiquetteLines = getExerciseEtiquetteLines(exercise, { gymxietyMode });
-  const etiquetteMarkup = etiquetteLines.length
-    ? etiquetteLines.map(line => `<p class="supportive-text">${escapeHTML(line)}</p>`).join('')
+  const etiquetteSet = [];
+  if (exercise.etiquetteTip) {
+    etiquetteSet.push(exercise.etiquetteTip);
+  }
+  etiquetteLines.forEach(line => {
+    if (line && !etiquetteSet.includes(line)) {
+      etiquetteSet.push(line);
+    }
+  });
+  const etiquetteMarkup = etiquetteSet.length
+    ? `
+        <div class="execution-etiquette" data-etiquette-tip>
+          ${etiquetteSet.map(line => `<p class="supportive-text">${escapeHTML(line)}</p>`).join('')}
+        </div>
+      `
     : '';
-  const confidenceTag = `<span class="confidence-tag">Confidence: ${escapeHTML(exercise.confidence || 'Moderate')}</span>`;
-  const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(exercise.muscle || 'Full body')}</p>`;
+  const rawConfidence = exercise.confidence?.toString().trim();
+  const confidenceTag = rawConfidence
+    ? `<span class="confidence-tag">Confidence: ${escapeHTML(rawConfidence)}</span>`
+    : '';
   const feedbackButtons = EXECUTION_FEEDBACK_CHOICES
     .map(choice => {
       const isSelected = feedbackChoice === choice.value ? ' is-selected' : '';
@@ -226,51 +252,70 @@ function renderExerciseCard(exercise, index, total, options = {}) {
       </p>
     </div>
   `;
-  const easierButton = canUseConfidenceAlternative(exercise)
-    ? `<button class="easy-version-btn" type="button" data-action="exercise-alt" data-exercise-index="${index}">Show easier version</button>`
+  const easierButtonMarkup = canUseConfidenceAlternative(exercise)
+    ? `<div class="execution-easier-action"><button class="easy-version-btn" type="button" data-action="exercise-alt" data-exercise-index="${index}">Show easier version</button></div>`
     : '';
-  return `
-    <section class="landing-section">
-      <article class="landing-card exercise-card fade-transition" data-exercise-card data-exercise-index="${index}">
-        ${progressMarkup}
-        <h2 class="landing-card-title">${escapeHTML(exercise.exercise || 'Next movement')}</h2>
-        ${confidenceTag}
-        <div class="execution-meta">
-          <strong>${escapeHTML(exercise.sets || '3 sets')} x ${escapeHTML(exercise.repRange || '8 reps')}</strong>
-          <span>${escapeHTML(rest)}</span>
-        </div>
-        ${supportiveIntro}
-        ${instructionsMarkup}
-        ${extraCues}
-        ${etiquetteMarkup}
-        ${muscleLabel}
-        <div class="landing-pill-list">
-          <span class="landing-pill">${escapeHTML(exercise.muscle || 'Full body')}</span>
-          <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
-        </div>
-        ${feedbackControls}
-        ${easierButton}
-      </article>
-    </section>
-  `;
-}
-
-function renderNavigationSection(index, total, options = {}) {
-  const { gymxietyMode } = options;
+  const navLead = gymxietyMode
+    ? 'Pause whenever you need. Extra rest is always okay.'
+    : 'Stay calm between sets.';
   const isFirst = index === 0;
   const isLast = index === total - 1;
   const nextLabel = isLast ? 'Finish Workout' : 'Next Exercise';
   const nextState = isLast ? 'finish' : 'next';
-  const navLead = gymxietyMode
-    ? 'Pause whenever you need. Extra rest is always okay.'
-    : 'Stay calm between sets.';
+  const restMarkup = `
+    <div class="execution-rest-card">
+      <p class="landing-subtext">Rest timer</p>
+      <p class="execution-rest-value">${escapeHTML(rest)}</p>
+    </div>
+  `;
+  const progressIndicator = `
+    <p class="execution-progress-indicator">Exercise ${escapeHTML(String(index + 1))} of ${escapeHTML(String(total))}</p>
+  `;
+  const navigationMarkup = `
+    <div class="execution-nav-group">
+      <p class="supportive-text execution-nav-copy">${escapeHTML(navLead)}</p>
+      <div class="landing-actions landing-actions-stack execution-nav-actions">
+        <button class="landing-button secondary" type="button" data-action="prev-exercise" ${isFirst ? 'disabled' : ''}>Previous Exercise</button>
+        <button class="landing-button" type="button" data-action="next-exercise" data-state="${nextState}">${escapeHTML(nextLabel)}</button>
+      </div>
+      ${easierButtonMarkup}
+      ${feedbackControls}
+    </div>
+  `;
   return `
-    <section class="landing-section">
-      <article class="landing-card execution-nav">
-        <p class="landing-subtext">${escapeHTML(navLead)}</p>
-        <div class="landing-actions landing-actions-stack">
-          <button class="landing-button secondary" type="button" data-action="prev-exercise" ${isFirst ? 'disabled' : ''}>Previous Exercise</button>
-          <button class="landing-button" type="button" data-action="next-exercise" data-state="${nextState}">${nextLabel}</button>
+    <section class="landing-section execution-section">
+      <article class="landing-card exercise-card execution-flow-card fade-transition" data-exercise-card data-exercise-index="${index}">
+        <div class="execution-screen">
+          <div class="execution-header">
+            <div class="execution-header-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
+            <div class="execution-header-text">
+              <p class="execution-header-label">Current move</p>
+              <h2 class="landing-card-title">${escapeHTML(exerciseName)}</h2>
+              <p class="execution-header-muscle">${escapeHTML(muscle)}</p>
+            </div>
+          </div>
+          <div class="execution-prescription-card">
+            <p class="landing-subtext">${escapeHTML(prescriptionLabel)}</p>
+            <div class="execution-prescription-values">
+              <span class="execution-prescription-main">${escapeHTML(primaryPrescription)}</span>
+              <span class="execution-prescription-sub">${escapeHTML(secondaryPrescription)}</span>
+            </div>
+          </div>
+          <div class="execution-instructions">
+            ${confidenceTag}
+            ${supportiveIntro}
+            ${instructionsMarkup}
+            ${extraCues}
+            <p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>
+            <div class="landing-pill-list execution-pill-list">
+              <span class="landing-pill">${escapeHTML(muscle)}</span>
+              <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
+            </div>
+          </div>
+          ${etiquetteMarkup}
+          ${restMarkup}
+          ${progressIndicator}
+          ${navigationMarkup}
         </div>
       </article>
     </section>
@@ -451,7 +496,6 @@ export function renderWorkoutExecution(state) {
       feedbackChoice: feedbackSelections[exerciseKey],
       feedbackKey: exerciseKey
     })}
-    ${renderNavigationSection(currentIndex, total, { gymxietyMode })}
   `;
 
   return renderPageShell(sections, { isLoading });
