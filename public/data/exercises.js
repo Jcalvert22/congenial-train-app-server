@@ -5,53 +5,274 @@ export const MUSCLE_GROUPS = [
   'Arms',
   'Back',
   'Abs',
-  'Legs'
-];
-
-export const EQUIPMENT_LIST = [
-  'Bench',
-  'Pec Deck',
-  'Dumbbells',
-  'Cables',
-  'Lat Pulldown',
-  'Seated Row',
-  'Shoulder Press',
-  'Preacher Curl',
-  'Squat Rack',
-  'Leg Extension',
-  'Hamstring Curl',
-  'Treadmill',
-  'Stair Stepper',
-  'Cardio Bike'
+  'Legs',
+  'Glutes',
+  'Core',
+  'Full Body',
+  'Conditioning'
 ];
 
 export const EXERCISES = [
-  { name: 'Incline Dumbbell Press', equipment: ['Bench', 'Dumbbells'], muscle_group: 'Upper Chest', howto: 'Lie on an incline bench and press dumbbells upward.', video: '' },
-  { name: 'Incline Push-up', equipment: ['Bench'], muscle_group: 'Upper Chest', howto: 'Place hands on bench, feet on floor, and perform push-ups.', video: '' },
-  { name: 'Push-up', equipment: ['Bench', 'Dumbbells'], muscle_group: 'Chest', howto: 'Start in a plank position and lower your body until your chest nearly touches the floor, then push back up.', video: '' },
-  { name: 'Bench Press', equipment: ['Bench', 'Dumbbells'], muscle_group: 'Chest', howto: 'Lie on a bench, grip dumbbells. Lower to chest, then press up.', video: '' },
-  { name: 'Pec Deck Fly', equipment: ['Pec Deck'], muscle_group: 'Chest', howto: 'Sit at the machine, bring arms together in front of chest, then return.', video: '' },
-  { name: 'Cable Chest Fly', equipment: ['Cables'], muscle_group: 'Chest', howto: 'With arms slightly bent, bring handles together in a wide arc, then return.', video: '' },
-  { name: 'Shoulder Press', equipment: ['Shoulder Press', 'Dumbbells'], muscle_group: 'Shoulders', howto: 'Press weight overhead, then lower.', video: '' },
-  { name: 'Lateral Raise', equipment: ['Dumbbells', 'Cables'], muscle_group: 'Shoulders', howto: 'Raise weights to sides to shoulder height.', video: '' },
-  { name: 'Front Raise', equipment: ['Dumbbells', 'Cables'], muscle_group: 'Shoulders', howto: 'Raise weights in front to shoulder height.', video: '' },
-  { name: 'Bicep Curl', equipment: ['Dumbbells', 'Preacher Curl', 'Cables'], muscle_group: 'Arms', howto: 'Curl weights up while keeping elbows close, then lower slowly.', video: '' },
-  { name: 'Triceps Pushdown', equipment: ['Cables'], muscle_group: 'Arms', howto: 'Push bar or rope down, keeping elbows at sides.', video: '' },
-  { name: 'Hammer Curl', equipment: ['Dumbbells'], muscle_group: 'Arms', howto: 'Curl dumbbells with palms facing each other.', video: '' },
-  { name: 'Overhead Triceps Extension', equipment: ['Dumbbells'], muscle_group: 'Arms', howto: 'Extend dumbbell overhead, then lower behind head and press up.', video: '' },
-  { name: 'Lat Pulldown', equipment: ['Lat Pulldown', 'Cables'], muscle_group: 'Back', howto: 'Pull bar to chest, then release.', video: '' },
-  { name: 'Seated Row', equipment: ['Cables'], muscle_group: 'Back', howto: 'Pull handles to torso, then release.', video: '' },
-  { name: 'Dumbbell Row', equipment: ['Bench', 'Dumbbells'], muscle_group: 'Back', howto: 'Place one knee and hand on bench, row dumbbell to hip.', video: '' },
-  { name: 'Crunch', equipment: ['Bench'], muscle_group: 'Abs', howto: 'Curl shoulders toward hips, then lower.', video: '' },
-  { name: 'Plank', equipment: ['Bench'], muscle_group: 'Abs', howto: 'Hold body straight on elbows and toes.', video: '' },
-  { name: 'Leg Raise', equipment: ['Bench'], muscle_group: 'Abs', howto: 'Lie on bench, raise legs upward, then lower.', video: '' },
-  { name: 'Squat', equipment: ['Squat Rack', 'Dumbbells'], muscle_group: 'Legs', howto: 'Lower hips back and down, then stand up.', video: '' },
-  { name: 'Leg Extension', equipment: ['Leg Extension'], muscle_group: 'Legs', howto: 'Extend knees to lift pad.', video: '' },
-  { name: 'Hamstring Curl', equipment: ['Hamstring Curl'], muscle_group: 'Legs', howto: 'Curl heels toward glutes.', video: '' },
-  { name: 'Calf Raise', equipment: ['Bench', 'Dumbbells'], muscle_group: 'Legs', howto: 'Stand on edge of bench, raise heels, then lower.', video: '' },
-  { name: 'Treadmill Walk', equipment: ['Treadmill'], muscle_group: 'Legs', howto: 'Walk at a steady pace.', video: '' },
-  { name: 'Stair Stepper', equipment: ['Stair Stepper'], muscle_group: 'Legs', howto: 'Climb rotating stairs.', video: '' },
-  { name: 'Bike Ride', equipment: ['Cardio Bike'], muscle_group: 'Legs', howto: 'Pedal at a steady pace.', video: '' },
+  {
+    name: 'Incline Dumbbell Press',
+    equipment: ['Bench', 'Dumbbells'],
+    muscle_group: 'Upper Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Lie on an incline bench and press dumbbells upward.',
+    video: ''
+  },
+  {
+    name: 'Incline Push-up',
+    equipment: ['Bench', 'Bodyweight'],
+    muscle_group: 'Upper Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Place hands on a bench, keep hips level, and press away from the surface.',
+    video: ''
+  },
+  {
+    name: 'Push-up',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: true,
+    howto: 'Start in a plank, lower until your chest nearly touches the floor, then press back up at a steady pace.',
+    video: ''
+  },
+  {
+    name: 'Bench Press',
+    equipment: ['Bench', 'Barbell'],
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Lie on a flat bench, lower the bar to your chest, then press up while keeping feet planted.',
+    video: ''
+  },
+  {
+    name: 'Pec Deck Fly',
+    equipment: ['Pec Deck'],
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Sit tall at the machine, bring the arms together in front of the chest, then return slowly.',
+    video: ''
+  },
+  {
+    name: 'Cable Chest Fly',
+    equipment: ['Cables'],
+    muscle_group: 'Chest',
+    movement_pattern: 'Horizontal Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: true,
+    howto: 'Step forward with staggered stance, hug the handles together in a wide arc, then control back.',
+    video: ''
+  },
+  {
+    name: 'Shoulder Press',
+    equipment: ['Shoulder Press Machine'],
+    muscle_group: 'Shoulders',
+    movement_pattern: 'Vertical Push',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Press the machine handles overhead with elbows tracking under wrists, then lower to ear level.',
+    video: ''
+  },
+  {
+    name: 'Lateral Raise',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Shoulders',
+    movement_pattern: 'Vertical Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Raise dumbbells to the side with a soft elbow until shoulder height, then lower slowly.',
+    video: ''
+  },
+  {
+    name: 'Front Raise',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Shoulders',
+    movement_pattern: 'Vertical Push',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Lift dumbbells in front to shoulder height, pause briefly, then lower with control.',
+    video: ''
+  },
+  {
+    name: 'Bicep Curl',
+    equipment: ['Dumbbells', 'Cables', 'Preacher Curl'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Arms',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Curl the weight up while keeping elbows tucked to your sides, then lower slowly.',
+    video: ''
+  },
+  {
+    name: 'Triceps Pushdown',
+    equipment: ['Cables'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Arms',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'With elbows pinned by your ribs, press the rope or bar downward and control the return.',
+    video: ''
+  },
+  {
+    name: 'Hammer Curl',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Arms',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Curl dumbbells with palms facing each other, pausing briefly at the top.',
+    video: ''
+  },
+  {
+    name: 'Overhead Triceps Extension',
+    equipment: ['Dumbbells'],
+    muscle_group: 'Arms',
+    movement_pattern: 'Arms',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Press a dumbbell overhead, bend elbows to lower it behind the head, then extend back up.',
+    video: ''
+  },
+  {
+    name: 'Lat Pulldown',
+    equipment: ['Lat Pulldown', 'Cables'],
+    muscle_group: 'Back',
+    movement_pattern: 'Vertical Pull',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Pull the bar toward the collarbone while keeping chest tall, then control back up.',
+    video: ''
+  },
+  {
+    name: 'Seated Row',
+    equipment: ['Cables'],
+    muscle_group: 'Back',
+    movement_pattern: 'Horizontal Pull',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Sit upright, pull handles toward the torso, pause, then extend arms forward with control.',
+    video: ''
+  },
+  {
+    name: 'Dumbbell Row',
+    equipment: ['Bench', 'Dumbbells'],
+    muscle_group: 'Back',
+    movement_pattern: 'Horizontal Pull',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'With one hand on a bench, row the dumbbell toward your hip while keeping hips level.',
+    video: ''
+  },
+  {
+    name: 'Crunch',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Abs',
+    movement_pattern: 'Core',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Curl shoulders toward hips on the floor or mat, exhaling through the lift.',
+    video: ''
+  },
+  {
+    name: 'Plank',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Abs',
+    movement_pattern: 'Core',
+    intimidation_level: 'moderate',
+    gymxiety_safe: true,
+    howto: 'Hold a straight line from head to heels on forearms, bracing the core and glutes.',
+    video: ''
+  },
+  {
+    name: 'Leg Raise',
+    equipment: ['Bodyweight'],
+    muscle_group: 'Abs',
+    movement_pattern: 'Core',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Lie on a flat surface, lift legs toward the ceiling with control, then lower without arching the back.',
+    video: ''
+  },
+  {
+    name: 'Squat',
+    equipment: ['Squat Rack', 'Barbell'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Squat',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Lower hips back and down until thighs are parallel, then stand tall while keeping knees tracking toes.',
+    video: ''
+  },
+  {
+    name: 'Leg Extension',
+    equipment: ['Leg Extension'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Leg Extension',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Extend knees to lift the pad, pause briefly, then lower under control.',
+    video: ''
+  },
+  {
+    name: 'Hamstring Curl',
+    equipment: ['Hamstring Curl'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Leg Curl',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Curl heels toward the glutes against the pad and return slowly.',
+    video: ''
+  },
+  {
+    name: 'Calf Raise',
+    equipment: ['Dumbbells', 'Bench'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Calf Raise',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Stand on an elevated surface, rise onto toes, pause, then lower your heels below the platform.',
+    video: ''
+  },
+  {
+    name: 'Treadmill Walk',
+    equipment: ['Treadmill'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Walk at a steady, conversational pace while keeping posture tall.',
+    video: ''
+  },
+  {
+    name: 'Stair Stepper',
+    equipment: ['Stair Stepper'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'moderate',
+    gymxiety_safe: false,
+    howto: 'Climb rotating stairs with light pressure on the rails and smooth steps.',
+    video: ''
+  },
+  {
+    name: 'Bike Ride',
+    equipment: ['Cardio Bike'],
+    muscle_group: 'Legs',
+    movement_pattern: 'Conditioning',
+    intimidation_level: 'low',
+    gymxiety_safe: true,
+    howto: 'Pedal at a steady pace focusing on relaxed breathing.',
+    video: ''
+  },
   {
     name: 'Leg Press',
     equipment: ['Machine'],
@@ -503,6 +724,56 @@ export const EXERCISES = [
     howto: 'Hold a single dumbbell at your side and walk slowly while keeping the torso upright.'
   }
 ];
+
+const BASE_EQUIPMENT = [
+  'Bench',
+  'Dumbbells',
+  'Bodyweight',
+  'Bodyweight Only',
+  'Cables',
+  'Resistance Bands',
+  'Mini Bands',
+  'Suspension Trainer',
+  'Smith Machine',
+  'Squat Rack',
+  'Machine',
+  'Leg Extension',
+  'Hamstring Curl',
+  'Pec Deck',
+  'Shoulder Press',
+  'Lat Pulldown',
+  'Seated Row',
+  'Preacher Curl',
+  'Stability Ball',
+  'Treadmill',
+  'Cardio Bike',
+  'Rowing Machine',
+  'Recumbent Bike',
+  'Elliptical',
+  'Stair Stepper'
+];
+
+const BASE_EQUIPMENT_SET = new Set(BASE_EQUIPMENT.map(item => item.toLowerCase()));
+
+const EXTRA_EQUIPMENT = Array.from(
+  new Set(
+    EXERCISES.flatMap(exercise => {
+      if (Array.isArray(exercise.equipment)) {
+        return exercise.equipment;
+      }
+      if (exercise.equipment) {
+        return [exercise.equipment];
+      }
+      return [];
+    })
+      .map(item => item.trim())
+      .filter(Boolean)
+  )
+)
+  .filter(item => !BASE_EQUIPMENT_SET.has(item.toLowerCase()))
+  .sort((a, b) => a.localeCompare(b));
+
+export const EQUIPMENT_LIST = [...BASE_EQUIPMENT, ...EXTRA_EQUIPMENT];
 
 export const BEGINNER_EQUIPMENT = [
   'Dumbbells',

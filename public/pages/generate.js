@@ -1,5 +1,5 @@
 import { escapeHTML } from '../utils/helpers.js';
-import { createPlannerPlan, storePlannerResult, getEquipmentList } from '../logic/workout.js';
+import { createPlannerPlan, storePlannerResult, getEquipmentList, getMuscleGroups } from '../logic/workout.js';
 import { getState } from '../logic/state.js';
 import { renderPageShell } from '../components/stateCards.js';
 import {
@@ -24,6 +24,12 @@ const GOAL_MUSCLE_MAP = {
 };
 const LOADING_DELAY_MS = 1100;
 const GYMXIETY_MODAL_TRANSITION_MS = 220;
+const MIN_MUSCLE_SELECTION = 1;
+const MAX_MUSCLE_SELECTION = 3;
+const EQUIPMENT_HELPER_LOCKED = 'Pick at least one option to keep the session realistic.';
+const EQUIPMENT_HELPER_UNLOCKED = 'Edit anything that does not match today and add or remove as needed.';
+const MUSCLE_HELPER_LOCKED = 'Choose equipment first to unlock these muscle chips.';
+const MUSCLE_HELPER_RANGE = 'Pick one to three groups so we keep this workout focused.';
 
 function renderHeader() {
   return `
@@ -73,6 +79,20 @@ function renderEquipmentOptions(selectedEquipment = []) {
   `;
 }
 
+function renderMuscleOptions(selectedMuscles = [], disabled = false) {
+  const safeSelection = Array.isArray(selectedMuscles) ? selectedMuscles : [];
+  return `
+    <div class="equipment-list" data-muscle-list>
+      ${getMuscleGroups().map(item => `
+        <label class="equipment-item">
+          <input type="checkbox" name="muscles" value="${escapeHTML(item)}" ${safeSelection.includes(item) ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+          <span>${escapeHTML(item)}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+}
+
 function renderFormSection(state) {
   const profile = state.profile || {};
   const defaultExperience = EXPERIENCE_OPTIONS.find(option => {
@@ -83,7 +103,20 @@ function renderFormSection(state) {
     const text = profile.goal || '';
     return text.toLowerCase().includes(option.split(' ')[0].toLowerCase());
   }) || GOAL_OPTIONS[0];
-  const defaultEquipment = guessEquipment(profile.equipment);
+  const previousPlanEquipment = state.ui?.plannerResult?.preferences?.equipment;
+  const defaultEquipment = Array.isArray(previousPlanEquipment) && previousPlanEquipment.length
+    ? previousPlanEquipment
+    : guessEquipment(profile.equipment);
+  const previousPlanMuscles = state.ui?.plannerResult?.preferences?.muscles;
+  const shouldLockMuscles = !defaultEquipment.length;
+  const baseMuscleDefaults = shouldLockMuscles
+    ? []
+    : (Array.isArray(previousPlanMuscles) && previousPlanMuscles.length
+        ? previousPlanMuscles
+        : buildMuscles(defaultGoal));
+  const defaultMuscles = Array.isArray(baseMuscleDefaults)
+    ? baseMuscleDefaults.slice(0, MAX_MUSCLE_SELECTION)
+    : [];
   const gymxietyEnabled = getGymxietyPreference();
 
   return `
@@ -91,6 +124,18 @@ function renderFormSection(state) {
       <div class="landing-error" data-generate-error hidden role="alert"></div>
       <article class="landing-card" data-generate-form>
         <form class="landing-form" data-form="generate-workout">
+          <fieldset class="generate-step" data-equipment-step>
+            <legend class="landing-subtext">Step 1 · Equipment on hand</legend>
+            <p class="landing-subtext">Tap everything you truly have nearby today.</p>
+            ${renderEquipmentOptions(defaultEquipment)}
+            <p class="supportive-text" data-equipment-helper>${defaultEquipment.length ? EQUIPMENT_HELPER_UNLOCKED : EQUIPMENT_HELPER_LOCKED}</p>
+          </fieldset>
+          <fieldset class="generate-step" data-muscle-step>
+            <legend class="landing-subtext">Step 2 · Muscles to nudge</legend>
+            <p class="landing-subtext">Unlocked after you choose your equipment.</p>
+            ${renderMuscleOptions(defaultMuscles, shouldLockMuscles)}
+            <p class="supportive-text" data-muscle-helper>${shouldLockMuscles ? MUSCLE_HELPER_LOCKED : MUSCLE_HELPER_RANGE}</p>
+          </fieldset>
           <label>
             <span class="landing-subtext">Experience level</span>
             <select class="landing-select" name="experience" required>
@@ -98,19 +143,10 @@ function renderFormSection(state) {
             </select>
           </label>
           <label>
-            <span class="landing-subtext">Primary goal</span>
+            <span class="landing-subtext">Session intention</span>
             <select class="landing-select" name="goal" required>
               ${buildOptionElements(GOAL_OPTIONS, defaultGoal)}
             </select>
-          </label>
-          <label>
-            <span class="landing-subtext">Equipment on hand</span>
-            ${renderEquipmentOptions(defaultEquipment)}
-            <small class="landing-subtext">Tap every option you truly have nearby. No pressure to add more.</small>
-          </label>
-          <label class="profile-toggle">
-            <input type="checkbox" id="gymxietyGenerateToggle" name="gymxietyMode" ${gymxietyEnabled ? 'checked' : ''}>
-            Gymxiety Mode (Beginner-friendly, confidence-focused workouts)
           </label>
           <label>
             <span class="landing-subtext">Estimated workout length (optional)</span>
@@ -119,8 +155,12 @@ function renderFormSection(state) {
               ${buildOptionElements(DURATION_OPTIONS, '')}
             </select>
           </label>
+          <label class="profile-toggle">
+            <input type="checkbox" id="gymxietyGenerateToggle" name="gymxietyMode" ${gymxietyEnabled ? 'checked' : ''}>
+            Gymxiety Mode (Beginner-friendly, confidence-focused workouts)
+          </label>
           <div class="landing-actions landing-actions-stack landing-space-top-md">
-            <button class="landing-button" type="submit">Generate Workout</button>
+            <button class="landing-button" type="submit" data-generate-submit ${shouldLockMuscles ? 'disabled' : ''}>Build my workout</button>
             <button class="landing-button secondary" type="button" data-action="reset-generate">Reset</button>
           </div>
         </form>
@@ -200,9 +240,12 @@ function buildPlanPayload(formValues) {
   const workoutTime = Number.isFinite(duration) ? duration : 35;
   const beginnerMode = formValues.experience === 'Beginner';
   const mode = formValues.goal === 'Hypertrophy' ? 'bulking' : 'dieting';
+  const requestedMuscles = Array.isArray(formValues.muscles) && formValues.muscles.length
+    ? formValues.muscles
+    : buildMuscles(formValues.goal);
   return createPlannerPlan({
     equipment: formValues.equipment,
-    muscles: buildMuscles(formValues.goal),
+    muscles: requestedMuscles,
     beginnerMode,
     workoutTime,
     mode,
@@ -234,6 +277,11 @@ export function attachGeneratePageEvents(root) {
   const errorBox = root.querySelector('[data-generate-error]');
   const retryButtons = root.querySelectorAll('[data-action="retry-generate"]');
   const resetButton = root.querySelector('[data-action="reset-generate"]');
+  const submitButton = root.querySelector('[data-generate-submit]');
+  const equipmentHelper = root.querySelector('[data-equipment-helper]');
+  const muscleHelper = root.querySelector('[data-muscle-helper]');
+  const equipmentInputs = form ? Array.from(form.querySelectorAll('input[name="equipment"]')) : [];
+  const muscleInputs = form ? Array.from(form.querySelectorAll('input[name="muscles"]')) : [];
   const gymxietyToggle = root.querySelector('#gymxietyGenerateToggle');
   const modal = root.querySelector('[data-gymxiety-modal]');
   const modalCard = root.querySelector('[data-gymxiety-modal-card]');
@@ -244,6 +292,95 @@ export function attachGeneratePageEvents(root) {
   let gymxietyModalOpen = false;
   let onboardingComplete = hasCompletedGymxietyOnboarding();
   const shouldAutoShowGymxietyModal = !onboardingComplete && getGymxietyPreference();
+
+  const getCheckedValues = inputs => inputs
+    .filter(input => input.checked)
+    .map(input => input.value.toString().trim())
+    .filter(Boolean);
+
+  const updateEquipmentHelper = hasEquipment => {
+    if (!equipmentHelper) {
+      return;
+    }
+    equipmentHelper.textContent = hasEquipment ? EQUIPMENT_HELPER_UNLOCKED : EQUIPMENT_HELPER_LOCKED;
+  };
+
+  const updateMuscleHelper = (hasEquipment, muscleValues, helperMessage) => {
+    if (!muscleHelper) {
+      return;
+    }
+    if (!hasEquipment) {
+      muscleHelper.textContent = MUSCLE_HELPER_LOCKED;
+      return;
+    }
+    if (helperMessage) {
+      muscleHelper.textContent = helperMessage;
+      return;
+    }
+    if (!muscleValues.length) {
+      muscleHelper.textContent = MUSCLE_HELPER_RANGE;
+      return;
+    }
+    if (muscleValues.length >= MAX_MUSCLE_SELECTION) {
+      muscleHelper.textContent = 'Great mix selected. Tap one to swap or deselect if you want to change focus.';
+      return;
+    }
+    const remaining = MAX_MUSCLE_SELECTION - muscleValues.length;
+    muscleHelper.textContent = remaining === 1
+      ? 'You can pick one more group for balance.'
+      : `You can pick ${remaining} more groups for balance.`;
+  };
+
+  const updateSubmitState = (hasEquipment, muscleValues) => {
+    if (!submitButton) {
+      return;
+    }
+    const withinRange = muscleValues.length >= MIN_MUSCLE_SELECTION && muscleValues.length <= MAX_MUSCLE_SELECTION;
+    submitButton.disabled = !hasEquipment || !withinRange;
+  };
+
+  const syncSelectionState = options => {
+    const equipmentValues = getCheckedValues(equipmentInputs);
+    const hasEquipment = equipmentValues.length > 0;
+    if (!hasEquipment) {
+      muscleInputs.forEach(input => {
+        input.checked = false;
+        input.disabled = true;
+      });
+    } else {
+      muscleInputs.forEach(input => {
+        input.disabled = false;
+      });
+    }
+    const muscleValues = getCheckedValues(muscleInputs);
+    updateEquipmentHelper(hasEquipment);
+    updateMuscleHelper(hasEquipment, muscleValues, options?.muscleHelperMessage);
+    updateSubmitState(hasEquipment, muscleValues);
+  };
+
+  equipmentInputs.forEach(input => {
+    input.addEventListener('change', () => syncSelectionState());
+  });
+
+  muscleInputs.forEach(input => {
+    input.addEventListener('change', event => {
+      if (!event.target.checked) {
+        syncSelectionState();
+        return;
+      }
+      const nextValues = getCheckedValues(muscleInputs);
+      if (nextValues.length > MAX_MUSCLE_SELECTION) {
+        event.target.checked = false;
+        syncSelectionState({
+          muscleHelperMessage: `Pick up to ${MAX_MUSCLE_SELECTION} groups. Deselect one before adding another.`
+        });
+        return;
+      }
+      syncSelectionState();
+    });
+    syncSelectionState();
+
+  });
 
   const markGymxietyOnboardingComplete = () => {
     if (onboardingComplete) {
@@ -368,6 +505,7 @@ export function attachGeneratePageEvents(root) {
   if (resetButton) {
     resetButton.addEventListener('click', () => {
       form?.reset();
+      syncSelectionState();
       resetView();
     });
   }
@@ -386,18 +524,19 @@ export function attachGeneratePageEvents(root) {
     const equipment = Array.from(form.querySelectorAll('input[name="equipment"]:checked'))
       .map(input => input.value.toString().trim())
       .filter(Boolean);
+    const muscles = getCheckedValues(muscleInputs);
     const duration = (formData.get('duration') || '').toString().trim();
     const gymxietyMode = Boolean(form.querySelector('#gymxietyGenerateToggle')?.checked);
 
-    if (!experience || !goal || !equipment.length) {
-      setError('Please pick an experience level, goal, and at least one piece of equipment so we can personalize your workout.');
+    if (!experience || !goal || !equipment.length || muscles.length < MIN_MUSCLE_SELECTION) {
+      setError('Please pick an experience level, goal, at least one piece of equipment, and at least one muscle focus.');
       return;
     }
 
     toggleView('loading');
     loadingTimer = window.setTimeout(() => {
       try {
-        const plan = buildPlanPayload({ experience, goal, equipment, duration, gymxietyMode });
+        const plan = buildPlanPayload({ experience, goal, equipment, muscles, duration, gymxietyMode });
         if (!plan || !Array.isArray(plan.planRows) || !plan.planRows.length) {
           if (fallbackCopy) {
             fallbackCopy.textContent = 'Nothing matched those exact inputs. Try selecting different equipment or a new goal, then generate again.';
@@ -407,7 +546,7 @@ export function attachGeneratePageEvents(root) {
           return;
         }
         plan.generatedAt = new Date().toISOString();
-        plan.preferences = { experience, goal, equipment, duration, gymxietyMode };
+        plan.preferences = { experience, goal, equipment, muscles, duration, gymxietyMode };
         if (loadingCard) {
           loadingCard.classList.remove('card-fade-out');
           requestAnimationFrame(() => loadingCard.classList.add('card-fade-out'));

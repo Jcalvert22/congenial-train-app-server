@@ -230,6 +230,7 @@ function renderExerciseCard(row, index, options = {}) {
   const steadyReminder = gymxietyMode
     ? '<p class="supportive-text">Take your time - focus on slow, controlled movement.</p>'
     : '';
+  const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>`;
   const canSwap = canUseConfidenceAlternative(row);
   const easierLink = canSwap
     ? `<button class="easier-btn" type="button" data-action="confidence-alt" data-exercise-index="${index}">Need an easier version?</button>`
@@ -243,6 +244,7 @@ function renderExerciseCard(row, index, options = {}) {
       <p>${escapeHTML(instructions)}</p>
       ${supportiveCopy}
       ${steadyReminder}
+      ${muscleLabel}
       <div class="landing-pill-list">
         <span class="landing-pill">${escapeHTML(muscle)}</span>
         <span class="landing-pill">${escapeHTML(equipment)}</span>

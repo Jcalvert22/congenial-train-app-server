@@ -897,7 +897,7 @@ function resolveRoute(hash, state, auth) {
     case '#/planner':
       return protectRoute(() => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }));
     case '#/library':
-      return protectRoute(() => ({ html: renderLibrary(state) }));
+      return protectRoute(() => ({ html: renderLibrary(state), afterRender: attachLibraryEvents }));
     case '#/plan-generator':
       return protectRoute(() => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }));
     case '#/profile':
@@ -1394,21 +1394,102 @@ function renderPlanGenerator(state) {
 }
 
 function renderLibrary() {
-  const topExercises = EXERCISES.slice(0, 18);
-  const cards = topExercises.map(exercise => `
-    <article class="landing-card">
-      <p class="landing-subtext">${escapeHTML(exercise.muscle_group)}</p>
-      <h3>${escapeHTML(exercise.name)}</h3>
-      <p>${escapeHTML(exercise.howto)}</p>
-    </article>
-  `).join('');
+  const normalizedExercises = EXERCISES.map((exercise, index) => {
+    const equipmentList = Array.isArray(exercise.equipment) && exercise.equipment.length
+      ? exercise.equipment
+      : exercise.equipment
+        ? [exercise.equipment]
+        : ['Bodyweight'];
+    const movement = exercise.movement_pattern || 'General';
+    const movementKey = movement.toLowerCase();
+    const muscle = exercise.muscle_group || 'Full Body';
+    const muscleKey = muscle.toLowerCase();
+    const equipmentKeys = equipmentList.map(item => item.toLowerCase());
+    const intimidation = (exercise.intimidation_level || 'moderate').toLowerCase();
+    const intimidationLabel = intimidation.charAt(0).toUpperCase() + intimidation.slice(1);
+    const gymxietySafe = Boolean(exercise.gymxiety_safe);
+    const howto = exercise.howto || 'Move slowly, breathe through each rep, and adjust the setup until it feels steady.';
+    const searchText = `${exercise.name} ${muscle} ${movement} ${equipmentList.join(' ')}`.toLowerCase();
+    return {
+      id: index,
+      name: exercise.name,
+      muscle,
+      muscleKey,
+      movement,
+      movementKey,
+      intimidation,
+      intimidationLabel,
+      gymxietySafe,
+      equipmentList,
+      equipmentLabel: equipmentList.join(', ') || 'Bodyweight',
+      equipmentKeys,
+      howto,
+      searchText
+    };
+  });
+
+  const buildOptionList = values => {
+    const unique = new Set();
+    values.filter(Boolean).forEach(value => unique.add(value));
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  };
+
+  const movementOptions = buildOptionList(normalizedExercises.map(ex => ex.movement));
+  const muscleOptions = buildOptionList(normalizedExercises.map(ex => ex.muscle));
+  const equipmentOptions = buildOptionList(normalizedExercises.flatMap(ex => ex.equipmentList));
+  const intensityOptions = buildOptionList(
+    normalizedExercises.map(ex => ex.intimidationLabel)
+  );
+
+  const buildSelect = (label, filterName, options, allLabel) => {
+    const fallback = allLabel || label.toLowerCase();
+    return `
+      <label>
+        <span class="landing-subtext">${escapeHTML(label)}</span>
+        <select class="landing-select" data-filter="${filterName}">
+          <option value="">All ${escapeHTML(fallback)}</option>
+          ${options
+            .map(option => `
+              <option value="${escapeHTML(option.toLowerCase())}">${escapeHTML(option)}</option>
+            `)
+            .join('')}
+        </select>
+      </label>
+    `;
+  };
+
+  const cards = normalizedExercises.map(exercise => {
+    const equipmentDataset = exercise.equipmentKeys.join('|');
+    return `
+      <article
+        class="landing-card"
+        data-exercise-card
+        data-name="${escapeHTML(exercise.searchText)}"
+        data-muscle="${escapeHTML(exercise.muscleKey)}"
+        data-movement="${escapeHTML(exercise.movementKey)}"
+        data-equipment="${escapeHTML(equipmentDataset)}"
+        data-intimidation="${escapeHTML(exercise.intimidation)}"
+        data-gymxiety="${exercise.gymxietySafe ? 'safe' : 'standard'}"
+      >
+        <p class="landing-subtext">${escapeHTML(exercise.muscle)}</p>
+        <h3>${escapeHTML(exercise.name)}</h3>
+        ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
+        <p>${escapeHTML(exercise.howto)}</p>
+        <div class="landing-pill-list">
+          <span class="landing-pill">${escapeHTML(exercise.movement)}</span>
+          <span class="landing-pill">${escapeHTML(exercise.equipmentLabel)}</span>
+          <span class="landing-pill">${escapeHTML(exercise.intimidationLabel)}</span>
+        </div>
+      </article>
+    `;
+  }).join('');
 
   const sections = `
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Library</span>
         <h1>Plain-language cues for every move.</h1>
-        <p class="landing-subtext lead">Skim a card, keep anxiety low, and walk into the gym with a script.</p>
+        <p class="landing-subtext lead">Use the filters to surface moves that feel stable, Gymxiety-safe, and matched to your equipment.</p>
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">How to use it</p>
@@ -1416,14 +1497,120 @@ function renderLibrary() {
       </div>
     </header>
     <section class="landing-section">
-      <p class="landing-subtext">Exercises</p>
-      <div class="landing-grid landing-grid-two">
+      <p class="landing-subtext">Filter library</p>
+      <form class="landing-grid landing-grid-two" data-library-filters>
+        <label class="landing-grid-span">
+          <span class="landing-subtext">Search</span>
+          <input type="search" class="landing-input" placeholder="Search by name or muscle" data-filter="search" aria-label="Search exercises">
+        </label>
+        ${buildSelect('Movement pattern', 'movement', movementOptions, 'patterns')}
+        ${buildSelect('Muscle group', 'muscle', muscleOptions, 'muscles')}
+        ${buildSelect('Equipment', 'equipment', equipmentOptions, 'equipment')}
+        ${buildSelect('Intimidation level', 'intimidation', intensityOptions, 'levels')}
+        <label class="profile-toggle landing-grid-span">
+          <input type="checkbox" data-filter="gymxiety">
+          Show Gymxiety-safe only
+        </label>
+        <div class="landing-actions landing-space-top-sm landing-grid-span">
+          <button class="landing-button secondary" type="button" data-action="reset-library">Reset filters</button>
+        </div>
+      </form>
+      <div class="landing-actions">
+        <p class="landing-subtext"><span data-library-count>${normalizedExercises.length}</span> exercises match</p>
+      </div>
+      <div class="landing-grid landing-grid-two" data-library-grid>
         ${cards}
       </div>
+      <p class="supportive-text" data-library-empty hidden>No exercises match those filters. Try clearing one or two toggles.</p>
     </section>
   `;
 
   return renderAppPage(sections);
+}
+
+function attachLibraryEvents(root) {
+  const filterForm = root.querySelector('[data-library-filters]');
+  const cards = Array.from(root.querySelectorAll('[data-exercise-card]'));
+  const countNode = root.querySelector('[data-library-count]');
+  const emptyState = root.querySelector('[data-library-empty]');
+  const resetButton = root.querySelector('[data-action="reset-library"]');
+  if (!filterForm || !cards.length) {
+    return;
+  }
+
+  const getSelectValue = name => (filterForm.querySelector(`[data-filter="${name}"]`)?.value || '').toLowerCase();
+  const getSearchValue = () => (filterForm.querySelector('[data-filter="search"]')?.value || '').trim().toLowerCase();
+  const isGymxietyOnly = () => Boolean(filterForm.querySelector('[data-filter="gymxiety"]')?.checked);
+
+  const applyFilters = () => {
+    const query = getSearchValue();
+    const movement = getSelectValue('movement');
+    const muscle = getSelectValue('muscle');
+    const equipment = getSelectValue('equipment');
+    const intimidation = getSelectValue('intimidation');
+    const gymxietyOnly = isGymxietyOnly();
+    let visible = 0;
+
+    cards.forEach(card => {
+      const name = card.dataset.name || '';
+      const cardMovement = card.dataset.movement || '';
+      const cardMuscle = card.dataset.muscle || '';
+      const cardEquipment = card.dataset.equipment || '';
+      const cardIntimidation = card.dataset.intimidation || '';
+      const cardGymxiety = card.dataset.gymxiety === 'safe';
+      const equipmentTokens = cardEquipment ? cardEquipment.split('|') : [];
+
+      const matchesSearch = query ? name.includes(query) : true;
+      const matchesMovement = movement ? cardMovement === movement : true;
+      const matchesMuscle = muscle ? cardMuscle === muscle : true;
+      const matchesEquipment = equipment ? equipmentTokens.includes(equipment) : true;
+      const matchesIntimidation = intimidation ? cardIntimidation === intimidation : true;
+      const matchesGymxiety = gymxietyOnly ? cardGymxiety : true;
+
+      const shouldShow = matchesSearch && matchesMovement && matchesMuscle && matchesEquipment && matchesIntimidation && matchesGymxiety;
+      card.hidden = !shouldShow;
+      if (shouldShow) {
+        visible++;
+      }
+    });
+
+    if (countNode) {
+      countNode.textContent = String(visible);
+    }
+    if (emptyState) {
+      emptyState.hidden = visible > 0;
+    }
+  };
+
+  filterForm.addEventListener('input', event => {
+    if (event.target.matches('[data-filter="search"]')) {
+      applyFilters();
+    }
+  });
+
+  filterForm.addEventListener('change', event => {
+    if (event.target.matches('[data-filter]')) {
+      applyFilters();
+    }
+  });
+
+  resetButton?.addEventListener('click', event => {
+    event.preventDefault();
+    if (typeof filterForm.reset === 'function') {
+      filterForm.reset();
+    } else {
+      filterForm.querySelectorAll('[data-filter]').forEach(field => {
+        if (field.type === 'checkbox') {
+          field.checked = false;
+        } else {
+          field.value = '';
+        }
+      });
+    }
+    applyFilters();
+  });
+
+  applyFilters();
 }
 
 function renderDashboard(state) {

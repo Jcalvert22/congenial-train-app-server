@@ -178,6 +178,7 @@ function renderExerciseCard(exercise, index, total, options = {}) {
     ? exercise.supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('')
     : '';
   const confidenceTag = `<span class="confidence-tag">Confidence: ${escapeHTML(exercise.confidence || 'Moderate')}</span>`;
+  const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(exercise.muscle || 'Full body')}</p>`;
   const easierButton = canUseConfidenceAlternative(exercise)
     ? `<button class="easy-version-btn" type="button" data-action="exercise-alt" data-exercise-index="${index}">Show easier version</button>`
     : '';
@@ -194,6 +195,7 @@ function renderExerciseCard(exercise, index, total, options = {}) {
         ${supportiveIntro}
         ${instructionsMarkup}
         ${extraCues}
+        ${muscleLabel}
         <div class="landing-pill-list">
           <span class="landing-pill">${escapeHTML(exercise.muscle || 'Full body')}</span>
           <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>

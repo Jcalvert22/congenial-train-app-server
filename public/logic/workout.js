@@ -3,8 +3,7 @@ import {
   MUSCLE_GROUPS,
   EQUIPMENT_LIST,
   BEGINNER_EQUIPMENT,
-  BEGINNER_MUSCLES,
-  BASIC_EXERCISES
+  BEGINNER_MUSCLES
 } from '../data/exercises.js';
 import {
   clamp,
@@ -112,12 +111,146 @@ function mapDefaultEntryToExercise(entry) {
   };
 }
 
-function pickDefaultExerciseForMuscle(muscle = '') {
-  const normalized = (muscle || '').toLowerCase();
-  const match = DEFAULT_BEGINNER_WORKOUT.find(entry =>
-    normalized && entry.muscle && entry.muscle.toLowerCase().includes(normalized)
-  );
-  return mapDefaultEntryToExercise(match || DEFAULT_BEGINNER_WORKOUT[0]);
+const DEFAULT_MOVEMENT_PATTERN = 'General';
+const DEFAULT_INTIMIDATION_LEVEL = 'moderate';
+const INTIMIDATION_LEVEL_ORDER = ['low', 'moderate', 'high'];
+const DEFAULT_EQUIPMENT_FALLBACK = ['Bodyweight'];
+
+function expandEquipmentTokens(value = '') {
+  return value
+    .split('/')
+    .join(',')
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function buildEquipmentKeys(list = []) {
+  const keys = new Set();
+  list.forEach(item => {
+    const lower = item.toLowerCase();
+    keys.add(lower);
+    if (lower.includes('bodyweight')) {
+      keys.add('bodyweight');
+    }
+    if (lower.includes('dumbbell')) {
+      keys.add('dumbbells');
+    }
+    if (lower.includes('bench')) {
+      keys.add('bench');
+    }
+    if (lower.includes('machine')) {
+      keys.add('machine');
+    }
+    if (lower.includes('smith')) {
+      keys.add('smith machine');
+    }
+    if (lower.includes('cable')) {
+      keys.add('cables');
+    }
+    if (lower.includes('band')) {
+      keys.add('resistance bands');
+      keys.add('bands');
+    }
+    if (lower.includes('bike')) {
+      keys.add('cardio bike');
+    }
+    if (lower.includes('row')) {
+      keys.add('rowing machine');
+    }
+    if (lower.includes('elliptical')) {
+      keys.add('elliptical');
+    }
+    if (lower.includes('treadmill')) {
+      keys.add('treadmill');
+    }
+    if (lower.includes('suspension')) {
+      keys.add('suspension trainer');
+    }
+    if (lower.includes('stability')) {
+      keys.add('stability ball');
+    }
+  });
+  return Array.from(keys);
+}
+
+function normalizeExerciseEntry(exercise) {
+  if (!exercise || !exercise.name) {
+    return null;
+  }
+  const equipmentValues = Array.isArray(exercise.equipment) && exercise.equipment.length
+    ? exercise.equipment
+    : exercise.equipment
+      ? [exercise.equipment]
+      : DEFAULT_EQUIPMENT_FALLBACK;
+  const flattenedEquipment = equipmentValues
+    .flatMap(value => expandEquipmentTokens((value || '').toString()))
+    .filter(Boolean);
+  const equipmentList = flattenedEquipment.length ? flattenedEquipment : DEFAULT_EQUIPMENT_FALLBACK;
+  const equipmentKeys = buildEquipmentKeys(equipmentList);
+  return {
+    ...exercise,
+    equipment: equipmentList,
+    equipmentKeys,
+    muscle_group: exercise.muscle_group || 'Full Body',
+    movement_pattern: exercise.movement_pattern || DEFAULT_MOVEMENT_PATTERN,
+    intimidation_level: (exercise.intimidation_level || DEFAULT_INTIMIDATION_LEVEL).toLowerCase(),
+    gymxiety_safe: typeof exercise.gymxiety_safe === 'boolean' ? exercise.gymxiety_safe : false,
+    howto: exercise.howto || DEFAULT_GYMXIETY_DESCRIPTION,
+    video: exercise.video || ''
+  };
+}
+
+const NORMALIZED_EXERCISES = EXERCISES.map(normalizeExerciseEntry).filter(Boolean);
+
+function resolveAllowedIntimidationLevels(cap = '') {
+  if (!cap) {
+    return null;
+  }
+  const normalized = cap.toString().trim().toLowerCase();
+  const index = INTIMIDATION_LEVEL_ORDER.indexOf(normalized);
+  if (index === -1) {
+    return null;
+  }
+  return INTIMIDATION_LEVEL_ORDER.slice(0, index + 1);
+}
+
+function collectMatchesForMuscle(muscle, options = {}) {
+  const normalizedMuscle = (muscle || '').toString().trim().toLowerCase();
+  if (!normalizedMuscle) {
+    return [];
+  }
+  const equipmentSet = options.equipmentSet;
+  const preferGymxietySafe = Boolean(options.preferGymxietySafe);
+  const allowedIntimidationLevels = Array.isArray(options.allowedIntimidationLevels)
+    ? options.allowedIntimidationLevels
+    : null;
+  const baseMatches = NORMALIZED_EXERCISES.filter(exercise => {
+    if ((exercise.muscle_group || '').toLowerCase() !== normalizedMuscle) {
+      return false;
+    }
+    if (!equipmentSet || !equipmentSet.size) {
+      return true;
+    }
+    return exercise.equipmentKeys.some(key => equipmentSet.has(key));
+  });
+  if (!baseMatches.length) {
+    return [];
+  }
+  let matches = baseMatches;
+  if (preferGymxietySafe) {
+    const safeMatches = matches.filter(exercise => exercise.gymxiety_safe);
+    if (safeMatches.length) {
+      matches = safeMatches;
+    }
+  }
+  if (allowedIntimidationLevels && allowedIntimidationLevels.length) {
+    const cappedMatches = matches.filter(exercise => allowedIntimidationLevels.includes(exercise.intimidation_level));
+    if (cappedMatches.length) {
+      matches = cappedMatches;
+    }
+  }
+  return matches;
 }
 
 const GYMXIETY_CATEGORY_POOLS = {
@@ -572,7 +705,7 @@ function buildFallbackRow(entry, index, options = {}) {
 
 function finalizePlanPayload(planRows, summary, meta = {}) {
   const timestamp = meta.timestamp || new Date().toISOString();
-  return {
+  const payload = {
     planRows,
     exercises: planRows,
     summary,
@@ -580,10 +713,14 @@ function finalizePlanPayload(planRows, summary, meta = {}) {
     goal: meta.goal || 'General Fitness',
     timestamp
   };
+  if (meta.planMeta) {
+    payload.meta = meta.planMeta;
+  }
+  return payload;
 }
 
 function buildDefaultFallbackPlan(options = {}) {
-  const { goal = 'General Fitness', gymxietyMode = false } = options;
+  const { goal = 'General Fitness', gymxietyMode = false, planMeta = null } = options;
   const planRows = DEFAULT_BEGINNER_WORKOUT.map((exercise, index) => buildFallbackRow(exercise, index, { gymxietyMode }));
   const focus = Array.from(new Set(planRows.map(row => row.muscle))).slice(0, 2);
   const summary = {
@@ -593,7 +730,7 @@ function buildDefaultFallbackPlan(options = {}) {
     setsPerExercise: gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS,
     mode: gymxietyMode ? 'Gymxiety' : 'Beginner Reset'
   };
-  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode });
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode, planMeta });
 }
 
 function ensurePlanPayload(plan, options = {}) {
@@ -610,7 +747,8 @@ function ensurePlanPayload(plan, options = {}) {
     exercises,
     goal: plan?.goal || options.goal || 'General Fitness',
     gymxietyMode: typeof plan?.gymxietyMode === 'boolean' ? plan.gymxietyMode : Boolean(options.gymxietyMode),
-    timestamp: plan?.timestamp || new Date().toISOString()
+    timestamp: plan?.timestamp || new Date().toISOString(),
+    meta: plan?.meta || options.planMeta
   };
 }
 
@@ -695,15 +833,26 @@ function buildConfidenceAlternative(exercise, overrides = {}) {
   };
 }
 
+const EQUIPMENT_SELECTION_SYNONYMS = {
+  'bodyweight only': ['bodyweight']
+};
+
 function normalizeEquipmentSelection(list = []) {
   if (!Array.isArray(list)) {
     return new Set();
   }
-  return new Set(
-    list
-      .map(item => (item || '').toString().trim().toLowerCase())
-      .filter(Boolean)
-  );
+  const normalized = new Set();
+  list
+    .map(item => (item || '').toString().trim().toLowerCase())
+    .filter(Boolean)
+    .forEach(value => {
+      normalized.add(value);
+      const synonyms = EQUIPMENT_SELECTION_SYNONYMS[value];
+      if (Array.isArray(synonyms)) {
+        synonyms.forEach(alias => normalized.add(alias));
+      }
+    });
+  return normalized;
 }
 
 function hasAnyToken(equipmentSet, tokens = []) {
@@ -926,34 +1075,65 @@ function buildStandardPlannerPlan(options = {}) {
     goal = 'General Fitness'
   } = options;
 
-  let plan = [];
-  selectedMuscles.forEach(muscle => {
-    let baseMatches = EXERCISES.filter(
-      ex =>
-        ex.muscle_group === muscle &&
-        ex.equipment.some(eq => selectedEquipment.includes(eq) || (eq === 'Bodyweight' && selectedEquipment.includes('Bodyweight Only')))
-    );
-    if (!baseMatches.length) {
-      const fallbackExercise = pickDefaultExerciseForMuscle(muscle);
-      if (fallbackExercise) {
-        baseMatches = [fallbackExercise];
-      }
+  const equipmentSet = normalizeEquipmentSelection(selectedEquipment);
+  const requestedMuscles = Array.isArray(selectedMuscles) ? selectedMuscles.slice() : [];
+  const requestedEquipment = Array.isArray(selectedEquipment) ? selectedEquipment.slice() : [];
+  const preferGymxietySafe = Boolean(options.preferGymxietySafe);
+  const allowedIntimidationLevels = resolveAllowedIntimidationLevels(options.intimidationCap);
+  const planMeta = {
+    requestedMuscles,
+    requestedEquipment,
+    requestedEquipmentNormalized: Array.from(equipmentSet),
+    matchCount: 0,
+    missingMuscles: [],
+    matchedMuscles: [],
+    usedFallback: false,
+    filters: {
+      preferGymxietySafe,
+      intimidationCap: options.intimidationCap || null
     }
-    const shuffled = shuffleArray(baseMatches);
-    plan = plan.concat(shuffled.slice(0, exercisesPerGroup));
-  });
+  };
 
-  if (!plan.length) {
-    const fallbackCount = Math.max(MIN_STANDARD_MOVEMENTS, exercisesPerGroup * 2);
-    plan = BASIC_EXERCISES.slice(0, fallbackCount).map(ex => ({
-      ...ex,
-      howto: ex.howto || `Move through ${ex.name} with calm, steady reps.`,
-      video: ex.video || ''
-    }));
+  if (!requestedMuscles.length) {
+    planMeta.usedFallback = true;
+    planMeta.errorReason = 'missing-muscles';
+    return buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta });
   }
 
+  let plan = [];
+  const muscleMatchCounts = {};
+  const usedExerciseNames = new Set();
+  requestedMuscles.forEach(muscle => {
+    const matches = collectMatchesForMuscle(muscle, {
+      equipmentSet,
+      preferGymxietySafe,
+      allowedIntimidationLevels
+    });
+    const shuffled = shuffleArray(matches);
+    muscleMatchCounts[muscle] = matches.length;
+    if (!shuffled.length) {
+      return;
+    }
+    let pool = shuffled.filter(entry => !usedExerciseNames.has(entry.name));
+    if (!pool.length && plan.length < MIN_STANDARD_MOVEMENTS) {
+      pool = shuffled;
+    }
+    if (!pool.length) {
+      return;
+    }
+    const picks = pool.slice(0, exercisesPerGroup);
+    picks.forEach(entry => usedExerciseNames.add(entry.name));
+    plan = plan.concat(picks);
+  });
+
+  planMeta.matchCount = Object.values(muscleMatchCounts).reduce((sum, count = 0) => sum + count, 0);
+  planMeta.missingMuscles = requestedMuscles.filter(muscle => (muscleMatchCounts[muscle] || 0) === 0);
+  planMeta.matchedMuscles = requestedMuscles.filter(muscle => (muscleMatchCounts[muscle] || 0) > 0);
+
   if (!plan.length) {
-    plan = DEFAULT_BEGINNER_WORKOUT.map(entry => mapDefaultEntryToExercise(entry)).filter(Boolean);
+    planMeta.usedFallback = true;
+    planMeta.errorReason = planMeta.missingMuscles.length ? 'no-matches' : 'missing-muscles';
+    return buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta });
   }
 
   if (plan.length >= MIN_STANDARD_MOVEMENTS) {
@@ -1003,7 +1183,9 @@ function buildStandardPlannerPlan(options = {}) {
   });
 
   if (!planRows.length) {
-    return buildDefaultFallbackPlan({ goal, gymxietyMode: false });
+    planMeta.usedFallback = true;
+    planMeta.errorReason = 'no-matches';
+    return buildDefaultFallbackPlan({ goal, gymxietyMode: false, planMeta });
   }
 
   const focus = planRows.length
@@ -1017,7 +1199,7 @@ function buildStandardPlannerPlan(options = {}) {
     mode: mode === 'bulking' ? 'Bulking' : 'Dieting'
   };
 
-  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode: false });
+  return finalizePlanPayload(planRows, summary, { goal, gymxietyMode: false, planMeta });
 }
 
 export function generateWorkout(goal, equipment = [], gymxietyMode = false, extraOptions = {}) {
@@ -1362,7 +1544,9 @@ export function createPlannerPlan(options = {}) {
     benchMax,
     squatMax,
     deadliftMax,
-    mode
+    mode,
+    preferGymxietySafe: beginnerMode,
+    intimidationCap: beginnerMode ? 'moderate' : null
   };
 
   try {
