@@ -4,10 +4,14 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
+const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
 
 function resolveCta(state) {
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start Your Beginner Journey' };
+  }
+  function getCtaAttrs(cta) {
+    return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
   }
   if (!state?.profile?.onboardingComplete) {
     return { href: '#/onboarding', label: 'Resume Onboarding' };
@@ -24,7 +28,7 @@ function buildHero(cta) {
         <p class="landing-subtext lead">AllAroundAthlete helps beginners build momentum without pressure or confusion.</p>
         <p>We designed every screen for people who feel overwhelmed by loud fitness advice. Short, calm explanations replace jargon so you can focus on steady progress.</p>
         <div class="landing-actions">
-          <a class="landing-button" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
           <a class="landing-button secondary" href="#/exercise-library">See the exercise library</a>
         </div>
       </div>
@@ -111,7 +115,7 @@ function buildCtaSection(cta) {
       <h2>Start your beginner journey with us.</h2>
       <p>Short workouts, simple cues, and gentle accountability - everything you need to build confidence.</p>
       <div class="landing-actions">
-        <a class="landing-button" href="${cta.href}">${cta.label}</a>
+        <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
         <a class="landing-button secondary" href="#/pricing">See pricing</a>
       </div>
     </section>

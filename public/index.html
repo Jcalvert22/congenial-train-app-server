@@ -17,12 +17,13 @@
     import { startCheckout } from '/js/checkout.js';
 
     document.addEventListener('click', event => {
-      const startTrialButton = event.target.closest('#start-trial');
-      if (!startTrialButton) {
+      const checkoutTarget = event.target.closest('[data-checkout-plan], #start-trial');
+      if (!checkoutTarget) {
         return;
       }
       event.preventDefault();
-      startCheckout('monthly');
+      const plan = checkoutTarget.getAttribute('data-checkout-plan') || 'monthly';
+      startCheckout(plan);
     });
   </script>
 </body>

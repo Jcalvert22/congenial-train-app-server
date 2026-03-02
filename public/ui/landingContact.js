@@ -4,10 +4,14 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
+const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
 
 function resolveCta(state) {
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start Trial' };
+  }
+  function getCtaAttrs(cta) {
+    return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
   }
   if (!state?.profile?.onboardingComplete) {
     return { href: '#/onboarding', label: 'Resume Onboarding' };
@@ -96,7 +100,7 @@ function buildCtaSection(cta) {
       <p class="landing-subtext">Ready now?</p>
       <h2>Jump into your calm trial today.</h2>
       <div class="landing-actions">
-        <a class="landing-button" href="${cta.href}">${cta.label}</a>
+        <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
         <a class="landing-button secondary" href="#/pricing">See pricing</a>
       </div>
     </section>

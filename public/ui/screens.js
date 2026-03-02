@@ -83,6 +83,17 @@ const ROUTE_HASHES = {
   '404': '#/404'
 };
 
+const CHECKOUT_PLAN_ID = 'monthly';
+const START_TRIAL_HASH = ROUTE_HASHES['start-trial'];
+
+function checkoutAttrFromHref(href) {
+  return href === START_TRIAL_HASH ? ` data-checkout-plan="${CHECKOUT_PLAN_ID}"` : '';
+}
+
+function checkoutAttrFromCta(cta) {
+  return checkoutAttrFromHref(cta?.href || '');
+}
+
 const BASE_STYLES = `
   :root {
     --accent: #9ae6b4;
@@ -934,7 +945,7 @@ function renderFeaturePlaceholder(title, description) {
       <span class="badge">Feature Preview</span>
       <h2 style="margin:12px 0 8px;">${escapeHTML(title)}</h2>
       <p style="color:var(--muted);line-height:1.6;max-width:720px;">${escapeHTML(description)}</p>
-      <a class="cta-btn" href="${ROUTE_HASHES['start-trial']}" style="display:inline-flex;margin-top:18px;">Start Trial</a>
+      <a class="cta-btn" href="${ROUTE_HASHES['start-trial']}"${checkoutAttrFromHref(ROUTE_HASHES['start-trial'])} style="display:inline-flex;margin-top:18px;">Start Trial</a>
     </section>
   `;
 }
@@ -967,7 +978,7 @@ function renderFeaturesShowcase() {
         <p class="landing-subtext lead">Peek at the modules inside AllAroundAthlete before you unlock them.</p>
         <p>Each feature is built to keep nervous starters grounded. Clear copy, short actions, and reminders that it is okay to move slowly.</p>
         <div class="landing-actions">
-          <a class="landing-button" href="${ROUTE_HASHES['start-trial']}">Start free trial</a>
+          <a class="landing-button" href="${ROUTE_HASHES['start-trial']}"${checkoutAttrFromHref(ROUTE_HASHES['start-trial'])}>Start free trial</a>
           <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
         </div>
       </div>
@@ -998,7 +1009,7 @@ function renderHome(state, auth) {
         <p class="landing-subtext lead">
           Gymxiety Mode removes the pressure, confusion, and intimidation of the gym &mdash; so you can build confidence one step at a time.
         </p>
-        <a href="${ROUTE_HASHES['start-trial']}" class="primary-btn">Start Your 7-day Trial</a>
+        <a href="${ROUTE_HASHES['start-trial']}"${checkoutAttrFromHref(ROUTE_HASHES['start-trial'])} class="primary-btn">Start Your 7-day Trial</a>
       </div>
       <div class="landing-hero-aside">
         <div class="landing-card emphasis">
@@ -1146,7 +1157,7 @@ function renderHome(state, auth) {
         </div>
         <p class="landing-text">Try it free, stay for the calm coaching. One plan unlocks everything.</p>
         <div class="landing-actions landing-actions-stack landing-space-top-md">
-          <a class="landing-button" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button" href="${cta.href}"${checkoutAttrFromCta(cta)}>${cta.label}</a>
           <a class="landing-button secondary" href="${ROUTE_HASHES['pricing']}">See pricing</a>
         </div>
       </article>
@@ -1157,7 +1168,7 @@ function renderHome(state, auth) {
         <p class="landing-text">
           Try Gymxiety Mode free for 7 days. No pressure. No judgment. Just progress.
         </p>
-        <a href="${ROUTE_HASHES['start-trial']}" class="primary-btn">Start Your Trial</a>
+        <a href="${ROUTE_HASHES['start-trial']}"${checkoutAttrFromHref(ROUTE_HASHES['start-trial'])} class="primary-btn">Start Your Trial</a>
       </div>
     </section>
   `;

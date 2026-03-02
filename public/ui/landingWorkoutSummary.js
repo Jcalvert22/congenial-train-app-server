@@ -5,6 +5,7 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
+const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
 
 const HOW_IT_HELPS = [
   {
@@ -46,6 +47,9 @@ function resolveCta(state) {
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start free trial' };
   }
+  function getCtaAttrs(cta) {
+    return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
+  }
   if (!state?.profile?.onboardingComplete) {
     return { href: '#/onboarding', label: 'Continue onboarding' };
   }
@@ -66,7 +70,7 @@ function buildHero(profile, cta) {
           <li>Equipment detected: <strong>${escapeHTML(equipment)}</strong></li>
         </ul>
         <div class="landing-actions">
-          <a class="landing-button" data-action="cta-start" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button" data-action="cta-start" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
           <a class="landing-button secondary" href="#/planner">Preview planner instead</a>
         </div>
       </div>
@@ -153,7 +157,7 @@ function buildUnlockSection(cta) {
         ${UNLOCKS.map(item => `<li>${escapeHTML(item)}</li>`).join('')}
       </ul>
       <div class="landing-actions">
-        <a class="landing-button" data-action="cta-start" href="${cta.href}">${cta.label}</a>
+        <a class="landing-button" data-action="cta-start" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
         <a class="landing-button secondary" href="#/exercise-library">Explore form library</a>
       </div>
     </section>

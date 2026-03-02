@@ -4,6 +4,11 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
+const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
+
+function getCtaAttrs(cta) {
+  return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
+}
 
 function resolveCta(state) {
   if (!state?.isSubscribed) {
@@ -24,7 +29,7 @@ function buildHero(cta) {
         <p class="landing-subtext lead">Start your beginner journey with confidence. No pressure, no confusion.</p>
         <p>Every membership includes the same calm tools - no tiers, no upsells. Just steady guidance that keeps things approachable.</p>
         <div class="landing-actions">
-          <a class="landing-button" href="${cta.href}">${cta.label}</a>
+          <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
           <a class="landing-button secondary" href="#/program-generator">Explore features</a>
         </div>
       </div>
@@ -74,7 +79,7 @@ function buildPlanCard(cta) {
             ${benefits.slice(0, 4).map(item => `<li>${item}</li>`).join('')}
           </ul>
           <div class="landing-actions landing-space-top-md">
-            <a class="landing-button" href="${cta.href}">${cta.label}</a>
+            <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
           </div>
         </article>
         <article class="landing-card">
@@ -151,7 +156,7 @@ function buildCtaSection(cta) {
       <h2>Start your free trial today.</h2>
       <p>Sign up when it feels right - no pressure, just steady support.</p>
       <div class="landing-actions">
-        <a class="landing-button" href="${cta.href}">${cta.label}</a>
+        <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
         <a class="landing-button secondary" href="#/exercise-library">Preview the library</a>
       </div>
     </section>
