@@ -53,7 +53,7 @@ async function fetchProfile(userId) {
     return null;
   }
   const { data, error } = await client
-    .from('profiles')
+    .from('profile')
     .select('id,email,stripe_customer_id,subscription_status,plan,current_period_end')
     .eq('id', userId)
     .single();
@@ -78,7 +78,7 @@ async function ensureProfile(user) {
     return existing;
   }
   const payload = { id: user.id, email: user.email }; // subscription defaults handled in DB
-  const { error } = await client.from('profiles').insert(payload);
+  const { error } = await client.from('profile').insert(payload);
   if (error && error.code !== '23505') {
     console.error('Unable to seed profile row', error);
   }

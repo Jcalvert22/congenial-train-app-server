@@ -1,4 +1,4 @@
-const SUPABASE_TABLE = 'profiles';
+const SUPABASE_TABLE = 'profile';
 
 function textResponse(body, init = {}) {
   return new Response(body, init);
@@ -156,9 +156,10 @@ async function retrieveSubscription(env, subscriptionId) {
   return data;
 }
 
-function buildSubscriptionPayload(subscription, status = 'active') {
+function buildSubscriptionPayload(customerId, subscription, status = 'active') {
   const interval = subscription?.items?.data?.[0]?.plan?.interval || subscription?.lines?.data?.[0]?.plan?.interval;
   return {
+    stripe_customer_id: customerId,
     subscription_status: status,
     plan: derivePlan(interval),
     current_period_end: subscription?.current_period_end ? toIso(subscription.current_period_end) : null
@@ -170,7 +171,7 @@ async function syncSubscription(env, customerId, subscription, status = 'active'
     console.warn('Subscription sync missing customerId');
     return;
   }
-  const payload = buildSubscriptionPayload(subscription, status);
+  const payload = buildSubscriptionPayload(customerId, subscription, subscription?.status || status);
   await patchSupabase(env, buildFilter('stripe_customer_id', customerId), payload);
 }
 
@@ -187,6 +188,14 @@ async function handleCustomerSubscriptionCreated(subscription, env) {
   await syncSubscription(env, subscription?.customer, subscription, 'active');
 }
 
+async function handleCustomerSubscriptionUpdated(subscription, env) {
+  await syncSubscription(env, subscription?.customer, subscription);
+}
+
+async function handleCustomerSubscriptionDeleted(subscription, env) {
+  await syncSubscription(env, subscription?.customer, subscription, 'canceled');
+}
+
 async function handleInvoicePaid(invoice, env) {
   const subscriptionId = invoice?.subscription;
   const subscription = await retrieveSubscription(env, subscriptionId);
@@ -200,6 +209,12 @@ async function routeEvent(event, env) {
       break;
     case 'customer.subscription.created':
       await handleCustomerSubscriptionCreated(event.data.object, env);
+      break;
+    case 'customer.subscription.updated':
+      await handleCustomerSubscriptionUpdated(event.data.object, env);
+      break;
+    case 'customer.subscription.deleted':
+      await handleCustomerSubscriptionDeleted(event.data.object, env);
       break;
     case 'invoice.paid':
       await handleInvoicePaid(event.data.object, env);

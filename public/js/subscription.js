@@ -11,7 +11,7 @@ export async function fetchSubscriptionStatus() {
     return null;
   }
   const { data, error } = await client
-    .from('profiles')
+    .from('profile')
     .select('subscription_status, plan, current_period_end')
     .eq('id', user.id)
     .single();

@@ -30,8 +30,11 @@ function buildSupabaseHeaders(env) {
 }
 
 async function fetchProfile(env, userId) {
+  if (!userId) {
+    return null;
+  }
   const filter = `id=eq.${encodeURIComponent(userId)}`;
-  const url = `${env.SUPABASE_URL}/rest/v1/profiles?${filter}&select=id,email,stripe_customer_id`;
+  const url = `${env.SUPABASE_URL}/rest/v1/profile?${filter}&select=id,email,stripe_customer_id`;
   const response = await fetch(url, { headers: buildSupabaseHeaders(env) });
   if (!response.ok) {
     throw new Error(`Failed to load profile (${response.status})`);
@@ -40,8 +43,32 @@ async function fetchProfile(env, userId) {
   return data?.[0] || null;
 }
 
+async function insertProfile(env, payload) {
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/profile`, {
+    method: 'POST',
+    headers: { ...buildSupabaseHeaders(env), Prefer: 'return=representation' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to insert profile (${response.status}): ${errorText}`);
+  }
+  const data = await response.json();
+  return data?.[0] || payload;
+}
+
+async function ensureProfile(env, userId) {
+  let profile = await fetchProfile(env, userId);
+  if (profile) {
+    return profile;
+  }
+  const payload = { id: userId };
+  profile = await insertProfile(env, payload);
+  return profile;
+}
+
 async function updateProfile(env, userId, patch) {
-  const url = `${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`;
+  const url = `${env.SUPABASE_URL}/rest/v1/profile?id=eq.${encodeURIComponent(userId)}`;
   const response = await fetch(url, {
     method: 'PATCH',
     headers: { ...buildSupabaseHeaders(env), Prefer: 'return=minimal' },
@@ -94,6 +121,8 @@ async function createStripeCheckoutSession(env, customerId, priceId, userId) {
   params.append('line_items[0][price]', priceId);
   params.append('line_items[0][quantity]', '1');
   params.append('client_reference_id', userId);
+  params.append('metadata[supabase_user_id]', userId);
+  params.append('subscription_data[metadata][supabase_user_id]', userId);
 
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
@@ -142,10 +171,7 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const profile = await fetchProfile(env, userId);
-    if (!profile) {
-      return jsonResponse({ error: 'Profile not found for user.' }, { status: 404 });
-    }
+    const profile = await ensureProfile(env, userId);
     const stripeCustomerId = await ensureStripeCustomer(env, profile, userId);
     const session = await createStripeCheckoutSession(env, stripeCustomerId, priceId, userId);
     console.log('Stripe session created for', userId, 'plan', priceKey, 'url', session.url);
