@@ -1,7 +1,8 @@
 import { getAuth } from './state.js';
 
-const START_TRIAL_URL = '/#/start-trial';
+const LOGIN_URL = '/#/login';
 const DASHBOARD_URL = '/#/dashboard';
+const PAYWALL_URL = '/#/paywall';
 
 function redirectTo(targetUrl) {
   if (typeof window === 'undefined' || typeof window.location === 'undefined') {
@@ -14,19 +15,30 @@ function redirectTo(targetUrl) {
   window.location.replace(targetUrl);
 }
 
-export function protectRoute(renderCallback) {
-  const auth = getAuth();
-  if (!auth || auth.loggedIn !== true) {
-    redirectTo(START_TRIAL_URL);
-    return null;
-  }
-  return typeof renderCallback === 'function' ? renderCallback() : null;
+export function redirectToLogin() {
+  redirectTo(LOGIN_URL);
 }
 
-export function redirectIfLoggedIn() {
+export function protectRoute(renderCallback, options = {}) {
+  const auth = getAuth();
+  if (!auth || auth.loggedIn !== true) {
+    redirectToLogin();
+    return null;
+  }
+  if (options.requireSubscription !== false && auth.subscriptionStatus !== 'active') {
+    if (typeof options.onLocked === 'function') {
+      return options.onLocked(auth);
+    }
+    return null;
+  }
+  return typeof renderCallback === 'function' ? renderCallback(auth) : null;
+}
+
+export function redirectIfLoggedIn(target = null) {
   const auth = getAuth();
   if (auth && auth.loggedIn === true) {
-    redirectTo(DASHBOARD_URL);
+    const destination = target || (auth.subscriptionStatus === 'active' ? DASHBOARD_URL : PAYWALL_URL);
+    redirectTo(destination);
     return true;
   }
   return false;

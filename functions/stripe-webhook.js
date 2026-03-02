@@ -122,41 +122,75 @@ async function verifyStripeSignature(body, signatureHeader, secret) {
   return false;
 }
 
-async function handleCheckoutSessionCompleted(session, env) {
-  const email = session?.customer_details?.email || session?.customer_email;
-  if (!email) {
-    console.warn('checkout.session.completed missing email');
-    return;
-  }
-  const payload = {
-    subscription_status: 'active'
+function buildStripeHeaders(env) {
+  return {
+    Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`
   };
-  if (session?.customer) {
-    payload.stripe_customer_id = session.customer;
-  }
-  await patchSupabase(env, buildFilter('email', email), payload);
 }
 
-async function handlePaymentStatus(sessionObject, env, status) {
-  const customerId = sessionObject?.customer;
+function derivePlan(interval) {
+  if (!interval) {
+    return 'monthly';
+  }
+  return interval.startsWith('year') ? 'yearly' : 'monthly';
+}
+
+function toIso(timestamp) {
+  if (!timestamp) {
+    return null;
+  }
+  return new Date(timestamp * 1000).toISOString();
+}
+
+async function retrieveSubscription(env, subscriptionId) {
+  if (!subscriptionId) {
+    return null;
+  }
+  const response = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+    headers: buildStripeHeaders(env)
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || 'Unable to fetch subscription');
+  }
+  return data;
+}
+
+function buildSubscriptionPayload(subscription, status = 'active') {
+  const interval = subscription?.items?.data?.[0]?.plan?.interval || subscription?.lines?.data?.[0]?.plan?.interval;
+  return {
+    subscription_status: status,
+    plan: derivePlan(interval),
+    current_period_end: subscription?.current_period_end ? toIso(subscription.current_period_end) : null
+  };
+}
+
+async function syncSubscription(env, customerId, subscription, status = 'active') {
   if (!customerId) {
-    console.warn(`Payment event missing customer for status ${status}`);
+    console.warn('Subscription sync missing customerId');
     return;
   }
-  await patchSupabase(env, buildFilter('stripe_customer_id', customerId), {
-    subscription_status: status
-  });
+  const payload = buildSubscriptionPayload(subscription, status);
+  await patchSupabase(env, buildFilter('stripe_customer_id', customerId), payload);
 }
 
-async function handleSessionExpired(session, env) {
-  const email = session?.customer_details?.email || session?.customer_email;
-  if (!email) {
-    console.warn('session.expired missing email');
-    return;
+async function handleCheckoutSessionCompleted(session, env) {
+  const subscriptionId = typeof session?.subscription === 'string' ? session.subscription : null;
+  let subscription = null;
+  if (subscriptionId) {
+    subscription = await retrieveSubscription(env, subscriptionId);
   }
-  await patchSupabase(env, buildFilter('email', email), {
-    subscription_status: 'incomplete'
-  });
+  await syncSubscription(env, session?.customer, subscription, 'active');
+}
+
+async function handleCustomerSubscriptionCreated(subscription, env) {
+  await syncSubscription(env, subscription?.customer, subscription, 'active');
+}
+
+async function handleInvoicePaid(invoice, env) {
+  const subscriptionId = invoice?.subscription;
+  const subscription = await retrieveSubscription(env, subscriptionId);
+  await syncSubscription(env, invoice?.customer, subscription, 'active');
 }
 
 async function routeEvent(event, env) {
@@ -164,17 +198,11 @@ async function routeEvent(event, env) {
     case 'checkout.session.completed':
       await handleCheckoutSessionCompleted(event.data.object, env);
       break;
-    case 'payment.succeeded':
-    case 'payment_intent.succeeded':
-      await handlePaymentStatus(event.data.object, env, 'active');
+    case 'customer.subscription.created':
+      await handleCustomerSubscriptionCreated(event.data.object, env);
       break;
-    case 'payment.failed':
-    case 'payment_intent.payment_failed':
-      await handlePaymentStatus(event.data.object, env, 'past_due');
-      break;
-    case 'session.expired':
-    case 'checkout.session.expired':
-      await handleSessionExpired(event.data.object, env);
+    case 'invoice.paid':
+      await handleInvoicePaid(event.data.object, env);
       break;
     default:
       break;

@@ -1,0 +1,78 @@
+import { signupWithEmail, refreshAuthState, getAuth } from '../auth/state.js';
+import { redirectIfLoggedIn } from '../auth/guard.js';
+
+function renderAuthShell(content) {
+  return `
+    <section class="auth-page">
+      <div class="auth-card">
+        ${content}
+      </div>
+    </section>
+  `;
+}
+
+export function renderSignupPage() {
+  if (redirectIfLoggedIn()) {
+    return '';
+  }
+  return renderAuthShell(`
+    <span class="badge">Account</span>
+    <h1>Create your account.</h1>
+    <p class="auth-subtext">Start your calm training journey with a secure login.</p>
+    <form data-signup-form autocomplete="off">
+      <label>
+        <span>Email</span>
+        <input type="email" name="email" required placeholder="you@example.com" />
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" required minlength="6" placeholder="Choose at least 6 characters" />
+      </label>
+      <button type="submit">Create account</button>
+      <p class="auth-error" data-signup-error aria-live="polite"></p>
+    </form>
+    <p class="auth-meta">Already have an account? <a href="#/login">Log in</a>.</p>
+  `);
+}
+
+export function attachSignupPageEvents(root) {
+  const form = root.querySelector('[data-signup-form]');
+  const errorEl = root.querySelector('[data-signup-error]');
+  if (!form) {
+    return;
+  }
+
+  const setBusy = isBusy => {
+    form.querySelector('button[type="submit"]').disabled = isBusy;
+  };
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (errorEl) {
+      errorEl.textContent = '';
+    }
+    const formData = new FormData(form);
+    const email = formData.get('email')?.toString().trim();
+    const password = formData.get('password')?.toString() || '';
+    if (!email || !password) {
+      if (errorEl) {
+        errorEl.textContent = 'Enter your email and password to continue.';
+      }
+      return;
+    }
+    try {
+      setBusy(true);
+      await signupWithEmail({ email, password });
+      await refreshAuthState();
+      const auth = getAuth();
+      window.location.hash = auth.subscriptionStatus === 'active' ? '#/dashboard' : '#/paywall';
+    } catch (error) {
+      console.error('Signup failed', error);
+      if (errorEl) {
+        errorEl.textContent = error?.message || 'Unable to create your account right now.';
+      }
+    } finally {
+      setBusy(false);
+    }
+  });
+}

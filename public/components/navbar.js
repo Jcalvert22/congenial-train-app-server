@@ -118,7 +118,12 @@ export function renderPublicNavbar() {
     tagline: 'Structure without stress',
     links: PUBLIC_LINKS,
     secondaryAction: `<a class="chrome-button ghost" href="#/pricing">View plans</a>`,
-    primaryAction: `<button class="chrome-button" id="start-trial" type="button" data-plan="${getSelectedPlan()}">Start free trial</button>`
+    primaryAction: `
+      <div class="chrome-cta-pair">
+        <a class="chrome-button ghost" href="#/login">Log in</a>
+        <button class="chrome-button" id="start-trial" type="button" data-plan="${getSelectedPlan()}">Start free trial</button>
+      </div>
+    `
   });
   mountNavbar(html, container => {
     const button = container.querySelector('#start-trial');
@@ -140,8 +145,9 @@ export function renderAppNavbar() {
     if (logoutBtn) {
       logoutBtn.addEventListener('click', event => {
         event.preventDefault();
-        logout();
-        window.location.hash = '#/';
+        logout().finally(() => {
+          window.location.hash = '#/';
+        });
       });
     }
   });

@@ -3,22 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkout Canceled</title>
-  <link rel="stylesheet" href="/styles/main.css" />
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#050d0b; color:#fcfffc; font-family:'Segoe UI', 'Inter', sans-serif; margin:0; }
-    main { text-align:center; padding:32px; border-radius:20px; background:rgba(15,32,29,0.9); border:1px solid rgba(210,255,234,0.2); box-shadow:0 24px 60px rgba(0,0,0,0.4); max-width:420px; }
-    h1 { margin-bottom:12px; }
-    p { margin:0 0 24px; color:#d8f3e6; }
-    button { border:none; border-radius:999px; padding:12px 28px; font-size:1rem; font-weight:600; cursor:pointer; background:transparent; color:#9ae6b4; border:1px solid rgba(210,255,234,0.4); }
-    button:hover { background:rgba(154,230,180,0.12); }
-  </style>
+  <title>Redirecting…</title>
 </head>
 <body>
-  <main>
-    <h1>Checkout canceled</h1>
-    <p>No stress—come back whenever you are ready to continue your trial.</p>
-    <button type="button" onclick="window.location.href='/'">Return home</button>
-  </main>
+  <script>
+    window.location.replace('/#/canceled');
+  </script>
 </body>
 </html>

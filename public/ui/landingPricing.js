@@ -3,6 +3,8 @@ import { getState } from '../logic/state.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 import { startCheckout, setTrialPlan } from '../js/checkout.js';
+import { getCurrentUser } from '../auth/state.js';
+import { redirectToLogin } from '../auth/guard.js';
 
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
@@ -185,11 +187,17 @@ function attachCheckoutButtons(root) {
       setTrialPlan(plan);
       button.disabled = true;
       try {
+        const user = await getCurrentUser();
+        if (!user) {
+          redirectToLogin();
+          return;
+        }
         await startCheckout(plan);
       } catch (error) {
         console.error('Unable to start checkout', error);
-        button.disabled = false;
         alert('We could not start your checkout right now. Please try again.');
+      } finally {
+        button.disabled = false;
       }
     });
   });

@@ -1,116 +1,202 @@
-const AUTH_KEY = 'aaa_auth';
+import { getSupabaseClient, getCurrentUser as fetchSupabaseUser, onSupabaseAuthChange } from '../js/supabaseClient.js';
+
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
-const hasWindow = typeof window !== 'undefined';
-const hasStorage = hasWindow && typeof window.localStorage !== 'undefined';
 const defaultAuthState = Object.freeze({
+  initialized: false,
   loggedIn: false,
   user: null,
   stripeCustomerId: null,
-  subscriptionStatus: null
+  subscriptionStatus: null,
+  plan: null,
+  currentPeriodEnd: null
 });
 
-let cachedAuth = null;
-let memoryFallback = null;
+let authState = { ...defaultAuthState };
+let initPromise = null;
+let authSubscription = null;
 
-function cloneDefault() {
-  return { ...defaultAuthState };
+function getOptionalClient() {
+  return getSupabaseClient({ required: false });
 }
 
-function readStoredValue() {
-  if (hasStorage) {
-    return window.localStorage.getItem(AUTH_KEY);
-  }
-  return memoryFallback;
+function getRequiredClient() {
+  return getSupabaseClient({ required: true });
 }
 
-function writeStoredValue(value) {
-  if (hasStorage) {
-    if (value === null) {
-      window.localStorage.removeItem(AUTH_KEY);
-    } else {
-      window.localStorage.setItem(AUTH_KEY, value);
-    }
-  } else {
-    memoryFallback = value;
-  }
-}
-
-function normalizeAuth(parsed) {
-  if (!parsed || typeof parsed !== 'object') {
-    return cloneDefault();
-  }
-  return {
-    loggedIn: parsed.loggedIn === true,
-    user: parsed.user ?? null,
-    stripeCustomerId: parsed.stripeCustomerId ?? null,
-    subscriptionStatus: parsed.subscriptionStatus ?? null
-  };
+function cloneState(overrides = {}) {
+  return { ...defaultAuthState, ...overrides, initialized: true };
 }
 
 function notifyAuthChange(state) {
-  if (!hasWindow || typeof window.dispatchEvent !== 'function') {
+  if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
     return;
   }
   const detail = { detail: state };
   if (typeof window.CustomEvent === 'function') {
     window.dispatchEvent(new CustomEvent(AUTH_EVENT_NAME, detail));
-  } else if (window.document && typeof window.document.createEvent === 'function') {
-    const event = window.document.createEvent('CustomEvent');
+    return;
+  }
+  const doc = window.document;
+  if (doc && typeof doc.createEvent === 'function') {
+    const event = doc.createEvent('CustomEvent');
     event.initCustomEvent(AUTH_EVENT_NAME, false, false, detail.detail);
     window.dispatchEvent(event);
   }
 }
 
+async function fetchProfile(userId) {
+  if (!userId) {
+    return null;
+  }
+  const client = getOptionalClient();
+  if (!client) {
+    return null;
+  }
+  const { data, error } = await client
+    .from('profiles')
+    .select('id,email,stripe_customer_id,subscription_status,plan,current_period_end')
+    .eq('id', userId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('Unable to load profile', error);
+    return null;
+  }
+  return data || null;
+}
+
+async function ensureProfile(user) {
+  if (!user) {
+    return null;
+  }
+  const client = getOptionalClient();
+  if (!client) {
+    return null;
+  }
+  const existing = await fetchProfile(user.id);
+  if (existing) {
+    return existing;
+  }
+  const payload = { id: user.id, email: user.email }; // subscription defaults handled in DB
+  const { error } = await client.from('profiles').insert(payload);
+  if (error && error.code !== '23505') {
+    console.error('Unable to seed profile row', error);
+  }
+  return fetchProfile(user.id);
+}
+
+async function hydrateAuthState() {
+  try {
+    const user = await fetchSupabaseUser();
+    if (!user) {
+      authState = cloneState();
+      notifyAuthChange(authState);
+      return authState;
+    }
+    const profile = await ensureProfile(user);
+    authState = cloneState({
+      loggedIn: true,
+      user,
+      stripeCustomerId: profile?.stripe_customer_id || null,
+      subscriptionStatus: profile?.subscription_status || null,
+      plan: profile?.plan || null,
+      currentPeriodEnd: profile?.current_period_end || null
+    });
+    notifyAuthChange(authState);
+    return authState;
+  } catch (error) {
+    console.error('Failed to hydrate auth state', error);
+    authState = cloneState();
+    notifyAuthChange(authState);
+    return authState;
+  }
+}
+
+export function ensureAuthInitialized() {
+  if (!initPromise) {
+    initPromise = hydrateAuthState().finally(() => {
+      if (!authSubscription) {
+        authSubscription = onSupabaseAuthChange(() => {
+          hydrateAuthState();
+        });
+      }
+    });
+  }
+  return initPromise;
+}
+
 export function getAuth() {
-  if (cachedAuth) {
-    return { ...cachedAuth };
-  }
-  const raw = readStoredValue();
-  if (!raw) {
-    cachedAuth = cloneDefault();
-    return { ...cachedAuth };
-  }
-  try {
-    cachedAuth = normalizeAuth(JSON.parse(raw));
-  } catch (error) {
-    console.warn('Unable to parse auth state', error);
-    cachedAuth = cloneDefault();
-  }
-  return { ...cachedAuth };
+  return { ...authState };
 }
 
-export function setAuth(nextAuth) {
-  const state = normalizeAuth(nextAuth);
-  cachedAuth = state;
-  try {
-    writeStoredValue(JSON.stringify(state));
-  } catch (error) {
-    console.warn('Unable to persist auth state', error);
+export function setAuth(nextAuth = {}) {
+  const merged = cloneState({
+    ...authState,
+    ...nextAuth,
+    loggedIn: nextAuth.loggedIn ?? authState.loggedIn,
+    user: nextAuth.user ?? authState.user,
+    stripeCustomerId:
+      nextAuth.stripeCustomerId !== undefined
+        ? nextAuth.stripeCustomerId
+        : authState.stripeCustomerId,
+    subscriptionStatus:
+      nextAuth.subscriptionStatus !== undefined
+        ? nextAuth.subscriptionStatus
+        : authState.subscriptionStatus,
+    plan: nextAuth.plan !== undefined ? nextAuth.plan : authState.plan,
+    currentPeriodEnd:
+      nextAuth.currentPeriodEnd !== undefined
+        ? nextAuth.currentPeriodEnd
+        : authState.currentPeriodEnd
+  });
+  authState = merged;
+  notifyAuthChange(authState);
+  return authState;
+}
+
+export async function refreshAuthState() {
+  return hydrateAuthState();
+}
+
+export async function loginWithEmail({ email, password }) {
+  const client = getRequiredClient();
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) {
+    throw error;
   }
-  notifyAuthChange(state);
-  return state;
+  await hydrateAuthState();
+  return getAuth();
 }
 
-export function login(userData = null) {
-  const state = {
-    loggedIn: true,
-    user: userData || null,
-    stripeCustomerId: null,
-    subscriptionStatus: 'trialing'
-  };
-  setAuth(state);
-  return state;
+export async function signupWithEmail({ email, password }) {
+  const client = getRequiredClient();
+  const { data, error } = await client.auth.signUp({ email, password });
+  if (error) {
+    throw error;
+  }
+  if (data?.user) {
+    await ensureProfile(data.user);
+  }
+  await hydrateAuthState();
+  return getAuth();
 }
 
-export function logout(options = {}) {
-  cachedAuth = cloneDefault();
-  writeStoredValue(null);
-  notifyAuthChange(cachedAuth);
-  if (options.redirect !== false && hasWindow && window.location) {
-    window.location.replace('/#/');
+export async function logout(options = {}) {
+  const client = getOptionalClient();
+  const { error } = client ? await client.auth.signOut() : { error: null };
+  if (error) {
+    console.error('Supabase sign out failed', error);
+  }
+  authState = cloneState();
+  notifyAuthChange(authState);
+  if (options.redirect !== false && typeof window !== 'undefined') {
+    window.location.hash = '#/login';
   }
 }
 
-export function isLoggedIn() {
-  return getAuth().loggedIn === true;
+export async function isLoggedIn() {
+  const user = await fetchSupabaseUser();
+  return Boolean(user);
 }
+
+export { fetchSupabaseUser as getCurrentUser };

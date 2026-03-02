@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="supabase-url" content="" />
+  <meta name="supabase-anon-key" content="" />
   <title>All Around Athlete</title>
   <link rel="stylesheet" href="./styles/main.css" />
   <link id="aaa-landing-styles" rel="stylesheet" href="./styles/landing.css" />
@@ -14,7 +16,9 @@
 
   <script type="module" src="./app.mjs"></script>
   <script type="module">
-    import { startCheckout, setTrialPlan, getSelectedPlan } from '/js/checkout.js';
+    import { startCheckout, setTrialPlan, getSelectedPlan } from './js/checkout.js';
+    import { getCurrentUser } from './auth/state.js';
+    import { redirectToLogin } from './auth/guard.js';
 
     const PLAN_OPTIONS = [
       { id: 'monthly', title: 'Monthly', detail: '$7.99 billed each month' },
@@ -74,6 +78,11 @@
         option.disabled = true;
         try {
           console.log('Top-right plan selection:', plan);
+          const user = await getCurrentUser();
+          if (!user) {
+            redirectToLogin();
+            return;
+          }
           await startCheckout(plan);
         } finally {
           option.disabled = false;
@@ -139,7 +148,12 @@
       event.preventDefault();
       const plan = (checkoutTarget.getAttribute('data-checkout-plan') || 'monthly').trim() || 'monthly';
       setTrialPlan(plan);
-      startCheckout(plan);
+      const user = await getCurrentUser();
+      if (!user) {
+        redirectToLogin();
+        return;
+      }
+      await startCheckout(plan);
     });
   </script>
 </body>

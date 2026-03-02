@@ -1,3 +1,6 @@
+const SUCCESS_URL = 'https://all-around-athlete.pages.dev/success';
+const CANCEL_URL = 'https://all-around-athlete.pages.dev/canceled';
+
 function jsonResponse(body, init = {}) {
   const headers = new Headers(init.headers || {});
   headers.set('Content-Type', 'application/json');
@@ -9,7 +12,8 @@ function assertEnv(env) {
     'STRIPE_SECRET_KEY',
     'STRIPE_MONTHLY_PRICE_ID',
     'STRIPE_YEARLY_PRICE_ID',
-    'APP_URL'
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY'
   ];
   const missing = required.filter(key => !env?.[key]);
   if (missing.length) {
@@ -17,13 +21,79 @@ function assertEnv(env) {
   }
 }
 
-async function createStripeCheckoutSession(env, priceId) {
+function buildSupabaseHeaders(env) {
+  return {
+    'Content-Type': 'application/json',
+    apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`
+  };
+}
+
+async function fetchProfile(env, userId) {
+  const filter = `id=eq.${encodeURIComponent(userId)}`;
+  const url = `${env.SUPABASE_URL}/rest/v1/profiles?${filter}&select=id,email,stripe_customer_id`;
+  const response = await fetch(url, { headers: buildSupabaseHeaders(env) });
+  if (!response.ok) {
+    throw new Error(`Failed to load profile (${response.status})`);
+  }
+  const data = await response.json();
+  return data?.[0] || null;
+}
+
+async function updateProfile(env, userId, patch) {
+  const url = `${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}`;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: { ...buildSupabaseHeaders(env), Prefer: 'return=minimal' },
+    body: JSON.stringify(patch)
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update profile (${response.status}): ${errorText}`);
+  }
+}
+
+async function createStripeCustomer(env, { email, userId }) {
+  const params = new URLSearchParams();
+  if (email) {
+    params.append('email', email);
+  }
+  params.append('metadata[supabase_user_id]', userId);
+
+  const response = await fetch('https://api.stripe.com/v1/customers', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.error?.message || 'Unable to create Stripe customer');
+  }
+  return result;
+}
+
+async function ensureStripeCustomer(env, profile, userId) {
+  if (profile?.stripe_customer_id) {
+    return profile.stripe_customer_id;
+  }
+  const customer = await createStripeCustomer(env, { email: profile?.email, userId });
+  await updateProfile(env, userId, { stripe_customer_id: customer.id });
+  return customer.id;
+}
+
+async function createStripeCheckoutSession(env, customerId, priceId, userId) {
   const params = new URLSearchParams();
   params.append('mode', 'subscription');
-  params.append('success_url', `${env.APP_URL}#/dashboard`);
-  params.append('cancel_url', `${env.APP_URL}/canceled`);
+  params.append('success_url', SUCCESS_URL);
+  params.append('cancel_url', CANCEL_URL);
+  params.append('customer', customerId);
   params.append('line_items[0][price]', priceId);
   params.append('line_items[0][quantity]', '1');
+  params.append('client_reference_id', userId);
 
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
     method: 'POST',
@@ -56,28 +126,32 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Invalid JSON payload.' }, { status: 400 });
   }
 
-  console.log('Received checkout payload:', payload);
   const priceKey = payload?.priceId === 'yearly' ? 'yearly' : 'monthly';
-  const priceIdMap = {
+  const userId = payload?.userId;
+  if (!userId) {
+    return jsonResponse({ error: 'userId is required.' }, { status: 400 });
+  }
+
+  const priceMap = {
     monthly: env.STRIPE_MONTHLY_PRICE_ID,
     yearly: env.STRIPE_YEARLY_PRICE_ID
   };
-  const selectedPriceId = priceIdMap[priceKey];
-  console.log('Resolved plan:', priceKey, 'Stripe price ID:', selectedPriceId);
-
-  if (!selectedPriceId) {
+  const priceId = priceMap[priceKey];
+  if (!priceId) {
     return jsonResponse({ error: 'Unsupported price selection.' }, { status: 400 });
   }
 
   try {
-    const session = await createStripeCheckoutSession(env, selectedPriceId);
-    console.log('Stripe session created for plan:', priceKey, 'url:', session.url);
-    return jsonResponse({ url: session.url, plan: priceKey });
+    const profile = await fetchProfile(env, userId);
+    if (!profile) {
+      return jsonResponse({ error: 'Profile not found for user.' }, { status: 404 });
+    }
+    const stripeCustomerId = await ensureStripeCustomer(env, profile, userId);
+    const session = await createStripeCheckoutSession(env, stripeCustomerId, priceId, userId);
+    console.log('Stripe session created for', userId, 'plan', priceKey, 'url', session.url);
+    return jsonResponse({ url: session.url });
   } catch (error) {
-  console.error("Stripe error details:", error?.message, error);
-  return jsonResponse(
-    { error: 'Unable to create checkout session.' },
-    { status: 500 }
-  );
-}
+    console.error('Unable to start checkout', error);
+    return jsonResponse({ error: 'Unable to create checkout session.' }, { status: 500 });
+  }
 }

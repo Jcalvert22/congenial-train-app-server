@@ -34,17 +34,21 @@ import { renderAboutLanding } from './landingAbout.js';
 import { renderContactLanding } from './landingContact.js';
 import { renderPricingLanding } from './landingPricing.js';
 import { renderStartTrial } from './landingStartTrial.js';
-import { renderCreateAccount } from './landingCreateAccount.js';
 import { renderWelcome } from './landingWelcome.js';
 import { renderWorkoutExecution, attachWorkoutExecutionEvents } from '../pages/workout-execution.js';
 import { renderHistoryPage, attachHistoryPageEvents } from '../pages/history.js';
 import { renderWorkoutDetailPage, attachWorkoutDetailEvents } from '../pages/workout-detail.js';
 import { renderProfilePage, attachProfilePageEvents } from '../pages/profile.js';
 import { renderProfileEdit, attachProfileEditEvents } from '../pages/profile-edit.js';
+import { renderLoginPage, attachLoginPageEvents } from '../pages/login.js';
+import { renderSignupPage, attachSignupPageEvents } from '../pages/signup.js';
+import { renderPaywall, attachPaywallEvents } from '../pages/paywall.js';
+import { renderSuccessPage, attachSuccessPageEvents } from '../pages/success.js';
+import { renderCanceledPage, attachCanceledPageEvents } from '../pages/canceled.js';
 import { renderFooter } from './footer.js';
 import { revealPageContent } from '../components/stateCards.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
-import { getAuth } from '../auth/state.js';
+import { getAuth, ensureAuthInitialized } from '../auth/state.js';
 import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 import { EXERCISES } from '../data/exercises.js';
@@ -742,7 +746,7 @@ const FEATURE_OVERVIEW = [
   }
 ];
 
-export function startApp() {
+export async function startApp() {
   initializeState();
   injectBaseStyles();
   const renderer = initRenderer('#app');
@@ -774,6 +778,7 @@ export function startApp() {
     lastRenderedHash = hash;
   };
 
+  await ensureAuthInitialized();
   window.addEventListener('hashchange', renderCurrentRoute);
   window.addEventListener(AUTH_EVENT_NAME, renderCurrentRoute);
   subscribe(renderCurrentRoute);
@@ -855,6 +860,13 @@ function landingResult(factory) {
   return { html: page.html, afterRender: page.afterRender };
 }
 
+function renderPaywallGate(authOverride) {
+  return {
+    html: renderPaywall(authOverride || getAuth()),
+    afterRender: attachPaywallEvents
+  };
+}
+
 function resolveRoute(hash, state, auth) {
   if (hash.startsWith('#/history/')) {
     const id = decodeURIComponent(hash.replace('#/history/', '')).trim();
@@ -862,7 +874,10 @@ function resolveRoute(hash, state, auth) {
       navigateTo('history');
       return null;
     }
-    return protectRoute(() => ({ html: renderWorkoutDetailPage(id), afterRender: attachWorkoutDetailEvents }));
+    return protectRoute(
+      () => ({ html: renderWorkoutDetailPage(id), afterRender: attachWorkoutDetailEvents }),
+      { onLocked: renderPaywallGate }
+    );
   }
   switch (hash) {
     case '#/':
@@ -872,6 +887,17 @@ function resolveRoute(hash, state, auth) {
       return { html: renderFeaturesShowcase() };
     case '#/pricing':
       return landingResult(renderPricingLanding);
+    case '#/login':
+      return { html: renderLoginPage(), afterRender: attachLoginPageEvents };
+    case '#/signup':
+      return { html: renderSignupPage(), afterRender: attachSignupPageEvents };
+    case '#/success':
+      return protectRoute(
+        () => ({ html: renderSuccessPage(), afterRender: attachSuccessPageEvents }),
+        { requireSubscription: false }
+      );
+    case '#/canceled':
+      return { html: renderCanceledPage(), afterRender: attachCanceledPageEvents };
     case '#/about':
       return landingResult(renderAboutLanding);
     case '#/contact':
@@ -882,40 +908,69 @@ function resolveRoute(hash, state, auth) {
       return landingResult(renderExerciseLibraryLanding);
     case '#/summary':
     case '#/workout-summary':
-      return protectRoute(() => ({ html: renderWorkoutSummaryPage(state), afterRender: attachWorkoutSummaryEvents }));
+      return protectRoute(
+        () => ({ html: renderWorkoutSummaryPage(state), afterRender: attachWorkoutSummaryEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/workout':
-      return protectRoute(() => ({ html: renderWorkoutExecution(state), afterRender: attachWorkoutExecutionEvents }));
+      return protectRoute(
+        () => ({ html: renderWorkoutExecution(state), afterRender: attachWorkoutExecutionEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/start-trial':
       if (redirectIfLoggedIn()) {
         return null;
       }
       return landingResult(renderStartTrial);
     case '#/create-account':
-      if (redirectIfLoggedIn()) {
-        return null;
-      }
-      return landingResult(renderCreateAccount);
+      return { html: renderSignupPage(), afterRender: attachSignupPageEvents };
     case '#/welcome':
       if (redirectIfLoggedIn()) {
         return null;
       }
       return landingResult(renderWelcome);
+    case '#/paywall':
+      return protectRoute(
+        () => renderPaywallGate(auth),
+        { requireSubscription: false }
+      );
     case '#/dashboard':
-      return protectRoute(() => ({ html: renderDashboard(state) }));
+      return protectRoute(() => ({ html: renderDashboard(state) }), { onLocked: renderPaywallGate });
     case '#/history':
-      return protectRoute(() => ({ html: renderHistoryPage(state), afterRender: attachHistoryPageEvents }));
+      return protectRoute(
+        () => ({ html: renderHistoryPage(state), afterRender: attachHistoryPageEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/generate':
-      return protectRoute(() => ({ html: renderGeneratePage(state), afterRender: attachGeneratePageEvents }));
+      return protectRoute(
+        () => ({ html: renderGeneratePage(state), afterRender: attachGeneratePageEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/planner':
-      return protectRoute(() => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }));
+      return protectRoute(
+        () => ({ html: renderPlanner(state), afterRender: attachPlannerEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/library':
-      return protectRoute(() => ({ html: renderLibrary(state), afterRender: attachLibraryEvents }));
+      return protectRoute(
+        () => ({ html: renderLibrary(state), afterRender: attachLibraryEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/plan-generator':
-      return protectRoute(() => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }));
+      return protectRoute(
+        () => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/profile':
-      return protectRoute(() => ({ html: renderProfilePage(state), afterRender: attachProfilePageEvents }));
+      return protectRoute(
+        () => ({ html: renderProfilePage(state), afterRender: attachProfilePageEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/profile-edit':
-      return protectRoute(() => ({ html: renderProfileEdit(), afterRender: attachProfileEditEvents }));
+      return protectRoute(
+        () => ({ html: renderProfileEdit(), afterRender: attachProfileEditEvents }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/subscribe':
       return { html: renderSubscribe(state), afterRender: attachSubscribeEvents };
     case '#/onboarding':

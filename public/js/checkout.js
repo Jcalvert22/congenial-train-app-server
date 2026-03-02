@@ -1,3 +1,6 @@
+import { getCurrentUser } from '../auth/state.js';
+import { redirectToLogin } from '../auth/guard.js';
+
 const STORAGE_KEY = 'aaa-selected-plan';
 let currentPlan = 'monthly';
 
@@ -50,13 +53,18 @@ export function getSelectedPlan() {
 export async function startCheckout(priceId = currentPlan) {
   const normalizedPlan = normalizePlan(priceId);
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      redirectToLogin();
+      throw new Error('Login required before checkout.');
+    }
     console.log('Starting checkout with plan:', normalizedPlan);
     const response = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ priceId: normalizedPlan })
+      body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })
     });
 
     if (!response.ok) {
