@@ -1,4 +1,5 @@
 import { getAuth, logout } from '../auth/state.js';
+import { getSelectedPlan } from '../js/checkout.js';
 
 const NAVBAR_CONTAINER_ID = 'navbar';
 const NAVBAR_MENU_ID = 'aaa-chrome-menu';
@@ -117,9 +118,14 @@ export function renderPublicNavbar() {
     tagline: 'Structure without stress',
     links: PUBLIC_LINKS,
     secondaryAction: `<a class="chrome-button ghost" href="#/pricing">View plans</a>`,
-    primaryAction: `<button class="chrome-button" id="start-trial" type="button" data-plan="monthly">Start free trial</button>`
+    primaryAction: `<button class="chrome-button" id="start-trial" type="button" data-plan="${getSelectedPlan()}">Start free trial</button>`
   });
-  mountNavbar(html);
+  mountNavbar(html, container => {
+    const button = container.querySelector('#start-trial');
+    if (button) {
+      button.dataset.plan = getSelectedPlan();
+    }
+  });
 }
 
 export function renderAppNavbar() {
