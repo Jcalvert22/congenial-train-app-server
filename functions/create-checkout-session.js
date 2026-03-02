@@ -71,7 +71,10 @@ export async function onRequestPost(context) {
     const session = await createStripeCheckoutSession(env, selectedPriceId);
     return jsonResponse({ url: session.url });
   } catch (error) {
-    console.error('Stripe checkout error', error);
-    return jsonResponse({ error: 'Unable to create checkout session.' }, { status: 500 });
-  }
+  console.error("Stripe error details:", error?.message, error);
+  return jsonResponse(
+    { error: 'Unable to create checkout session.' },
+    { status: 500 }
+  );
+}
 }
