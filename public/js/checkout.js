@@ -1,6 +1,6 @@
 export async function startCheckout(priceId = 'monthly') {
   try {
-    const response = await fetch('/functions/create-checkout-session', {
+    const response = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
