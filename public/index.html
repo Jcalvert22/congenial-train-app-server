@@ -13,5 +13,17 @@
   <div id="app"></div>
 
   <script type="module" src="./app.mjs"></script>
+  <script type="module">
+    import { startCheckout } from '/js/checkout.js';
+
+    document.addEventListener('click', event => {
+      const startTrialButton = event.target.closest('#start-trial');
+      if (!startTrialButton) {
+        return;
+      }
+      event.preventDefault();
+      startCheckout('monthly');
+    });
+  </script>
 </body>
 </html>
