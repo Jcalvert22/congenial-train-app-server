@@ -14,23 +14,121 @@
 
   <script type="module" src="./app.mjs"></script>
   <script type="module">
-    import { startCheckout, setTrialPlan } from '/js/checkout.js';
+    import { startCheckout, setTrialPlan, getSelectedPlan } from '/js/checkout.js';
+
+    const PLAN_OPTIONS = [
+      { id: 'monthly', title: 'Monthly', detail: '$7.99 billed each month' },
+      { id: 'yearly', title: 'Yearly', detail: '$49.99 billed once per year' }
+    ];
+
+    let planModal = null;
+    let isModalOpen = false;
+
+    const handleKeydown = event => {
+      if (!isModalOpen) {
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closePlanModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeydown);
+
+    function ensurePlanModal() {
+      if (planModal) {
+        return planModal;
+      }
+      const backdrop = document.createElement('div');
+      backdrop.id = 'trial-plan-modal';
+      backdrop.className = 'plan-modal-backdrop';
+      backdrop.setAttribute('hidden', '');
+      backdrop.innerHTML = `
+        <div class="plan-modal" role="dialog" aria-modal="true" aria-labelledby="trial-plan-title">
+          <button class="plan-modal-close" type="button" aria-label="Close plan selection">&times;</button>
+          <div class="plan-modal-head">
+            <p class="plan-modal-label">Choose your billing plan</p>
+            <h2 id="trial-plan-title">Pick what fits your pace</h2>
+          </div>
+          <div class="plan-modal-options" data-plan-options></div>
+        </div>
+      `;
+
+      const optionsContainer = backdrop.querySelector('[data-plan-options]');
+      optionsContainer.innerHTML = PLAN_OPTIONS.map(option => `
+        <button type="button" class="plan-modal-option" data-plan-option="${option.id}">
+          <span class="plan-modal-option-title">${option.title}</span>
+          <span class="plan-modal-option-detail">${option.detail}</span>
+        </button>
+      `).join('');
+
+      optionsContainer.addEventListener('click', async event => {
+        const option = event.target.closest('[data-plan-option]');
+        if (!option) {
+          return;
+        }
+        const plan = option.dataset.planOption || 'monthly';
+        setTrialPlan(plan);
+        highlightPlanOption(plan);
+        option.disabled = true;
+        try {
+          console.log('Top-right plan selection:', plan);
+          await startCheckout(plan);
+        } finally {
+          option.disabled = false;
+          closePlanModal();
+        }
+      });
+
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) {
+          closePlanModal();
+        }
+      });
+
+      backdrop.querySelector('.plan-modal-close')?.addEventListener('click', closePlanModal);
+
+      document.body.appendChild(backdrop);
+      planModal = backdrop;
+      return planModal;
+    }
+
+    function highlightPlanOption(plan) {
+      const modal = ensurePlanModal();
+      modal.querySelectorAll('[data-plan-option]').forEach(button => {
+        const isActive = button.dataset.planOption === plan;
+        button.classList.toggle('is-active', isActive);
+      });
+    }
+
+    function openPlanModal() {
+      const modal = ensurePlanModal();
+      highlightPlanOption(getSelectedPlan());
+      modal.removeAttribute('hidden');
+      modal.classList.add('is-visible');
+      document.body.classList.add('plan-modal-open');
+      isModalOpen = true;
+      const firstButton = modal.querySelector('[data-plan-option]');
+      firstButton?.focus();
+    }
+
+    function closePlanModal() {
+      if (!planModal || planModal.hasAttribute('hidden')) {
+        isModalOpen = false;
+        return;
+      }
+      planModal.setAttribute('hidden', '');
+      planModal.classList.remove('is-visible');
+      document.body.classList.remove('plan-modal-open');
+      isModalOpen = false;
+    }
 
     document.addEventListener('click', async event => {
       const trialButton = event.target.closest('#start-trial');
       if (trialButton) {
         event.preventDefault();
-        if (trialButton.disabled) {
-          return;
-        }
-        const plan = (trialButton.dataset.plan || 'monthly').trim() || 'monthly';
-        console.log('Top-right trial button plan:', plan);
-        trialButton.disabled = true;
-        try {
-          await startCheckout(plan);
-        } finally {
-          trialButton.disabled = false;
-        }
+        openPlanModal();
         return;
       }
 

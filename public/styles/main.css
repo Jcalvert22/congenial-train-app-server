@@ -13,6 +13,10 @@ body {
   color: var(--text);
 }
 
+body.plan-modal-open {
+  overflow: hidden;
+}
+
 .site-header {
   background: rgba(10, 22, 22, 0.9);
   border-bottom: 1px solid var(--panel-border);
@@ -52,6 +56,88 @@ body {
 footer {
   border-top: 1px solid var(--panel-border);
   background: rgba(9, 20, 20, 0.85);
+}
+
+.plan-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 13, 11, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 999;
+}
+
+.plan-modal-backdrop[hidden] {
+  display: none;
+}
+
+.plan-modal {
+  width: min(420px, 100%);
+  background: #0f201d;
+  border-radius: 20px;
+  border: 1px solid rgba(210, 255, 234, 0.3);
+  padding: 28px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  position: relative;
+}
+
+.plan-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  color: #d8f3e6;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.plan-modal-head {
+  margin-bottom: 20px;
+}
+
+.plan-modal-label {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.75rem;
+  color: #9ae6b4;
+  margin: 0 0 6px;
+}
+
+.plan-modal-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-modal-option {
+  width: 100%;
+  border: 1px solid rgba(210, 255, 234, 0.4);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 16px 18px;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-modal-option-title {
+  font-weight: 600;
+}
+
+.plan-modal-option-detail {
+  color: #d8f3e6;
+  font-size: 0.9rem;
+}
+
+.plan-modal-option.is-active {
+  border-color: #9ae6b4;
+  background: rgba(154, 230, 180, 0.14);
 }
 
 .badge {
