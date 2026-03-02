@@ -56,12 +56,14 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: 'Invalid JSON payload.' }, { status: 400 });
   }
 
+  console.log('Received checkout payload:', payload);
   const priceKey = payload?.priceId === 'yearly' ? 'yearly' : 'monthly';
   const priceIdMap = {
     monthly: env.STRIPE_MONTHLY_PRICE_ID,
     yearly: env.STRIPE_YEARLY_PRICE_ID
   };
   const selectedPriceId = priceIdMap[priceKey];
+  console.log('Resolved plan:', priceKey, 'Stripe price ID:', selectedPriceId);
 
   if (!selectedPriceId) {
     return jsonResponse({ error: 'Unsupported price selection.' }, { status: 400 });
@@ -70,7 +72,7 @@ export async function onRequestPost(context) {
   try {
     const session = await createStripeCheckoutSession(env, selectedPriceId);
     console.log('Stripe session created for plan:', priceKey, 'url:', session.url);
-    return jsonResponse({ url: session.url });
+    return jsonResponse({ url: session.url, plan: priceKey });
   } catch (error) {
   console.error("Stripe error details:", error?.message, error);
   return jsonResponse(
