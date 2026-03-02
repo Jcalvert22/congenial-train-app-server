@@ -20,7 +20,7 @@ function assertEnv(env) {
 async function createStripeCheckoutSession(env, priceId) {
   const params = new URLSearchParams();
   params.append('mode', 'subscription');
-  params.append('success_url', `${env.APP_URL}/success`);
+  params.append('success_url', `${env.APP_URL}#/dashboard`);
   params.append('cancel_url', `${env.APP_URL}/canceled`);
   params.append('line_items[0][price]', priceId);
   params.append('line_items[0][quantity]', '1');
