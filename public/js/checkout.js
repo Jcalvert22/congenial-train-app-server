@@ -1,5 +1,6 @@
 export async function startCheckout(priceId = 'monthly') {
   try {
+    console.log('Starting checkout with plan:', priceId);
     const response = await fetch('/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -23,5 +24,13 @@ export async function startCheckout(priceId = 'monthly') {
   } catch (error) {
     console.error('Unable to start checkout', error);
     alert('We could not start your checkout right now. Please try again in a moment.');
+  }
+}
+
+export function setTrialPlan(plan = 'monthly') {
+  const targetPlan = (plan || 'monthly').trim() || 'monthly';
+  const button = document.getElementById('start-trial');
+  if (button) {
+    button.dataset.plan = targetPlan;
   }
 }

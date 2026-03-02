@@ -14,15 +14,33 @@
 
   <script type="module" src="./app.mjs"></script>
   <script type="module">
-    import { startCheckout } from '/js/checkout.js';
+    import { startCheckout, setTrialPlan } from '/js/checkout.js';
 
-    document.addEventListener('click', event => {
-      const checkoutTarget = event.target.closest('[data-checkout-plan], #start-trial');
+    document.addEventListener('click', async event => {
+      const trialButton = event.target.closest('#start-trial');
+      if (trialButton) {
+        event.preventDefault();
+        if (trialButton.disabled) {
+          return;
+        }
+        const plan = (trialButton.dataset.plan || 'monthly').trim() || 'monthly';
+        console.log('Top-right trial button plan:', plan);
+        trialButton.disabled = true;
+        try {
+          await startCheckout(plan);
+        } finally {
+          trialButton.disabled = false;
+        }
+        return;
+      }
+
+      const checkoutTarget = event.target.closest('[data-checkout-plan]');
       if (!checkoutTarget) {
         return;
       }
       event.preventDefault();
-      const plan = checkoutTarget.getAttribute('data-checkout-plan') || 'monthly';
+      const plan = (checkoutTarget.getAttribute('data-checkout-plan') || 'monthly').trim() || 'monthly';
+      setTrialPlan(plan);
       startCheckout(plan);
     });
   </script>

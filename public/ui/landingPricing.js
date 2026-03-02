@@ -2,10 +2,10 @@ import { render } from './render.js';
 import { getState } from '../logic/state.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
+import { startCheckout, setTrialPlan } from '../js/checkout.js';
 
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
-const CHECKOUT_ENDPOINT = '/create-checkout-session';
 
 function getCtaAttrs(cta) {
   return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
@@ -168,29 +168,6 @@ function buildCtaSection(cta) {
   `;
 }
 
-async function initiateCheckout(plan) {
-  const trimmedPlan = (plan || 'monthly').trim() || 'monthly';
-  const response = await fetch(CHECKOUT_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ priceId: trimmedPlan })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'Checkout request failed.');
-  }
-
-  const data = await response.json();
-  if (!data?.url) {
-    throw new Error('Checkout URL missing from response.');
-  }
-
-  window.location.href = data.url;
-}
-
 function attachCheckoutButtons(root) {
   const scope = root && typeof root.querySelector === 'function' ? root : document;
   const buttons = scope.querySelectorAll('.checkout-btn');
@@ -204,10 +181,11 @@ function attachCheckoutButtons(root) {
       if (button.disabled) {
         return;
       }
-      const plan = button.dataset.plan || 'monthly';
+      const plan = (button.dataset.plan || 'monthly').trim() || 'monthly';
+      setTrialPlan(plan);
       button.disabled = true;
       try {
-        await initiateCheckout(plan);
+        await startCheckout(plan);
       } catch (error) {
         console.error('Unable to start checkout', error);
         button.disabled = false;

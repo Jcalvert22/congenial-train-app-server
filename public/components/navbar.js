@@ -117,7 +117,7 @@ export function renderPublicNavbar() {
     tagline: 'Structure without stress',
     links: PUBLIC_LINKS,
     secondaryAction: `<a class="chrome-button ghost" href="#/pricing">View plans</a>`,
-    primaryAction: `<a class="chrome-button" id="start-trial" href="#/start-trial" data-checkout-plan="monthly">Start free trial</a>`
+    primaryAction: `<button class="chrome-button" id="start-trial" type="button" data-plan="monthly">Start free trial</button>`
   });
   mountNavbar(html);
 }
