@@ -69,6 +69,7 @@ export async function onRequestPost(context) {
 
   try {
     const session = await createStripeCheckoutSession(env, selectedPriceId);
+    console.log('Stripe session created for plan:', priceKey, 'url:', session.url);
     return jsonResponse({ url: session.url });
   } catch (error) {
   console.error("Stripe error details:", error?.message, error);
