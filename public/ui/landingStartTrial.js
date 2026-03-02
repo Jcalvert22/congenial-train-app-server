@@ -3,6 +3,7 @@ import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
+import { setTrialPlan } from '../js/checkout.js';
 
 function buildHero() {
   const primaryCtaHref = '#/create-account';
@@ -102,6 +103,26 @@ function buildCtaSection() {
   `;
 }
 
+function buildPlanPicker() {
+  return `
+    <section class="landing-section">
+      <p class="landing-subtext">Choose your billing plan</p>
+      <h2>Pick monthly or yearly before you start.</h2>
+      <p>Your top-right Start Free Trial button will always use the last plan you pick.</p>
+      <div class="trial-plan-toggle" role="group" aria-label="Select billing plan">
+        <button type="button" class="plan-toggle is-active" data-plan-select="monthly">
+          <strong>Monthly</strong>
+          <span>$7.99 &middot; cancel anytime</span>
+        </button>
+        <button type="button" class="plan-toggle" data-plan-select="yearly">
+          <strong>Yearly</strong>
+          <span>$49.99 &middot; two months free</span>
+        </button>
+      </div>
+    </section>
+  `;
+}
+
 export function renderStartTrial(options = {}) {
   const { standalone = true, includeFooter = true } = options;
   if (redirectIfLoggedIn()) {
@@ -114,6 +135,7 @@ export function renderStartTrial(options = {}) {
     <section class="landing-page">
       <div class="landing-container">
         ${buildHero()}
+        ${buildPlanPicker()}
         ${buildTrialDetails()}
         ${buildGymxietySection(gymxietyEnabled)}
         ${buildCtaSection()}
@@ -123,6 +145,26 @@ export function renderStartTrial(options = {}) {
   `;
 
   const afterRender = root => {
+    const planButtons = Array.from(root.querySelectorAll('[data-plan-select]'));
+    if (planButtons.length) {
+      const setActive = nextPlan => {
+        planButtons.forEach(btn => {
+          const isActive = btn.dataset.planSelect === nextPlan;
+          btn.classList.toggle('is-active', isActive);
+        });
+      };
+      const currentPlan = document.getElementById('start-trial')?.dataset.plan || 'monthly';
+      setTrialPlan(currentPlan);
+      setActive(currentPlan);
+      planButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const plan = button.dataset.planSelect || 'monthly';
+          setTrialPlan(plan);
+          setActive(plan);
+        });
+      });
+    }
+
     const toggle = root.querySelector('[data-gymxiety-trial-toggle]');
     const status = root.querySelector('[data-gymxiety-trial-status]');
     if (!toggle || !status) {

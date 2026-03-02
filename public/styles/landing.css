@@ -692,6 +692,41 @@
   align-items: flex-start;
 }
 
+
+.trial-plan-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.plan-toggle {
+  border: 1px solid rgba(210, 255, 234, 0.4);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  padding: 16px 18px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 1rem;
+}
+
+.plan-toggle strong {
+  font-size: 1.05rem;
+}
+
+.plan-toggle span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.plan-toggle.is-active {
+  border-color: var(--accent);
+  background: rgba(154, 230, 180, 0.12);
+}
 .landing-toggle {
   position: relative;
   display: inline-flex;
