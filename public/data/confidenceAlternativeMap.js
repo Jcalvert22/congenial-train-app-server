@@ -13,10 +13,12 @@ function loadJsonSync(relativePath, fallback) {
   return fallback;
 }
 
-const raw = loadJsonSync('./confidenceAlternativeMap.json', {
+const CONFIDENCE_MAP_FALLBACK = {
   confidenceAlternativeMap: {},
   confidenceAlternativeMeta: {}
-});
+};
+
+const raw = loadJsonSync('./confidenceAlternativeMap.json', CONFIDENCE_MAP_FALLBACK);
 
 const { confidenceAlternativeMap: confidenceAlternativeMapData = {}, confidenceAlternativeMeta = {} } = raw;
 
