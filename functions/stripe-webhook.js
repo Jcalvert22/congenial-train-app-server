@@ -150,10 +150,11 @@ async function retrieveSubscription(env, subscriptionId) {
 }
 
 function buildSubscriptionPayload(customerId, subscription, status = 'active') {
+  const periodEnd = subscription?.current_period_end ? toIso(subscription.current_period_end) : new Date(0).toISOString();
   return {
     stripe_customer_id: customerId,
     subscription_status: status,
-    current_period_end: subscription?.current_period_end ? toIso(subscription.current_period_end) : null
+    current_period_end: periodEnd
   };
 }
 
