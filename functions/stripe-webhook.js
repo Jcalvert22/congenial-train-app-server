@@ -254,6 +254,7 @@ export async function onRequestPost(context) {
   }
 
   try {
+    console.log('Stripe webhook received event', event?.type);
     await routeEvent(event, env);
     return textResponse('ok', { status: 200 });
   } catch (error) {
