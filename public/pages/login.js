@@ -1,5 +1,6 @@
-import { loginWithEmail, refreshAuthState, getAuth } from '../auth/state.js';
+import { refreshAuthState, getAuth } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
+import { login } from '../js/supabaseClient.js';
 
 function renderAuthShell(content) {
   return `
@@ -62,7 +63,10 @@ export function attachLoginPageEvents(root) {
     }
     try {
       setBusy(true);
-      await loginWithEmail({ email, password });
+      const { error } = await login(email, password);
+      if (error) {
+        throw error;
+      }
       await refreshAuthState();
       const auth = getAuth();
       window.location.hash = auth.subscriptionStatus === 'active' ? '#/dashboard' : '#/paywall';

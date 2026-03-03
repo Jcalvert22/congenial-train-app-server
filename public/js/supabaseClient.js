@@ -1,70 +1,51 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const CONFIG_WARNING = 'Supabase configuration missing. Provide supabase-url and supabase-anon-key meta tags.';
 
-const CONFIG_WARNING = 'Supabase configuration missing. Provide supabase-url and supabase-anon-key meta tags or window.__AAA_CONFIG__.';
+const supabaseUrl = document
+  .querySelector('meta[name="supabase-url"]')
+  .getAttribute('content');
 
-let cachedConfig = null;
-let supabaseClient = null;
+const supabaseAnonKey = document
+  .querySelector('meta[name="supabase-anon-key"]')
+  .getAttribute('content');
 
-function readMeta(name) {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-  return document.querySelector(`meta[name="${name}"]`)?.getAttribute('content') || null;
-}
+const supabaseLibrary = typeof window !== 'undefined' ? window.supabase : null;
+const supabase =
+  supabaseLibrary && supabaseUrl && supabaseAnonKey
+    ? supabaseLibrary.createClient(supabaseUrl, supabaseAnonKey)
+    : null;
 
-function resolveConfig() {
-  if (typeof window !== 'undefined' && window.__AAA_CONFIG__) {
-    const { supabaseUrl, supabaseAnonKey } = window.__AAA_CONFIG__;
-    if (supabaseUrl && supabaseAnonKey) {
-      return { supabaseUrl, supabaseAnonKey };
-    }
-  }
-  const supabaseUrl = readMeta('supabase-url');
-  const supabaseAnonKey = readMeta('supabase-anon-key');
-  return { supabaseUrl, supabaseAnonKey };
-}
-
-function haveConfig(config) {
-  return Boolean(config?.supabaseUrl && config?.supabaseAnonKey);
-}
-
-function getConfig() {
-  if (!cachedConfig) {
-    cachedConfig = resolveConfig();
-  }
-  return cachedConfig;
-}
-
-function getClientInstance() {
-  if (supabaseClient) {
-    return supabaseClient;
-  }
-  const config = getConfig();
-  if (!haveConfig(config)) {
-    console.warn(CONFIG_WARNING);
-    return null;
-  }
-  supabaseClient = createClient(config.supabaseUrl, config.supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      detectSessionInUrl: true,
-      autoRefreshToken: true
-    }
-  });
-  return supabaseClient;
+if (!supabase) {
+  console.warn(CONFIG_WARNING);
 }
 
 export function getSupabaseClient(options = {}) {
   const { required = true } = options;
-  const client = getClientInstance();
-  if (!client && required) {
+  if (!supabase && required) {
     throw new Error(CONFIG_WARNING);
   }
-  return client;
+  return supabase;
 }
 
 export function isSupabaseConfigured() {
-  return haveConfig(getConfig());
+  return Boolean(supabase);
+}
+
+export async function login(email, password) {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+  return { data, error };
+}
+
+export async function signup(email, password) {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signUp({
+    email,
+    password
+  });
+  return { data, error };
 }
 
 export async function getCurrentUser() {
@@ -72,12 +53,18 @@ export async function getCurrentUser() {
   if (!client) {
     return null;
   }
-  const { data, error } = await client.auth.getSession();
-  if (error) {
-    console.error('Unable to fetch Supabase session', error);
-    return null;
+  const {
+    data: { user }
+  } = await client.auth.getUser();
+  return user;
+}
+
+export async function logout() {
+  const client = getSupabaseClient({ required: false });
+  if (!client) {
+    return;
   }
-  return data?.session?.user || null;
+  await client.auth.signOut();
 }
 
 export function onSupabaseAuthChange(callback) {
