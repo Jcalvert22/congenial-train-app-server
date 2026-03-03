@@ -287,3 +287,18 @@ footer {
   background: #4caf50;
   transition: width 0.3s ease;
 }
+
+.cancel-sub-btn {
+  padding: 0.75rem 1rem;
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.cancel-sub-btn:hover {
+  background: #e04848;
+}

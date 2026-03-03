@@ -2,6 +2,21 @@ import { escapeHTML } from '../utils/helpers.js';
 import { getState } from '../logic/state.js';
 import { getAuth, logout } from '../auth/state.js';
 import { updateProfileMessage } from '../js/profileStatus.js';
+
+export async function openBillingPortal(userId) {
+  const res = await fetch('/create-portal-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+  if (data?.url) {
+    window.location.href = data.url;
+    return;
+  }
+  window.alert('Unable to open billing portal.');
+}
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
@@ -35,6 +50,10 @@ function wrapProfileContent(content) {
       <div id="trial-progress-container" class="trial-progress-container" style="display:none;">
         <div id="trial-progress-bar" class="trial-progress-bar"></div>
       </div>
+
+      <button id="cancel-subscription-btn" class="cancel-sub-btn" style="display:none;">
+        Manage Subscription
+      </button>
 
       <!-- rest of your profile UI -->
       ${content}
@@ -193,5 +212,14 @@ export function attachProfilePageEvents(root) {
 
   if (auth?.user) {
     updateProfileMessage(auth.user, normalizedProfile);
+    const cancelBtn = document.getElementById('cancel-subscription-btn');
+    if (cancelBtn) {
+      if (normalizedProfile.subscription_status === 'active') {
+        cancelBtn.style.display = 'block';
+        cancelBtn.onclick = () => openBillingPortal(auth.user.id);
+      } else {
+        cancelBtn.style.display = 'none';
+      }
+    }
   }
 }

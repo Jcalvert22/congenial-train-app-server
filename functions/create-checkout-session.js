@@ -1,5 +1,5 @@
-const SUCCESS_URL = 'https://all-around-athlete.pages.dev/success';
-const CANCEL_URL = 'https://all-around-athlete.pages.dev/canceled';
+const SUCCESS_URL = 'https://allaround-athlete.com/success';
+const CANCEL_URL = 'https://allaround-athlete.com/cancel';
 
 function jsonResponse(body, init = {}) {
   const headers = new Headers(init.headers || {});

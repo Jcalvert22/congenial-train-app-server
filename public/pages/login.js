@@ -3,6 +3,7 @@ import { redirectIfLoggedIn } from '../auth/guard.js';
 import { login, getSupabaseClient, getCurrentUser } from '../js/supabaseClient.js';
 import { getTrialDaysLeft, updateProfileMessage } from '../js/profileStatus.js';
 import { showTrialCountdown } from '../js/subscription.js';
+import { openBillingPortal } from './profile.js';
 
 function renderAuthShell(content) {
   return `
@@ -38,6 +39,16 @@ async function runSubscriptionCheck() {
     throw error;
   }
   updateProfileMessage(user, profile || {});
+
+  const cancelBtn = document.getElementById('cancel-subscription-btn');
+  if (cancelBtn) {
+    if (profile?.subscription_status === 'active') {
+      cancelBtn.style.display = 'block';
+      cancelBtn.onclick = () => openBillingPortal(user.id);
+    } else {
+      cancelBtn.style.display = 'none';
+    }
+  }
 
   if (profile?.subscription_status === 'trialing') {
     const daysLeft = getTrialDaysLeft(profile.current_period_end);
