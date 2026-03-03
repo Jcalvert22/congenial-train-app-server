@@ -16,7 +16,7 @@ function buildHero() {
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Need help?</p>
-        <h3>support@allaroundathlete.com</h3>
+        <h3>useallaroundathlete@gmail.com</h3>
         <p>Reach out anytime if you get stuck. A friendly reply arrives within 24-48 hours.</p>
       </div>
     </header>

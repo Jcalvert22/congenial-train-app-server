@@ -30,7 +30,7 @@ function buildHero() {
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Direct line</p>
-        <h3>support@allaroundathlete.com</h3>
+        <h3>useallaroundathlete@gmail.com</h3>
         <p>Send a note, share a win, or ask for guidance. Friendly help is always inside your inbox.</p>
       </div>
     </header>
@@ -57,7 +57,7 @@ function buildContactSection() {
         </label>
         <button class="landing-button landing-grid-span" type="submit">Send Message</button>
       </form>
-      <p class="landing-subtext landing-space-top-sm">Prefer email? Write to <a href="mailto:support@allaroundathlete.com">support@allaroundathlete.com</a>.</p>
+      <p class="landing-subtext landing-space-top-sm">Prefer email? Write to <a href="mailto:useallaroundathlete@gmail.com">useallaroundathlete@gmail.com</a>.</p>
     </section>
   `;
 }
