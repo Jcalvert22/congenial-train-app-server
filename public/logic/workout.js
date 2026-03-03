@@ -20,7 +20,6 @@ import {
 } from '../data/confidenceAlternativeMap.js';
 
 const PERCENT_MIN = 30;
-  const displayName = getExerciseDisplayName(exercise) || exerciseKey;
 const PERCENT_MAX = 95;
 const PERCENT_STEP = 5;
 const PERCENT_OFFSET_MIN = -25;
