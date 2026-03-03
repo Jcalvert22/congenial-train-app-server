@@ -15,6 +15,10 @@ function redirectTo(targetUrl) {
   window.location.replace(targetUrl);
 }
 
+function hasSubscriptionAccess(status) {
+  return status === 'active' || status === 'trialing';
+}
+
 export function redirectToLogin() {
   redirectTo(LOGIN_URL);
 }
@@ -25,7 +29,7 @@ export function protectRoute(renderCallback, options = {}) {
     redirectToLogin();
     return null;
   }
-  if (options.requireSubscription !== false && auth.subscriptionStatus !== 'active') {
+  if (options.requireSubscription !== false && !hasSubscriptionAccess(auth.subscriptionStatus)) {
     if (typeof options.onLocked === 'function') {
       return options.onLocked(auth);
     }
@@ -37,7 +41,7 @@ export function protectRoute(renderCallback, options = {}) {
 export function redirectIfLoggedIn(target = null) {
   const auth = getAuth();
   if (auth && auth.loggedIn === true) {
-    const destination = target || (auth.subscriptionStatus === 'active' ? DASHBOARD_URL : PAYWALL_URL);
+    const destination = target || (hasSubscriptionAccess(auth.subscriptionStatus) ? DASHBOARD_URL : PAYWALL_URL);
     redirectTo(destination);
     return true;
   }

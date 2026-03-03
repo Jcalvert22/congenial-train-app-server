@@ -69,7 +69,8 @@ export function attachSignupPageEvents(root) {
       }
       await refreshAuthState();
       const auth = getAuth();
-      window.location.hash = auth.subscriptionStatus === 'active' ? '#/dashboard' : '#/paywall';
+      const hasAccess = auth.subscriptionStatus === 'active' || auth.subscriptionStatus === 'trialing';
+      window.location.hash = hasAccess ? '#/dashboard' : '#/paywall';
     } catch (error) {
       console.error('Signup error:', error);
       if (errorEl) {

@@ -128,13 +128,6 @@ function buildStripeHeaders(env) {
   };
 }
 
-function toIso(timestamp) {
-  if (!timestamp) {
-    return null;
-  }
-  return new Date(timestamp * 1000).toISOString();
-}
-
 async function retrieveSubscription(env, subscriptionId) {
   if (!subscriptionId) {
     return null;
@@ -149,21 +142,22 @@ async function retrieveSubscription(env, subscriptionId) {
   return data;
 }
 
-function buildSubscriptionPayload(customerId, subscription, status = 'active') {
-  const periodEnd = subscription?.current_period_end ? toIso(subscription.current_period_end) : new Date(0).toISOString();
+function buildSubscriptionPayload(customerId, subscription, fallbackStatus = 'inactive') {
+  const normalizedStatus = subscription?.status || fallbackStatus;
+  const periodEnd = subscription?.current_period_end ?? null;
   return {
     stripe_customer_id: customerId,
-    subscription_status: status,
+    subscription_status: normalizedStatus,
     current_period_end: periodEnd
   };
 }
 
-async function syncSubscription(env, customerId, subscription, status = 'active') {
+async function syncSubscription(env, customerId, subscription, fallbackStatus = 'inactive') {
   if (!customerId) {
     console.warn('Subscription sync missing customerId');
     return;
   }
-  const payload = buildSubscriptionPayload(customerId, subscription, subscription?.status || status);
+  const payload = buildSubscriptionPayload(customerId, subscription, fallbackStatus);
   await patchSupabase(env, buildFilter('stripe_customer_id', customerId), payload);
 }
 
@@ -173,15 +167,15 @@ async function handleCheckoutSessionCompleted(session, env) {
   if (subscriptionId) {
     subscription = await retrieveSubscription(env, subscriptionId);
   }
-  await syncSubscription(env, session?.customer, subscription, 'active');
+  await syncSubscription(env, session?.customer, subscription, 'trialing');
 }
 
 async function handleCustomerSubscriptionCreated(subscription, env) {
-  await syncSubscription(env, subscription?.customer, subscription, 'active');
+  await syncSubscription(env, subscription?.customer, subscription, 'trialing');
 }
 
 async function handleCustomerSubscriptionUpdated(subscription, env) {
-  await syncSubscription(env, subscription?.customer, subscription);
+  await syncSubscription(env, subscription?.customer, subscription, 'active');
 }
 
 async function handleCustomerSubscriptionDeleted(subscription, env) {

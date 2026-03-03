@@ -131,6 +131,7 @@ async function createStripeCheckoutSession(env, customerId, priceId, userId) {
   params.append('line_items[0][quantity]', '1');
   params.append('client_reference_id', userId);
   params.append('metadata[supabase_user_id]', userId);
+  params.append('subscription_data[trial_period_days]', '7');
   params.append('subscription_data[metadata][supabase_user_id]', userId);
 
   const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {

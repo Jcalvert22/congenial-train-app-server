@@ -1,6 +1,7 @@
-import { refreshAuthState, getAuth } from '../auth/state.js';
+import { refreshAuthState } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
-import { login } from '../js/supabaseClient.js';
+import { login, getSupabaseClient, getCurrentUser } from '../js/supabaseClient.js';
+import { getTrialDaysLeft, showTrialCountdown } from '../js/subscription.js';
 
 function renderAuthShell(content) {
   return `
@@ -10,6 +11,40 @@ function renderAuthShell(content) {
       </div>
     </section>
   `;
+}
+
+function unlockFullApp() {
+  window.location.hash = '#/dashboard';
+}
+
+function showPaywall() {
+  window.location.hash = '#/paywall';
+}
+
+async function runSubscriptionCheck() {
+  const user = await getCurrentUser();
+  if (!user) {
+    showPaywall();
+    return;
+  }
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from('profile')
+    .select('subscription_status, current_period_end')
+    .eq('id', user.id)
+    .single();
+  if (error) {
+    throw error;
+  }
+  if (data?.subscription_status === 'trialing') {
+    const daysLeft = getTrialDaysLeft(data.current_period_end);
+    showTrialCountdown(daysLeft);
+    unlockFullApp();
+  } else if (data?.subscription_status === 'active') {
+    unlockFullApp();
+  } else {
+    showPaywall();
+  }
 }
 
 export function renderLoginPage() {
@@ -68,8 +103,7 @@ export function attachLoginPageEvents(root) {
         throw error;
       }
       await refreshAuthState();
-      const auth = getAuth();
-      window.location.hash = auth.subscriptionStatus === 'active' ? '#/dashboard' : '#/paywall';
+      await runSubscriptionCheck();
     } catch (error) {
       console.error('Login error:', error);
       if (errorEl) {
