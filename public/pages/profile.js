@@ -95,6 +95,13 @@ function hasPortalAccess(status) {
   return PORTAL_ELIGIBLE_STATUSES.has(normalizeStatus(status));
 }
 
+function canAttemptPortal(profile, stripeCustomerId) {
+  if (hasPortalAccess(profile?.subscription_status)) {
+    return true;
+  }
+  return Boolean(stripeCustomerId);
+}
+
 function extractPeriodEndSeconds(value) {
   if (value === null || value === undefined) {
     return null;
@@ -127,7 +134,7 @@ function needsBillingRefresh(profile) {
   return hasPortalAccess(profile.subscription_status) && !hasValidPeriodEnd(profile.current_period_end);
 }
 
-async function refreshBillingMetadata(user, cancelBtn) {
+async function refreshBillingMetadata(user, cancelBtn, stripeCustomerId) {
   if (!user) {
     return null;
   }
@@ -142,11 +149,10 @@ async function refreshBillingMetadata(user, cancelBtn) {
     };
     updateProfileMessage(user, normalized);
     if (cancelBtn) {
-      if (hasPortalAccess(normalized.subscription_status)) {
-        cancelBtn.style.display = 'block';
+      const shouldShow = canAttemptPortal(normalized, stripeCustomerId);
+      cancelBtn.style.display = shouldShow ? 'block' : 'none';
+      if (cancelBtn.style.display === 'block') {
         cancelBtn.onclick = () => openBillingPortal();
-      } else {
-        cancelBtn.style.display = 'none';
       }
     }
     return normalized;
@@ -310,7 +316,7 @@ export function attachProfilePageEvents(root) {
     updateProfileMessage(auth.user, normalizedProfile);
     const cancelBtn = document.getElementById('cancel-subscription-btn');
     if (cancelBtn) {
-      if (hasPortalAccess(normalizedProfile.subscription_status)) {
+      if (canAttemptPortal(normalizedProfile, auth.stripeCustomerId)) {
         cancelBtn.style.display = 'block';
         cancelBtn.onclick = () => openBillingPortal();
       } else {
@@ -318,7 +324,7 @@ export function attachProfilePageEvents(root) {
       }
     }
     if (!hasPortalAccess(normalizedProfile.subscription_status) || needsBillingRefresh(normalizedProfile)) {
-      refreshBillingMetadata(auth.user, cancelBtn).then(updated => {
+      refreshBillingMetadata(auth.user, cancelBtn, auth.stripeCustomerId).then(updated => {
         if (updated) {
           normalizedProfile = updated;
         }
