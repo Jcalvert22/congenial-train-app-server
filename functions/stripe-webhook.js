@@ -157,15 +157,30 @@ async function syncSubscription(env, customerId, subscription, fallbackStatus = 
     console.warn('Subscription sync missing customerId');
     return;
   }
+  console.log('Preparing subscription sync', {
+    customerId,
+    fallbackStatus,
+    subscriptionStatus: subscription?.status || null,
+    hasSubscription: Boolean(subscription)
+  });
   const payload = buildSubscriptionPayload(customerId, subscription, fallbackStatus);
   await patchSupabase(env, buildFilter('stripe_customer_id', customerId), payload);
+  console.log('Subscription sync complete', {
+    customerId,
+    storedStatus: payload.subscription_status,
+    storedPeriodEnd: payload.current_period_end
+  });
 }
 
 async function handleCheckoutSessionCompleted(session, env) {
   const subscriptionId = typeof session?.subscription === 'string' ? session.subscription : null;
   let subscription = null;
   if (subscriptionId) {
-    subscription = await retrieveSubscription(env, subscriptionId);
+    try {
+      subscription = await retrieveSubscription(env, subscriptionId);
+    } catch (error) {
+      console.error('Failed to retrieve subscription after checkout', subscriptionId, error);
+    }
   }
   await syncSubscription(env, session?.customer, subscription, 'trialing');
 }
@@ -184,7 +199,14 @@ async function handleCustomerSubscriptionDeleted(subscription, env) {
 
 async function handleInvoicePaid(invoice, env) {
   const subscriptionId = invoice?.subscription;
-  const subscription = await retrieveSubscription(env, subscriptionId);
+  let subscription = null;
+  if (subscriptionId) {
+    try {
+      subscription = await retrieveSubscription(env, subscriptionId);
+    } catch (error) {
+      console.error('Failed to retrieve subscription for invoice', subscriptionId, error);
+    }
+  }
   await syncSubscription(env, invoice?.customer, subscription, 'active');
 }
 
