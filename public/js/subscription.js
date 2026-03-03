@@ -5,9 +5,23 @@ const TRIAL_BANNER_ID = 'aaa-trial-countdown';
 
 export function getTrialDaysLeft(currentPeriodEnd) {
   const now = Math.floor(Date.now() / 1000);
-  const secondsLeft = (Number(currentPeriodEnd) || 0) - now;
+  const periodSeconds = normalizePeriodEndSeconds(currentPeriodEnd);
+  const secondsLeft = periodSeconds - now;
   const daysLeft = Math.ceil(secondsLeft / 86400);
   return Math.max(daysLeft, 0);
+}
+
+function normalizePeriodEndSeconds(value) {
+  if (!value) {
+    return 0;
+  }
+  if (typeof value === 'string') {
+    const millis = Date.parse(value);
+    if (!Number.isNaN(millis)) {
+      return Math.floor(millis / 1000);
+    }
+  }
+  return Number(value) || 0;
 }
 
 function ensureTrialBanner() {

@@ -142,9 +142,16 @@ async function retrieveSubscription(env, subscriptionId) {
   return data;
 }
 
+function resolvePeriodEndIso(subscription) {
+  if (subscription?.current_period_end) {
+    return new Date(subscription.current_period_end * 1000).toISOString();
+  }
+  return new Date(0).toISOString();
+}
+
 function buildSubscriptionPayload(customerId, subscription, fallbackStatus = 'inactive') {
   const normalizedStatus = subscription?.status || fallbackStatus;
-  const periodEnd = subscription?.current_period_end ?? null;
+  const periodEnd = resolvePeriodEndIso(subscription);
   return {
     stripe_customer_id: customerId,
     subscription_status: normalizedStatus,
