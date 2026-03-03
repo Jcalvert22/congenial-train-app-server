@@ -39,11 +39,14 @@ async function runSubscriptionCheck() {
     throw error;
   }
   const safeProfile = profile || {};
+  const normalizedStatus = typeof safeProfile.subscription_status === 'string'
+    ? safeProfile.subscription_status.trim().toLowerCase()
+    : '';
   updateProfileMessage(user, safeProfile);
 
   const cancelBtn = document.getElementById('cancel-subscription-btn');
   if (cancelBtn) {
-    if (safeProfile?.subscription_status === 'active') {
+    if (normalizedStatus === 'active') {
       cancelBtn.style.display = 'block';
       cancelBtn.onclick = () => openBillingPortal(user.id);
     } else {
@@ -51,12 +54,12 @@ async function runSubscriptionCheck() {
     }
   }
 
-  if (safeProfile?.subscription_status === 'trialing') {
+  if (normalizedStatus === 'trialing') {
     const resolvedPeriodEnd = resolveBillingPeriodEnd(user, safeProfile);
     const daysLeft = getTrialDaysLeft(resolvedPeriodEnd);
     showTrialCountdown(daysLeft);
     unlockFullApp();
-  } else if (safeProfile?.subscription_status === 'active') {
+  } else if (normalizedStatus === 'active') {
     unlockFullApp();
   } else {
     showPaywall();

@@ -1,5 +1,9 @@
 const TRIAL_LENGTH_SECONDS = 7 * 24 * 60 * 60;
 
+function normalizeStatus(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
 function normalizeSeconds(value) {
   if (!value && value !== 0) {
     return 0;
@@ -55,7 +59,7 @@ export function resolveBillingPeriodEnd(user, profile = {}) {
   if (storedSeconds > 0) {
     return storedSeconds;
   }
-  const status = (profile.subscription_status || '').toLowerCase();
+  const status = normalizeStatus(profile.subscription_status);
   if (status === 'trialing') {
     return resolveTrialFallbackSeconds(user);
   }
@@ -83,7 +87,9 @@ export function updateProfileMessage(user, profile = {}) {
   const memberSince = new Date(user.created_at).toLocaleDateString();
   const nextBilling = formatDate(resolvedPeriodEnd);
 
-  if (profile.subscription_status === 'trialing') {
+  const normalizedStatus = normalizeStatus(profile.subscription_status);
+
+  if (normalizedStatus === 'trialing') {
     el.textContent =
       `You've been using the app for ${daysUsingApp} days. ` +
       `Your free trial ends in ${daysLeft} days.`;
@@ -95,7 +101,7 @@ export function updateProfileMessage(user, profile = {}) {
     if (progressContainer) {
       progressContainer.style.display = 'block';
     }
-  } else if (profile.subscription_status === 'active') {
+  } else if (normalizedStatus === 'active') {
     el.textContent =
       `Member since ${memberSince}. ` +
       `You've been using the app for ${daysUsingApp} days. ` +

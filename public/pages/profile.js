@@ -87,8 +87,12 @@ function wrapProfileContent(content) {
 
 const PORTAL_ELIGIBLE_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']);
 
+function normalizeStatus(status) {
+  return typeof status === 'string' ? status.trim().toLowerCase() : '';
+}
+
 function hasPortalAccess(status) {
-  return PORTAL_ELIGIBLE_STATUSES.has((status || '').toLowerCase());
+  return PORTAL_ELIGIBLE_STATUSES.has(normalizeStatus(status));
 }
 
 function extractPeriodEndSeconds(value) {
@@ -133,9 +137,7 @@ async function refreshBillingMetadata(user, cancelBtn) {
       return null;
     }
     const normalized = {
-      subscription_status: typeof latest.subscription_status === 'string'
-        ? latest.subscription_status.toLowerCase()
-        : 'inactive',
+      subscription_status: normalizeStatus(latest.subscription_status) || 'inactive',
       current_period_end: latest.current_period_end ?? null
     };
     updateProfileMessage(user, normalized);
@@ -300,7 +302,7 @@ export function attachProfilePageEvents(root) {
   const profile = state.profile || {};
   const status = profile.subscription_status ?? auth.subscriptionStatus ?? 'inactive';
   let normalizedProfile = {
-    subscription_status: typeof status === 'string' ? status.toLowerCase() : 'inactive',
+    subscription_status: normalizeStatus(status) || 'inactive',
     current_period_end: profile.current_period_end ?? auth.currentPeriodEnd ?? null
   };
 
