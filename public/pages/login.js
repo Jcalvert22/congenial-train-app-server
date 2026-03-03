@@ -1,7 +1,8 @@
 import { refreshAuthState } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
 import { login, getSupabaseClient, getCurrentUser } from '../js/supabaseClient.js';
-import { getTrialDaysLeft, showTrialCountdown } from '../js/subscription.js';
+import { getTrialDaysLeft, updateProfileMessage } from '../js/profileStatus.js';
+import { showTrialCountdown } from '../js/subscription.js';
 
 function renderAuthShell(content) {
   return `
@@ -21,6 +22,15 @@ function showPaywall() {
   window.location.hash = '#/paywall';
 }
 
+function normalizePeriodEnd(value) {
+  if (typeof value === 'string') {
+    const parsed = Math.floor(new Date(value).getTime() / 1000);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  const num = Number(value);
+  return Number.isNaN(num) ? 0 : num;
+}
+
 async function runSubscriptionCheck() {
   const user = await getCurrentUser();
   if (!user) {
@@ -28,7 +38,7 @@ async function runSubscriptionCheck() {
     return;
   }
   const client = getSupabaseClient();
-  const { data, error } = await client
+  const { data: profile, error } = await client
     .from('profile')
     .select('subscription_status, current_period_end')
     .eq('id', user.id)
@@ -36,11 +46,20 @@ async function runSubscriptionCheck() {
   if (error) {
     throw error;
   }
-  if (data?.subscription_status === 'trialing') {
-    const daysLeft = getTrialDaysLeft(data.current_period_end);
+  const normalizedProfile = profile
+    ? {
+        ...profile,
+        current_period_end: normalizePeriodEnd(profile.current_period_end)
+      }
+    : { subscription_status: null, current_period_end: 0 };
+
+  updateProfileMessage(user, normalizedProfile);
+
+  if (normalizedProfile?.subscription_status === 'trialing') {
+    const daysLeft = getTrialDaysLeft(normalizedProfile.current_period_end);
     showTrialCountdown(daysLeft);
     unlockFullApp();
-  } else if (data?.subscription_status === 'active') {
+  } else if (normalizedProfile?.subscription_status === 'active') {
     unlockFullApp();
   } else {
     showPaywall();

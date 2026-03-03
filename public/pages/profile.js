@@ -1,6 +1,7 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { getState } from '../logic/state.js';
 import { getAuth, logout } from '../auth/state.js';
+import { updateProfileMessage } from '../js/profileStatus.js';
 import {
   renderEmptyStateCard,
   renderErrorStateCard,
@@ -24,6 +25,30 @@ function renderHeader(displayName) {
       </div>
     </header>
   `;
+}
+
+function wrapProfileContent(content) {
+  return `
+    <div class="profile-container">
+      <div id="profile-message" class="profile-message" style="display:none;"></div>
+
+      <div id="trial-progress-container" class="trial-progress-container" style="display:none;">
+        <div id="trial-progress-bar" class="trial-progress-bar"></div>
+      </div>
+
+      <!-- rest of your profile UI -->
+      ${content}
+    </div>
+  `;
+}
+
+function normalizePeriodEnd(value) {
+  if (typeof value === 'string') {
+    const parsed = Math.floor(new Date(value).getTime() / 1000);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  const num = Number(value);
+  return Number.isNaN(num) ? 0 : num;
 }
 
 function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
@@ -120,18 +145,17 @@ export function renderProfilePage(state = getState()) {
   if (!profile.goal && !profile.experience) {
     const sections = `
       ${renderHeader(displayName)}
-      ${renderEmptyStateCard({
+      ${wrapProfileContent(renderEmptyStateCard({
         title: 'Profile not set up',
         message: 'Add your basics so we can personalize every calm plan.',
         actionLabel: 'Edit Profile',
         actionHref: '#/profile-edit'
-      })}
+      }))}
     `;
     return renderPageShell(sections, { isLoading });
   }
 
-  const sections = `
-    ${renderHeader(displayName)}
+  const profileContent = `
     ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode })}
     ${renderPreferenceCard({
       equipment: profile.equipment,
@@ -139,6 +163,11 @@ export function renderProfilePage(state = getState()) {
       nextWorkout: state.program?.nextWorkout
     })}
     ${renderActionsSection()}
+  `;
+
+  const sections = `
+    ${renderHeader(displayName)}
+    ${wrapProfileContent(profileContent)}
   `;
 
   return renderPageShell(sections, { isLoading });
@@ -161,5 +190,17 @@ export function attachProfilePageEvents(root) {
       logout();
       window.location.hash = '#/';
     });
+  }
+
+  const auth = getAuth();
+  const state = getState();
+  const profile = state.profile || {};
+  const normalizedProfile = {
+    subscription_status: profile.subscription_status || auth.subscriptionStatus || 'inactive',
+    current_period_end: normalizePeriodEnd(profile.current_period_end ?? auth.currentPeriodEnd ?? 0)
+  };
+
+  if (auth?.user) {
+    updateProfileMessage(auth.user, normalizedProfile);
   }
 }
