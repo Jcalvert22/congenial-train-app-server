@@ -13,7 +13,8 @@ function loadJsonSync(relativePath, fallback) {
   return fallback;
 }
 
-const raw = loadJsonSync('./exercises.json', { exercises: {} });
+const EXERCISES_JSON_FALLBACK = { exercises: {} };
+const raw = loadJsonSync('./exercises.json', EXERCISES_JSON_FALLBACK);
 
 const EQUIPMENT_LABELS = {
   barbell: 'Barbell',
