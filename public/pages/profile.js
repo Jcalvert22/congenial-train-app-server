@@ -2,20 +2,43 @@ import { escapeHTML } from '../utils/helpers.js';
 import { getState } from '../logic/state.js';
 import { getAuth, logout } from '../auth/state.js';
 import { updateProfileMessage } from '../js/profileStatus.js';
+import { getSupabaseClient } from '../js/supabaseClient.js';
 
-export async function openBillingPortal(userId) {
-  const res = await fetch('/create-portal-session', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId })
-  });
+export async function openBillingPortal() {
+  try {
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data?.session?.access_token;
 
-  const data = await res.json();
-  if (data?.url) {
-    window.location.href = data.url;
-    return;
+    if (!accessToken) {
+      throw new Error('Missing Supabase session');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`
+    };
+
+    const res = await fetch('/create-portal-session', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({})
+    });
+
+    if (!res.ok) {
+      throw new Error(`Portal request failed: ${res.status}`);
+    }
+
+    const payload = await res.json();
+    if (payload?.url) {
+      window.location.href = payload.url;
+      return;
+    }
+    throw new Error('Portal URL missing');
+  } catch (error) {
+    console.error('Unable to open billing portal', error);
+    window.alert('Unable to open billing portal.');
   }
-  window.alert('Unable to open billing portal.');
 }
 import {
   renderEmptyStateCard,
@@ -59,6 +82,12 @@ function wrapProfileContent(content) {
       ${content}
     </div>
   `;
+}
+
+const PORTAL_ELIGIBLE_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']);
+
+function hasPortalAccess(status) {
+  return PORTAL_ELIGIBLE_STATUSES.has((status || '').toLowerCase());
 }
 
 function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
@@ -205,8 +234,9 @@ export function attachProfilePageEvents(root) {
   const auth = getAuth();
   const state = getState();
   const profile = state.profile || {};
+  const status = profile.subscription_status ?? auth.subscriptionStatus ?? 'inactive';
   const normalizedProfile = {
-    subscription_status: profile.subscription_status || auth.subscriptionStatus || 'inactive',
+    subscription_status: typeof status === 'string' ? status.toLowerCase() : 'inactive',
     current_period_end: profile.current_period_end ?? auth.currentPeriodEnd ?? null
   };
 
@@ -214,9 +244,9 @@ export function attachProfilePageEvents(root) {
     updateProfileMessage(auth.user, normalizedProfile);
     const cancelBtn = document.getElementById('cancel-subscription-btn');
     if (cancelBtn) {
-      if (normalizedProfile.subscription_status === 'active') {
+      if (hasPortalAccess(normalizedProfile.subscription_status)) {
         cancelBtn.style.display = 'block';
-        cancelBtn.onclick = () => openBillingPortal(auth.user.id);
+        cancelBtn.onclick = () => openBillingPortal();
       } else {
         cancelBtn.style.display = 'none';
       }
