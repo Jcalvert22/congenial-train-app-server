@@ -1,12 +1,19 @@
 const CONFIG_WARNING = 'Supabase configuration missing. Provide supabase-url and supabase-anon-key meta tags.';
 
-const supabaseUrl = document
-  .querySelector('meta[name="supabase-url"]')
-  .getAttribute('content');
+function getMetaContent(name) {
+  const element = document.querySelector(`meta[name="${name}"]`);
+  if (!element) {
+    return null;
+  }
+  const value = element.getAttribute('content');
+  if (!value || !value.trim()) {
+    return null;
+  }
+  return value.trim();
+}
 
-const supabaseAnonKey = document
-  .querySelector('meta[name="supabase-anon-key"]')
-  .getAttribute('content');
+const supabaseUrl = getMetaContent('supabase-url');
+const supabaseAnonKey = getMetaContent('supabase-anon-key');
 
 const supabaseLibrary = typeof window !== 'undefined' ? window.supabase : null;
 const supabase =
