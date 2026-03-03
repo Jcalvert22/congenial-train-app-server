@@ -62,7 +62,15 @@ export async function login(email, password) {
     email,
     password
   });
-  return { data, error };
+  if (error) {
+    return { data, error };
+  }
+  const confirmedAt = data?.user?.email_confirmed_at || data?.session?.user?.email_confirmed_at;
+  if (!confirmedAt) {
+    await client.auth.signOut();
+    return { data: null, error: new Error('Please confirm your email before logging in.') };
+  }
+  return { data, error: null };
 }
 
 export async function getCurrentUser() {

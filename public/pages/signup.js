@@ -53,7 +53,7 @@ export function attachSignupPageEvents(root) {
       errorEl.textContent = '';
     }
     const formData = new FormData(form);
-    const email = formData.get('email')?.toString().trim();
+    const email = formData.get('email')?.toString().trim().toLowerCase();
     const password = formData.get('password')?.toString() || '';
     if (!email || !password) {
       if (errorEl) {
@@ -71,7 +71,7 @@ export function attachSignupPageEvents(root) {
       const auth = getAuth();
       window.location.hash = auth.subscriptionStatus === 'active' ? '#/dashboard' : '#/paywall';
     } catch (error) {
-      console.error('Signup failed', error);
+      console.error('Signup error:', error);
       if (errorEl) {
         errorEl.textContent = error?.message || 'Unable to create your account right now.';
       }
