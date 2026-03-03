@@ -317,7 +317,7 @@ export function attachProfilePageEvents(root) {
         cancelBtn.style.display = 'none';
       }
     }
-    if (needsBillingRefresh(normalizedProfile)) {
+    if (!hasPortalAccess(normalizedProfile.subscription_status) || needsBillingRefresh(normalizedProfile)) {
       refreshBillingMetadata(auth.user, cancelBtn).then(updated => {
         if (updated) {
           normalizedProfile = updated;
