@@ -1,6 +1,5 @@
-import Stripe from 'stripe';
-
 const SUPABASE_TABLE = 'profile';
+const STRIPE_PORTAL_ENDPOINT = 'https://api.stripe.com/v1/billing_portal/sessions';
 
 function jsonResponse(body, init = {}) {
   const headers = new Headers(init.headers || {});
@@ -27,6 +26,28 @@ async function fetchProfile(env, userId) {
   }
   const data = await response.json();
   return data?.[0] || null;
+}
+
+async function createBillingPortalSession(env, customerId) {
+  const params = new URLSearchParams();
+  params.set('customer', customerId);
+  params.set('return_url', env.BILLING_PORTAL_RETURN_URL || 'https://allaround-athlete.com/profile');
+
+  const response = await fetch(STRIPE_PORTAL_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Stripe portal request failed: ${errorText}`);
+  }
+
+  return response.json();
 }
 
 async function getSupabaseUser(request, env) {
@@ -75,11 +96,7 @@ export async function onRequestPost({ request, env }) {
       return jsonResponse({ error: 'Missing Stripe customer ID' }, { status: 400 });
     }
 
-    const stripe = new Stripe(env.STRIPE_SECRET_KEY);
-    const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
-      return_url: 'https://allaround-athlete.com/profile'
-    });
+    const session = await createBillingPortalSession(env, profile.stripe_customer_id);
 
     return jsonResponse({ url: session.url });
   } catch (error) {
