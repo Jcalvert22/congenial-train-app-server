@@ -42,15 +42,6 @@ function wrapProfileContent(content) {
   `;
 }
 
-function normalizePeriodEnd(value) {
-  if (typeof value === 'string') {
-    const parsed = Math.floor(new Date(value).getTime() / 1000);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  const num = Number(value);
-  return Number.isNaN(num) ? 0 : num;
-}
-
 function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
   return `
     <section class="landing-section">
@@ -197,7 +188,7 @@ export function attachProfilePageEvents(root) {
   const profile = state.profile || {};
   const normalizedProfile = {
     subscription_status: profile.subscription_status || auth.subscriptionStatus || 'inactive',
-    current_period_end: normalizePeriodEnd(profile.current_period_end ?? auth.currentPeriodEnd ?? 0)
+    current_period_end: profile.current_period_end ?? auth.currentPeriodEnd ?? null
   };
 
   if (auth?.user) {

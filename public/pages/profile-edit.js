@@ -1,6 +1,6 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { getAuth, setAuth } from '../auth/state.js';
-import { setState } from '../logic/state.js';
+import { getState, setState } from '../logic/state.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 
 const EXPERIENCE_OPTIONS = ['Beginner', 'Intermediate', 'Advanced'];
@@ -38,11 +38,12 @@ function renderSelectOptions(options, selectedValue = '') {
   `).join('');
 }
 
-function renderFormSection(user = {}) {
+function renderFormSection(user = {}, profileDefaults = {}) {
   const nameValue = user.name || '';
   const emailValue = user.email || '';
   const experienceValue = user.experienceLevel || EXPERIENCE_OPTIONS[0];
   const goalValue = user.goal || GOAL_OPTIONS[0];
+  const equipmentValue = profileDefaults.equipment || user.profile?.equipment || '';
   const gymxietyEnabled = getGymxietyPreference();
   return `
     <section class="landing-section">
@@ -68,6 +69,10 @@ function renderFormSection(user = {}) {
               ${renderSelectOptions(GOAL_OPTIONS, goalValue)}
             </select>
           </label>
+          <label>
+            <span class="landing-subtext">Equipment access</span>
+            <textarea class="landing-textarea" name="equipment" rows="3" placeholder="e.g., Adjustable dumbbells, cables, treadmill">${escapeHTML(equipmentValue)}</textarea>
+          </label>
           <label class="profile-toggle">
             <input type="checkbox" id="gymxietyToggle" name="gymxietyMode" ${gymxietyEnabled ? 'checked' : ''}>
             Gymxiety Mode (Beginner-friendly, confidence-focused workouts)
@@ -85,9 +90,10 @@ function renderFormSection(user = {}) {
 export function renderProfileEdit() {
   const auth = getAuth();
   const user = auth.user || {};
+  const profile = getState().profile || {};
   const sections = `
     ${renderHeader()}
-    ${renderFormSection(user)}
+    ${renderFormSection(user, profile)}
   `;
   return wrapLandingPage(sections);
 }
@@ -108,6 +114,7 @@ export function attachProfileEditEvents(root) {
       const email = (formData.get('email') || '').toString().trim();
       const experience = (formData.get('experience') || '').toString().trim();
       const goal = (formData.get('goal') || '').toString().trim();
+      const equipment = (formData.get('equipment') || '').toString().trim();
       const gymxietyMode = Boolean(root.querySelector('#gymxietyToggle')?.checked);
       if (!name || !email || !experience || !goal) {
         window.alert('Please complete all required fields.');
@@ -119,8 +126,9 @@ export function attachProfileEditEvents(root) {
       auth.user.email = email;
       auth.user.experienceLevel = experience;
       auth.user.goal = goal;
-      auth.user.profile = { ...(auth.user.profile || {}), gymxietyMode };
+      auth.user.profile = { ...(auth.user.profile || {}), gymxietyMode, equipment };
       auth.user.gymxietyMode = gymxietyMode;
+      auth.user.equipment = equipment;
       setAuth(auth);
       setState(prev => {
         prev.profile = {
@@ -130,7 +138,8 @@ export function attachProfileEditEvents(root) {
           experience,
           experienceLevel: experience.toLowerCase(),
           goal,
-          gymxietyMode
+          gymxietyMode,
+          equipment
         };
         return prev;
       });

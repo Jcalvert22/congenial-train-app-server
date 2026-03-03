@@ -1,28 +1,56 @@
+function normalizeSeconds(value) {
+  if (!value && value !== 0) {
+    return 0;
+  }
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) {
+      return Math.floor(parsed / 1000);
+    }
+  }
+  const coerced = Number(value);
+  if (Number.isFinite(coerced)) {
+    return Math.floor(coerced);
+  }
+  return 0;
+}
+
 export function getDaysSince(dateString) {
-  const created = new Date(dateString).getTime();
+  const created = Date.parse(dateString || '');
+  if (Number.isNaN(created)) {
+    return 1;
+  }
   const now = Date.now();
-  return Math.floor((now - created) / 86400000);
+  const elapsedDays = Math.floor((now - created) / 86400000);
+  return Math.max(elapsedDays + 1, 1);
 }
 
 export function getTrialDaysLeft(currentPeriodEnd) {
+  const periodSeconds = normalizeSeconds(currentPeriodEnd);
   const now = Math.floor(Date.now() / 1000);
-  const secondsLeft = currentPeriodEnd - now;
+  const secondsLeft = periodSeconds - now;
   return Math.max(Math.ceil(secondsLeft / 86400), 0);
 }
 
 export function formatDate(ts) {
-  return new Date(ts * 1000).toLocaleDateString();
+  const seconds = normalizeSeconds(ts);
+  if (!seconds) {
+    return 'TBD';
+  }
+  return new Date(seconds * 1000).toLocaleDateString();
 }
 
 export function getTrialProgress(daysLeft) {
   const total = 7;
-  const used = total - daysLeft;
+  const remaining = Number.isFinite(daysLeft) ? daysLeft : 0;
+  const used = total - remaining;
   return Math.min(Math.max((used / total) * 100, 0), 100);
 }
 
 export function updateProfileMessage(user, profile) {
   const el = document.getElementById('profile-message');
   const bar = document.getElementById('trial-progress-bar');
+  const progressContainer = document.getElementById('trial-progress-container');
   if (!el || !user || !profile) {
     return;
   }
@@ -40,9 +68,9 @@ export function updateProfileMessage(user, profile) {
     const pct = getTrialProgress(daysLeft);
     if (bar) {
       bar.style.width = pct + '%';
-      if (bar.parentElement) {
-        bar.parentElement.style.display = 'block';
-      }
+    }
+    if (progressContainer) {
+      progressContainer.style.display = 'block';
     }
   } else if (profile.subscription_status === 'active') {
     el.textContent =
@@ -50,16 +78,16 @@ export function updateProfileMessage(user, profile) {
       `You've been using the app for ${daysUsingApp} days. ` +
       `Your next billing date is ${nextBilling}.`;
 
-    if (bar?.parentElement) {
-      bar.parentElement.style.display = 'none';
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
     }
   } else {
     el.textContent =
       `You've been using the app for ${daysUsingApp} days. ` +
       `Your free trial has ended.`;
 
-    if (bar?.parentElement) {
-      bar.parentElement.style.display = 'none';
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
     }
   }
 

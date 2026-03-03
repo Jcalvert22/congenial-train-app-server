@@ -22,15 +22,6 @@ function showPaywall() {
   window.location.hash = '#/paywall';
 }
 
-function normalizePeriodEnd(value) {
-  if (typeof value === 'string') {
-    const parsed = Math.floor(new Date(value).getTime() / 1000);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-  const num = Number(value);
-  return Number.isNaN(num) ? 0 : num;
-}
-
 async function runSubscriptionCheck() {
   const user = await getCurrentUser();
   if (!user) {
@@ -46,20 +37,13 @@ async function runSubscriptionCheck() {
   if (error) {
     throw error;
   }
-  const normalizedProfile = profile
-    ? {
-        ...profile,
-        current_period_end: normalizePeriodEnd(profile.current_period_end)
-      }
-    : { subscription_status: null, current_period_end: 0 };
+  updateProfileMessage(user, profile || {});
 
-  updateProfileMessage(user, normalizedProfile);
-
-  if (normalizedProfile?.subscription_status === 'trialing') {
-    const daysLeft = getTrialDaysLeft(normalizedProfile.current_period_end);
+  if (profile?.subscription_status === 'trialing') {
+    const daysLeft = getTrialDaysLeft(profile.current_period_end);
     showTrialCountdown(daysLeft);
     unlockFullApp();
-  } else if (normalizedProfile?.subscription_status === 'active') {
+  } else if (profile?.subscription_status === 'active') {
     unlockFullApp();
   } else {
     showPaywall();
