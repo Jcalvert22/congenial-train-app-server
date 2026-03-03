@@ -1,3 +1,5 @@
+const TRIAL_LENGTH_SECONDS = 7 * 24 * 60 * 60;
+
 function normalizeSeconds(value) {
   if (!value && value !== 0) {
     return 0;
@@ -40,6 +42,26 @@ export function formatDate(ts) {
   return new Date(seconds * 1000).toLocaleDateString();
 }
 
+function resolveTrialFallbackSeconds(user) {
+  const createdMs = Date.parse(user?.created_at || '');
+  if (Number.isNaN(createdMs)) {
+    return 0;
+  }
+  return Math.floor(createdMs / 1000) + TRIAL_LENGTH_SECONDS;
+}
+
+export function resolveBillingPeriodEnd(user, profile = {}) {
+  const storedSeconds = normalizeSeconds(profile.current_period_end);
+  if (storedSeconds > 0) {
+    return storedSeconds;
+  }
+  const status = (profile.subscription_status || '').toLowerCase();
+  if (status === 'trialing') {
+    return resolveTrialFallbackSeconds(user);
+  }
+  return storedSeconds;
+}
+
 export function getTrialProgress(daysLeft) {
   const total = 7;
   const remaining = Number.isFinite(daysLeft) ? daysLeft : 0;
@@ -47,7 +69,7 @@ export function getTrialProgress(daysLeft) {
   return Math.min(Math.max((used / total) * 100, 0), 100);
 }
 
-export function updateProfileMessage(user, profile) {
+export function updateProfileMessage(user, profile = {}) {
   const el = document.getElementById('profile-message');
   const bar = document.getElementById('trial-progress-bar');
   const progressContainer = document.getElementById('trial-progress-container');
@@ -56,9 +78,10 @@ export function updateProfileMessage(user, profile) {
   }
 
   const daysUsingApp = getDaysSince(user.created_at);
-  const daysLeft = getTrialDaysLeft(profile.current_period_end);
+  const resolvedPeriodEnd = resolveBillingPeriodEnd(user, profile);
+  const daysLeft = getTrialDaysLeft(resolvedPeriodEnd);
   const memberSince = new Date(user.created_at).toLocaleDateString();
-  const nextBilling = formatDate(profile.current_period_end);
+  const nextBilling = formatDate(resolvedPeriodEnd);
 
   if (profile.subscription_status === 'trialing') {
     el.textContent =

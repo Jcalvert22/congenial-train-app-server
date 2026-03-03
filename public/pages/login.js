@@ -1,7 +1,7 @@
 import { refreshAuthState } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
 import { login, getSupabaseClient, getCurrentUser } from '../js/supabaseClient.js';
-import { getTrialDaysLeft, updateProfileMessage } from '../js/profileStatus.js';
+import { getTrialDaysLeft, updateProfileMessage, resolveBillingPeriodEnd } from '../js/profileStatus.js';
 import { showTrialCountdown } from '../js/subscription.js';
 import { openBillingPortal } from './profile.js';
 
@@ -38,11 +38,12 @@ async function runSubscriptionCheck() {
   if (error) {
     throw error;
   }
-  updateProfileMessage(user, profile || {});
+  const safeProfile = profile || {};
+  updateProfileMessage(user, safeProfile);
 
   const cancelBtn = document.getElementById('cancel-subscription-btn');
   if (cancelBtn) {
-    if (profile?.subscription_status === 'active') {
+    if (safeProfile?.subscription_status === 'active') {
       cancelBtn.style.display = 'block';
       cancelBtn.onclick = () => openBillingPortal(user.id);
     } else {
@@ -50,11 +51,12 @@ async function runSubscriptionCheck() {
     }
   }
 
-  if (profile?.subscription_status === 'trialing') {
-    const daysLeft = getTrialDaysLeft(profile.current_period_end);
+  if (safeProfile?.subscription_status === 'trialing') {
+    const resolvedPeriodEnd = resolveBillingPeriodEnd(user, safeProfile);
+    const daysLeft = getTrialDaysLeft(resolvedPeriodEnd);
     showTrialCountdown(daysLeft);
     unlockFullApp();
-  } else if (profile?.subscription_status === 'active') {
+  } else if (safeProfile?.subscription_status === 'active') {
     unlockFullApp();
   } else {
     showPaywall();
