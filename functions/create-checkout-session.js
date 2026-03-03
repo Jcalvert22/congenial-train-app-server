@@ -62,7 +62,12 @@ async function ensureProfile(env, userId) {
   if (profile) {
     return profile;
   }
-  const payload = { id: userId };
+  const payload = {
+    id: userId,
+    stripe_customer_id: 'pending',
+    subscription_status: 'inactive',
+    current_period_end: new Date(0).toISOString()
+  };
   profile = await insertProfile(env, payload);
   return profile;
 }
@@ -103,8 +108,12 @@ async function createStripeCustomer(env, { email, userId }) {
   return result;
 }
 
+function isStripeCustomerId(value) {
+  return typeof value === 'string' && value.startsWith('cus_');
+}
+
 async function ensureStripeCustomer(env, profile, userId) {
-  if (profile?.stripe_customer_id) {
+  if (isStripeCustomerId(profile?.stripe_customer_id)) {
     return profile.stripe_customer_id;
   }
   const customer = await createStripeCustomer(env, { email: profile?.email, userId });
