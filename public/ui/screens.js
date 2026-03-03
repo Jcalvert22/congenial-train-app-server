@@ -461,17 +461,36 @@ form label.option {
   background: var(--panel-light);
 }
 .onboarding-panel {
-  max-width: 720px;
+  max-width: 760px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.onboarding-lede {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+.onboarding-card {
+  box-shadow: 0 24px 60px rgba(0,0,0,0.45);
 }
 .onboarding-form {
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.onboarding-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .onboarding-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
+}
+.onboarding-fieldset {
+  margin: 0;
 }
 .option-chip-fieldset {
   border: 1px solid rgba(255,255,255,0.2);
@@ -1817,44 +1836,53 @@ function renderSubscribe(state) {
 }
 
 function renderOnboarding(state) {
-  const profile = state.profile;
+  const profile = state.profile || {};
   const sexOptions = renderSexOptions('sex', profile.sex, true);
+  const goalValue = escapeHTML(profile.goal || '');
+  const heightValue = escapeHTML(profile.height || '');
+  const weightValue = escapeHTML(profile.weight || '');
+  const ageValue = escapeHTML(profile.age || '');
+  const locationValue = escapeHTML(profile.location || '');
   return `
     <section class="panel onboarding-panel">
-      <span class="badge">Welcome</span>
-      <h2>Let's get acquainted first</h2>
-      <p class="onboarding-lede">We ask for a few basics so every plan respects your goals, body, and available space. This stays private on your device.</p>
-      <form class="onboarding-form" data-form="onboarding">
-        <label>
-          Primary goal
-          <textarea name="goal" required placeholder="e.g., Build strength without burning out">${escapeHTML(profile.goal)}</textarea>
-        </label>
-        <div class="onboarding-grid">
+      <div>
+        <span class="badge">Welcome</span>
+        <h2>Let's get acquainted first</h2>
+        <p class="onboarding-lede">We ask for a few basics so every plan respects your goals, body, and available space. This stays private on your device.</p>
+      </div>
+      <article class="landing-card landing-card-dark onboarding-card">
+        <form class="landing-form onboarding-form" data-form="onboarding">
           <label>
-            Height (in)
-            <input type="number" name="height" min="36" max="96" required value="${escapeHTML(profile.height || '')}">
+            <span class="landing-subtext">Primary goal</span>
+            <textarea class="landing-textarea" name="goal" required placeholder="e.g., Build strength without burning out">${goalValue}</textarea>
           </label>
-          <label>
-            Weight (lbs)
-            <input type="number" name="weight" min="70" max="600" required value="${escapeHTML(profile.weight || '')}">
-          </label>
-          <fieldset class="option-chip-fieldset">
-            <legend>Sex</legend>
+          <div class="onboarding-grid">
+            <label>
+              <span class="landing-subtext">Height (in)</span>
+              <input class="landing-input" type="number" name="height" min="36" max="96" required value="${heightValue}">
+            </label>
+            <label>
+              <span class="landing-subtext">Weight (lbs)</span>
+              <input class="landing-input" type="number" name="weight" min="70" max="600" required value="${weightValue}">
+            </label>
+            <label>
+              <span class="landing-subtext">Age</span>
+              <input class="landing-input" type="number" name="age" min="13" max="90" required value="${ageValue}">
+            </label>
+            <label>
+              <span class="landing-subtext">Location</span>
+              <input class="landing-input" type="text" name="location" required value="${locationValue}" placeholder="City, State">
+            </label>
+          </div>
+          <fieldset class="option-chip-fieldset onboarding-fieldset">
+            <legend class="landing-subtext">Sex</legend>
             <div class="option-chip-group">
               ${sexOptions}
             </div>
           </fieldset>
-          <label>
-            Age
-            <input type="number" name="age" min="13" max="90" required value="${escapeHTML(profile.age || '')}">
-          </label>
-          <label>
-            Location
-            <input type="text" name="location" required value="${escapeHTML(profile.location || '')}" placeholder="City, State">
-          </label>
-        </div>
-        <button class="primary-btn" type="submit">Save and continue</button>
-      </form>
+          <button class="landing-button" type="submit">Save and continue</button>
+        </form>
+      </article>
     </section>
   `;
 }
