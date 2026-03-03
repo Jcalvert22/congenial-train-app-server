@@ -39,7 +39,7 @@ async function fetchProfile(env, userId) {
 }
 
 async function insertProfile(env, userId, email) {
-  const payload = { id: userId };
+  const payload = { id: userId, stripe_customer_id: 'pending' };
   if (email) {
     payload.email = email;
   }
