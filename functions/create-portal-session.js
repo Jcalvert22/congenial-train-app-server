@@ -28,26 +28,34 @@ async function fetchProfile(env, userId) {
   return data?.[0] || null;
 }
 
-async function createBillingPortalSession(env, customerId) {
-  const params = new URLSearchParams();
-  params.set('customer', customerId);
-  params.set('return_url', env.BILLING_PORTAL_RETURN_URL || 'https://allaround-athlete.com/profile');
+function createStripeClient(secretKey) {
+  return {
+    billingPortal: {
+      sessions: {
+        async create({ customer, return_url }) {
+          const params = new URLSearchParams();
+          params.set('customer', customer);
+          params.set('return_url', return_url);
 
-  const response = await fetch(STRIPE_PORTAL_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.STRIPE_SECRET_KEY}`,
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    body: params
-  });
+          const response = await fetch(STRIPE_PORTAL_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${secretKey}`,
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+          });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Stripe portal request failed: ${errorText}`);
-  }
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Stripe portal request failed: ${errorText}`);
+          }
 
-  return response.json();
+          return response.json();
+        }
+      }
+    }
+  };
 }
 
 async function getSupabaseUser(request, env) {
@@ -77,18 +85,11 @@ export async function onRequestPost({ request, env }) {
     return jsonResponse({ error: 'Server misconfiguration' }, { status: 500 });
   }
 
-  let payload = {};
-  try {
-    payload = Object.assign({}, await request.json());
-  } catch (error) {
-    // Ignore empty body; session token is preferred
-  }
-
   const supabaseUser = await getSupabaseUser(request, env);
-  const userId = supabaseUser?.id || payload?.userId;
-  if (!userId) {
+  if (!supabaseUser?.id) {
     return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
   }
+  const userId = supabaseUser.id;
 
   try {
     const profile = await fetchProfile(env, userId);
@@ -96,7 +97,11 @@ export async function onRequestPost({ request, env }) {
       return jsonResponse({ error: 'Missing Stripe customer ID' }, { status: 400 });
     }
 
-    const session = await createBillingPortalSession(env, profile.stripe_customer_id);
+    const stripe = createStripeClient(env.STRIPE_SECRET_KEY);
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: "https://allaround-athlete.com/profile"
+    });
 
     return jsonResponse({ url: session.url });
   } catch (error) {
