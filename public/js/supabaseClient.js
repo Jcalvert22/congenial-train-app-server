@@ -18,6 +18,23 @@ if (!supabase) {
   console.warn(CONFIG_WARNING);
 }
 
+async function handleEmailConfirmation() {
+  if (!supabase) {
+    return;
+  }
+  const hash = window.location.hash || '';
+  if (hash.includes('access_token')) {
+    const { error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Email confirmation failed:', error);
+      return;
+    }
+    window.location.href = '/';
+  }
+}
+
+handleEmailConfirmation();
+
 export function getSupabaseClient(options = {}) {
   const { required = true } = options;
   if (!supabase && required) {
@@ -30,15 +47,6 @@ export function isSupabaseConfigured() {
   return Boolean(supabase);
 }
 
-export async function login(email, password) {
-  const client = getSupabaseClient();
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password
-  });
-  return { data, error };
-}
-
 export async function signup(email, password) {
   const client = getSupabaseClient();
   const { data, error } = await client.auth.signUp({
@@ -48,11 +56,17 @@ export async function signup(email, password) {
   return { data, error };
 }
 
+export async function login(email, password) {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+  return { data, error };
+}
+
 export async function getCurrentUser() {
-  const client = getSupabaseClient({ required: false });
-  if (!client) {
-    return null;
-  }
+  const client = getSupabaseClient();
   const {
     data: { user }
   } = await client.auth.getUser();
@@ -60,10 +74,7 @@ export async function getCurrentUser() {
 }
 
 export async function logout() {
-  const client = getSupabaseClient({ required: false });
-  if (!client) {
-    return;
-  }
+  const client = getSupabaseClient();
   await client.auth.signOut();
 }
 
