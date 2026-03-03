@@ -128,13 +128,6 @@ function buildStripeHeaders(env) {
   };
 }
 
-function derivePlan(interval) {
-  if (!interval) {
-    return 'monthly';
-  }
-  return interval.startsWith('year') ? 'yearly' : 'monthly';
-}
-
 function toIso(timestamp) {
   if (!timestamp) {
     return null;
@@ -157,11 +150,9 @@ async function retrieveSubscription(env, subscriptionId) {
 }
 
 function buildSubscriptionPayload(customerId, subscription, status = 'active') {
-  const interval = subscription?.items?.data?.[0]?.plan?.interval || subscription?.lines?.data?.[0]?.plan?.interval;
   return {
     stripe_customer_id: customerId,
     subscription_status: status,
-    plan: derivePlan(interval),
     current_period_end: subscription?.current_period_end ? toIso(subscription.current_period_end) : null
   };
 }
