@@ -54,7 +54,7 @@ async function fetchProfile(userId) {
   }
   const { data, error } = await client
     .from('profile')
-    .select('id,email,stripe_customer_id,subscription_status,plan,current_period_end')
+    .select('id,email,stripe_customer_id,subscription_status,current_period_end')
     .eq('id', userId)
     .single();
 
@@ -104,7 +104,6 @@ async function hydrateAuthState() {
       user,
       stripeCustomerId: profile?.stripe_customer_id || null,
       subscriptionStatus: profile?.subscription_status || null,
-      plan: profile?.plan || null,
       currentPeriodEnd: profile?.current_period_end || null
     });
     notifyAuthChange(authState);

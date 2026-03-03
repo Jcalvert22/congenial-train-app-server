@@ -26,7 +26,7 @@ function buildSupabaseHeaders(serviceRoleKey) {
 }
 
 async function fetchProfile(env, userId) {
-  const url = `${env.SUPABASE_URL}/rest/v1/profile?id=eq.${encodeURIComponent(userId)}&select=id,email,stripe_customer_id,subscription_status,plan,current_period_end`;
+  const url = `${env.SUPABASE_URL}/rest/v1/profile?id=eq.${encodeURIComponent(userId)}&select=id,email,stripe_customer_id,subscription_status,current_period_end`;
   const response = await fetch(url, {
     headers: buildSupabaseHeaders(env.SUPABASE_SERVICE_ROLE_KEY)
   });
