@@ -1,4 +1,4 @@
-import { escapeHTML } from '../utils/helpers.js';
+import { escapeHTML, getExerciseDisplayName } from '../utils/helpers.js';
 import { findSavedWorkout, removeSavedWorkout } from '../utils/savedWorkouts.js';
 import { renderErrorStateCard, renderPageShell } from '../components/stateCards.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
@@ -106,7 +106,7 @@ function renderExerciseCard(exercise) {
   if (!exercise) {
     return '';
   }
-  const name = exercise.name || 'Exercise';
+  const name = getExerciseDisplayName(exercise) || 'Exercise';
   const sets = exercise.sets || DEFAULT_SET_LABEL;
   const reps = exercise.reps || '';
   const rest = exercise.rest || DEFAULT_REST_LABEL;

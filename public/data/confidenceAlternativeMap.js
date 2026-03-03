@@ -22,18 +22,42 @@ const raw = loadJsonSync('./confidenceAlternativeMap.json', CONFIDENCE_MAP_FALLB
 
 const { confidenceAlternativeMap: confidenceAlternativeMapData = {}, confidenceAlternativeMeta = {} } = raw;
 
+const normalizedConfidenceAlternativeMap = Object.create(null);
+Object.entries(confidenceAlternativeMapData).forEach(([key, value]) => {
+  if (!key) {
+    return;
+  }
+  normalizedConfidenceAlternativeMap[key] = value;
+  normalizedConfidenceAlternativeMap[key.toLowerCase()] = value;
+});
+
 const DEFAULT_CONFIDENCE_CUES = [
   'Move slowly and breathe calmly.',
   'Stop if anything feels sharp or painful.'
 ];
 
-export const confidenceAlternativeMap = confidenceAlternativeMapData;
+export const confidenceAlternativeMap = normalizedConfidenceAlternativeMap;
+
+function resolveReplacement(sourceName) {
+  if (!sourceName) {
+    return null;
+  }
+  const normalized = sourceName.toString ? sourceName.toString().trim() : '';
+  if (!normalized) {
+    return null;
+  }
+  const direct = confidenceAlternativeMap[normalized];
+  if (direct) {
+    return direct;
+  }
+  return confidenceAlternativeMap[normalized.toLowerCase()] || null;
+}
 
 export function getConfidenceAlternativeDetails(sourceName, fallback = {}) {
   if (!sourceName) {
     return null;
   }
-  const replacement = confidenceAlternativeMap[sourceName];
+  const replacement = resolveReplacement(sourceName);
   if (!replacement) {
     return null;
   }
@@ -50,5 +74,5 @@ export function getConfidenceAlternativeDetails(sourceName, fallback = {}) {
 }
 
 export function hasConfidenceAlternative(sourceName) {
-  return Boolean(confidenceAlternativeMap[sourceName]);
+  return Boolean(resolveReplacement(sourceName));
 }

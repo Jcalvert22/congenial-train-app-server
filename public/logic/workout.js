@@ -10,7 +10,8 @@ import {
   normalizeDay,
   normalizeSelection,
   shuffleArray,
-  MS_PER_DAY
+  MS_PER_DAY,
+  getExerciseDisplayName
 } from '../utils/helpers.js';
 import { getState, setState } from './state.js';
 import {
@@ -19,6 +20,7 @@ import {
 } from '../data/confidenceAlternativeMap.js';
 
 const PERCENT_MIN = 30;
+  const displayName = getExerciseDisplayName(exercise) || exerciseKey;
 const PERCENT_MAX = 95;
 const PERCENT_STEP = 5;
 const PERCENT_OFFSET_MIN = -25;
@@ -104,6 +106,7 @@ function mapDefaultEntryToExercise(entry) {
     .filter(Boolean);
   return {
     name: entry.name,
+    display_name: entry.name,
     equipment: equipment.length ? equipment : ['Bodyweight'],
     muscle_group: entry.muscle || 'Full Body',
     howto: entry.instructions,
@@ -497,9 +500,9 @@ function mapExerciseToPlanRow(exercise, index, options = {}) {
   });
   return {
     id: index,
-    exercise: exerciseKey,
-    name: exerciseKey,
-    baseExercise: exerciseKey,
+    exercise: displayName,
+    name: displayName,
+    baseExercise: displayName,
     equipment: exercise.equipment.join(', '),
     muscle: exercise.muscle_group || 'Full Body',
     repRange: displayedRepRange,
@@ -1011,6 +1014,8 @@ function buildFallbackRow(entry, index, options = {}) {
     equipment: equipmentTokens.length ? equipmentTokens : ['Bodyweight'],
     muscle_group: entry.muscle || 'Full Body'
   };
+  const displayName = entry.display_name || entry.name || `Movement ${index + 1}`;
+  const exerciseKey = entry.name || displayName;
   let repRange = gymxietyMode ? GYMXIETY_REP_RANGE : DEFAULT_FALLBACK_REP_RANGE;
   let sets = gymxietyMode ? GYMXIETY_SETS : DEFAULT_FALLBACK_SETS;
   const rest = gymxietyMode ? DEFAULT_GYMXIETY_REST : DEFAULT_FALLBACK_REST;
@@ -1025,9 +1030,9 @@ function buildFallbackRow(entry, index, options = {}) {
   }
   return {
     id: index,
-    exercise: entry.name,
-    name: entry.name,
-    baseExercise: entry.name,
+    exercise: displayName,
+    name: displayName,
+    baseExercise: displayName,
     equipment: entry.equipment,
     muscle: entry.muscle,
     repRange,
@@ -1039,7 +1044,7 @@ function buildFallbackRow(entry, index, options = {}) {
     video: null,
     usesWeight,
     timeBased: isTimeBased,
-    exerciseKey: entry.name,
+    exerciseKey,
     confidence: 'Moderate',
     supportiveCues,
     confidenceAlternative: null,
@@ -1169,13 +1174,14 @@ function buildConfidenceAlternative(exercise, overrides = {}) {
   if (!exercise) {
     return null;
   }
+  const sourceName = getExerciseDisplayName(exercise) || exercise.name;
   const fallback = {
     equipment: Array.isArray(exercise.equipment) ? exercise.equipment.join(', ') : exercise.equipment,
     muscle: exercise.muscle_group,
     description: exercise.howto,
     supportiveCues: DEFAULT_GYMXIETY_CUES
   };
-  const details = getConfidenceAlternativeDetails(exercise.name, fallback);
+  const details = getConfidenceAlternativeDetails(sourceName, fallback);
   if (!details) {
     return null;
   }
@@ -1187,7 +1193,7 @@ function buildConfidenceAlternative(exercise, overrides = {}) {
     sets: overrides.sets || '2 sets',
     repRange: overrides.repRange || '8-12 gentle reps',
     confidence: details.confidence || 'Easy',
-    source: exercise.name,
+    source: sourceName,
     supportiveCues: details.supportiveCues || DEFAULT_GYMXIETY_CUES
   };
 }
@@ -1386,10 +1392,12 @@ function buildGymxietyPlanRow(entry, index) {
     description: entry.instructions || DEFAULT_GYMXIETY_DESCRIPTION,
     supportiveCues: DEFAULT_GYMXIETY_CUES
   };
-  const alternative = confidenceAlternativeMap[entry.name]
-    ? getConfidenceAlternativeDetails(entry.name, fallback)
+  const baseExercise = entry.display_name || entry.name;
+  const exerciseKey = entry.name || baseExercise;
+  const alternative = confidenceAlternativeMap[baseExercise]
+    ? getConfidenceAlternativeDetails(baseExercise, fallback)
     : null;
-  const exerciseName = alternative?.exercise || entry.name;
+  const exerciseName = alternative?.exercise || baseExercise;
   const description = alternative?.description || fallback.description;
   const equipment = alternative?.equipment || fallback.equipment;
   const muscle = alternative?.muscle || fallback.muscle;
@@ -1400,7 +1408,7 @@ function buildGymxietyPlanRow(entry, index) {
     id: index,
     exercise: exerciseName,
     name: exerciseName,
-    baseExercise: entry.name,
+    baseExercise,
     equipment,
     muscle,
     repRange: GYMXIETY_REP_RANGE,
@@ -1411,7 +1419,7 @@ function buildGymxietyPlanRow(entry, index) {
     instructions: description,
     video: null,
     usesWeight: false,
-    exerciseKey: entry.name,
+    exerciseKey,
     confidence,
     supportiveCues,
     confidenceAlternative: null,
@@ -2046,11 +2054,14 @@ export function buildPlanRowsFromExercises(exercises = [], gymxietyMode = false)
     const repRange = timePrescription || repPrescription || '10-12 reps';
     const usesWeight = equipmentList.some(item => !['Bodyweight', 'Bench', 'Bands'].includes(item));
     const description = describeMovementPattern(exercise);
+    const fallbackLabel = `Movement ${index + 1}`;
+    const displayName = exercise ? getExerciseDisplayName(exercise) || (exercise.name || fallbackLabel) : fallbackLabel;
+    const exerciseKey = exercise?.name || displayName || fallbackLabel;
     return {
       id: index,
-      exercise: exercise?.name || `Movement ${index + 1}`,
-      name: exercise?.name || `Movement ${index + 1}`,
-      baseExercise: exercise?.name || `Movement ${index + 1}`,
+      exercise: displayName,
+      name: displayName,
+      baseExercise: displayName,
       equipment: equipmentList.join(', ') || 'Bodyweight',
       muscle,
       repRange,
@@ -2063,7 +2074,7 @@ export function buildPlanRowsFromExercises(exercises = [], gymxietyMode = false)
       video: null,
       usesWeight,
       timeBased: Boolean(timePrescription) || isConditioning,
-      exerciseKey: exercise?.name || `movement-${index}`,
+      exerciseKey,
       confidence: exercise?.confidence || (gymxietyMode ? 'Easy' : 'Moderate'),
       supportiveCues: [],
       confidenceAlternative: null,

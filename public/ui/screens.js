@@ -24,7 +24,8 @@ import {
   cleanInput,
   sanitizeNumberInput,
   normalizeSelection,
-  clamp
+  clamp,
+  getExerciseDisplayName
 } from '../utils/helpers.js';
 import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
 import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
@@ -1502,6 +1503,7 @@ function renderLibrary() {
       : exercise.equipment
         ? [exercise.equipment]
         : ['Bodyweight'];
+    const displayName = getExerciseDisplayName(exercise) || exercise.name || 'Exercise';
     const movement = exercise.movement_pattern || 'General';
     const movementKey = movement.toLowerCase();
     const muscle = exercise.muscle_group || 'Full Body';
@@ -1511,10 +1513,12 @@ function renderLibrary() {
     const intimidationLabel = intimidation.charAt(0).toUpperCase() + intimidation.slice(1);
     const gymxietySafe = Boolean(exercise.gymxiety_safe);
     const howto = exercise.howto || 'Move slowly, breathe through each rep, and adjust the setup until it feels steady.';
-    const searchText = `${exercise.name} ${muscle} ${movement} ${equipmentList.join(' ')}`.toLowerCase();
+    const searchText = `${displayName} ${muscle} ${movement} ${equipmentList.join(' ')}`.toLowerCase();
     return {
       id: index,
-      name: exercise.name,
+      name: displayName,
+      displayName,
+      rawName: exercise.name,
       muscle,
       muscleKey,
       movement,
@@ -1574,7 +1578,7 @@ function renderLibrary() {
         data-gymxiety="${exercise.gymxietySafe ? 'safe' : 'standard'}"
       >
         <p class="landing-subtext">${escapeHTML(exercise.muscle)}</p>
-        <h3>${escapeHTML(exercise.name)}</h3>
+        <h3>${escapeHTML(exercise.displayName)}</h3>
         ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
         <p>${escapeHTML(exercise.howto)}</p>
         <div class="landing-pill-list">

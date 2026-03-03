@@ -55,8 +55,10 @@ const TITLE_CASE = value => {
 const buildLegacyExercise = entry => {
   const equipmentLabel = EQUIPMENT_LABELS[entry.equipment] || 'Bodyweight';
   const muscleGroup = TITLE_CASE(entry.primary_muscle);
+  const displayName = TITLE_CASE(entry.name || entry.display_name);
   return {
     ...entry,
+    display_name: displayName,
     equipment_key: entry.equipment,
     equipment: [equipmentLabel],
     muscle_group: muscleGroup,

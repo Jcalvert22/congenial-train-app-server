@@ -1,4 +1,5 @@
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const WORD_SPLIT_PATTERN = /[\s-]+/;
 
 export function escapeHTML(value = '') {
   return String(value)
@@ -59,4 +60,29 @@ export function cloneDeep(value) {
     return structuredClone(value);
   }
   return JSON.parse(JSON.stringify(value));
+}
+
+export function toTitleCase(value = '') {
+  const input = (value || '').toString().trim();
+  if (!input) {
+    return '';
+  }
+  return input
+    .split(WORD_SPLIT_PATTERN)
+    .filter(Boolean)
+    .map(token => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ');
+}
+
+export function getExerciseDisplayName(exercise) {
+  if (!exercise) {
+    return '';
+  }
+  if (exercise.display_name) {
+    return exercise.display_name;
+  }
+  if (exercise.name) {
+    return toTitleCase(exercise.name);
+  }
+  return '';
 }
