@@ -3,6 +3,7 @@ import { getState } from '../logic/state.js';
 import { getAuth, logout } from '../auth/state.js';
 import { updateProfileMessage } from '../js/profileStatus.js';
 import { getSupabaseClient } from '../js/supabaseClient.js';
+import { fetchSubscriptionStatus } from '../js/subscription.js';
 
 export async function openBillingPortal() {
   try {
@@ -88,6 +89,69 @@ const PORTAL_ELIGIBLE_STATUSES = new Set(['active', 'trialing', 'past_due', 'unp
 
 function hasPortalAccess(status) {
   return PORTAL_ELIGIBLE_STATUSES.has((status || '').toLowerCase());
+}
+
+function extractPeriodEndSeconds(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value);
+    if (!Number.isNaN(parsed)) {
+      return Math.floor(parsed / 1000);
+    }
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return Math.floor(numeric);
+    }
+  }
+  return null;
+}
+
+function hasValidPeriodEnd(value) {
+  const seconds = extractPeriodEndSeconds(value);
+  return typeof seconds === 'number' && seconds > 0;
+}
+
+function needsBillingRefresh(profile) {
+  if (!profile) {
+    return false;
+  }
+  return hasPortalAccess(profile.subscription_status) && !hasValidPeriodEnd(profile.current_period_end);
+}
+
+async function refreshBillingMetadata(user, cancelBtn) {
+  if (!user) {
+    return null;
+  }
+  try {
+    const latest = await fetchSubscriptionStatus();
+    if (!latest) {
+      return null;
+    }
+    const normalized = {
+      subscription_status: typeof latest.subscription_status === 'string'
+        ? latest.subscription_status.toLowerCase()
+        : 'inactive',
+      current_period_end: latest.current_period_end ?? null
+    };
+    updateProfileMessage(user, normalized);
+    if (cancelBtn) {
+      if (hasPortalAccess(normalized.subscription_status)) {
+        cancelBtn.style.display = 'block';
+        cancelBtn.onclick = () => openBillingPortal();
+      } else {
+        cancelBtn.style.display = 'none';
+      }
+    }
+    return normalized;
+  } catch (error) {
+    console.error('Unable to refresh billing info', error);
+    return null;
+  }
 }
 
 function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
@@ -235,7 +299,7 @@ export function attachProfilePageEvents(root) {
   const state = getState();
   const profile = state.profile || {};
   const status = profile.subscription_status ?? auth.subscriptionStatus ?? 'inactive';
-  const normalizedProfile = {
+  let normalizedProfile = {
     subscription_status: typeof status === 'string' ? status.toLowerCase() : 'inactive',
     current_period_end: profile.current_period_end ?? auth.currentPeriodEnd ?? null
   };
@@ -250,6 +314,13 @@ export function attachProfilePageEvents(root) {
       } else {
         cancelBtn.style.display = 'none';
       }
+    }
+    if (needsBillingRefresh(normalizedProfile)) {
+      refreshBillingMetadata(auth.user, cancelBtn).then(updated => {
+        if (updated) {
+          normalizedProfile = updated;
+        }
+      });
     }
   }
 }
