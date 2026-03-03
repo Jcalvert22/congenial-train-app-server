@@ -69,18 +69,23 @@ async function ensureProfile(user) {
   if (!user) {
     return null;
   }
-  const client = getOptionalClient();
-  if (!client) {
-    return null;
-  }
-  const existing = await fetchProfile(user.id);
-  if (existing) {
-    return existing;
-  }
-  const payload = { id: user.id, email: user.email }; // subscription defaults handled in DB
-  const { error } = await client.from('profile').insert(payload);
-  if (error && error.code !== '23505') {
-    console.error('Unable to seed profile row', error);
+  try {
+    const response = await fetch('/sync-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, email: user.email })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Unable to sync profile row', errorText);
+      return fetchProfile(user.id);
+    }
+    const data = await response.json();
+    if (data?.profile) {
+      return data.profile;
+    }
+  } catch (error) {
+    console.error('Unable to sync profile row', error);
   }
   return fetchProfile(user.id);
 }
