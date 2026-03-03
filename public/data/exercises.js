@@ -1,479 +1,578 @@
-export const GENERAL_EQUIPMENT = [
-  'Bodyweight',
-  'Dumbbells',
-  'Cables',
-  'Bench',
-  'Squat Rack',
-  'Bands',
-  'Cardio Machines'
-];
+const EQUIPMENT_LABELS = {
+  barbell: 'Barbell',
+  dumbbell: 'Dumbbells',
+  machine: 'Machine',
+  cable: 'Cables',
+  bodyweight: 'Bodyweight'
+};
 
-export const MACHINE_EQUIPMENT = [
-  'Chest Press Machine',
-  'Pec Deck Machine',
-  'Lat Pulldown Machine',
-  'Seated Row Machine',
-  'Leg Press Machine',
-  'Hamstring Curl Machine',
-  'Ab Curl Machine',
-  'Rotary Torso Machine',
-  'Assisted Dip Machine',
-  'Pull-Up Bar (Bodyweight)'
-];
+const MOVEMENT_PATTERN_MAP = {
+  chest: 'Horizontal Push',
+  back: 'Horizontal Pull',
+  shoulders: 'Accessory',
+  biceps: 'Accessory',
+  triceps: 'Accessory',
+  quads: 'Squat',
+  hamstrings: 'Hinge',
+  glutes: 'Hinge',
+  core: 'Core'
+};
+
+const TITLE_CASE = value => {
+  if (!value) {
+    return '';
+  }
+  return value
+    .split(/\s|-/)
+    .filter(Boolean)
+    .map(token => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ');
+};
+
+const buildLegacyExercise = entry => {
+  const equipmentLabel = EQUIPMENT_LABELS[entry.equipment] || 'Bodyweight';
+  const muscleGroup = TITLE_CASE(entry.primary_muscle);
+  return {
+    ...entry,
+    equipment_key: entry.equipment,
+    equipment: [equipmentLabel],
+    muscle_group: muscleGroup,
+    movement_pattern: MOVEMENT_PATTERN_MAP[entry.primary_muscle] || 'General',
+    gymxiety_safe: entry.intimidation_level !== 'high'
+  };
+};
+
+export const GENERAL_EQUIPMENT = ['Bodyweight', 'Dumbbells', 'Cables', 'Barbell'];
+export const MACHINE_EQUIPMENT = ['Machine'];
 
 export const EQUIPMENT_ETIQUETTE = {
-  'Chest Press Machine': "Adjust the seat - it's normal.",
-  'Pec Deck Machine': 'Set the pads where you need them - everyone adjusts this one.',
-  'Lat Pulldown Machine': 'Keep the bar steady - no need to lean back far.',
-  'Seated Row Machine': 'Sit tall and pull smoothly - no rushing needed.',
-  'Leg Press Machine': 'Adjust the seat depth so it feels comfortable.',
-  'Hamstring Curl Machine': 'Make sure the pad sits just above your ankles.',
-  'Ab Curl Machine': 'Use a light weight and move slow.',
-  'Rotary Torso Machine': 'Choose a small range of motion - no need to twist far.',
-  'Assisted Dip Machine': 'Pick a weight that helps you.',
-  'Pull-Up Bar (Bodyweight)': 'Give others a little space when possible.',
-  Dumbbells: 'Step back from the rack before lifting.',
-  Cables: "Reset the attachment when you're done.",
-  Bench: 'Try not to block the mirror behind you.',
-  'Squat Rack': "Take your time setting up - you're allowed to.",
-  Bands: 'Secure the anchor so it stays safe for others.',
-  'Cardio Machines': 'Step off to the side if you need a break.',
-  Bodyweight: 'Give others a little space when possible.'
+  Barbell: 'Share the rack by stepping away during rest periods.',
+  Dumbbells: 'Pick up your weights and take a few steps back from the rack.',
+  Cables: 'Reset the pin and attachment so the next person can start quickly.',
+  Machine: 'Adjust the seat and handles to fit you—everyone does.',
+  Bodyweight: 'Give nearby lifters a little space before you start.'
 };
 
 export const GYMXIETY_ETIQUETTE = {
   Machines: "It's okay to take your time adjusting the seat.",
-  Dumbbells: "Find a small space - you don't need much room.",
-  'Squat Rack': 'You belong here. Everyone starts somewhere.',
-  Bench: "It's okay to move the bench a little."
+  Dumbbells: "Find a small space—you only need a few feet.",
+  Barbell: 'You belong in the rack even if you are new.',
+  Bench: "Move the bench if you need more room—it's expected."
 };
 
 export const EQUIPMENT_LIST = [...GENERAL_EQUIPMENT, ...MACHINE_EQUIPMENT];
 export const FALLBACK_EQUIPMENT = ['Bodyweight', 'Dumbbells', 'Cables'];
-export const MUSCLE_GROUPS = ['Chest', 'Back', 'Arms', 'Legs', 'Glutes', 'Core', 'Cardio'];
+export const MUSCLE_GROUPS = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Quads', 'Hamstrings', 'Glutes', 'Core'];
 
-export const EXERCISES = [
+export const EXERCISE_LIBRARY = [
   // Chest
   {
-    name: 'Chest Press Machine',
-    equipment: ['Chest Press Machine'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
+    name: 'Barbell Bench Press',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps', 'shoulders'],
+    equipment: 'barbell',
+    intimidation_level: 'moderate',
+    description: 'A compound chest press using a barbell. Builds chest, triceps, and shoulders.',
+    gymxiety_alternative: 'Dumbbell Bench Press'
+  },
+  {
+    name: 'Barbell Incline Bench Press',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps', 'shoulders'],
+    equipment: 'barbell',
+    intimidation_level: 'moderate',
+    description: 'Incline barbell press targeting upper chest and shoulders.',
+    gymxiety_alternative: 'Dumbbell Incline Press'
+  },
+  {
+    name: 'Dumbbell Bench Press',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps'],
+    equipment: 'dumbbell',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: "Adjust the seat - it's normal."
+    description: 'A beginner-friendly chest press using dumbbells.',
+    gymxiety_alternative: 'Machine Chest Press'
+  },
+  {
+    name: 'Dumbbell Incline Press',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps'],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Incline dumbbell press targeting upper chest.',
+    gymxiety_alternative: 'Machine Chest Press'
+  },
+  {
+    name: 'Machine Chest Press',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps'],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'A guided chest press machine ideal for beginners.',
+    gymxiety_alternative: 'Dumbbell Bench Press'
   },
   {
     name: 'Pec Deck Fly',
-    equipment: ['Pec Deck Machine'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
+    primary_muscle: 'chest',
+    secondary_muscles: [],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Set the pads where you need them - everyone adjusts this one.'
+    description: 'Machine fly isolating the chest.',
+    gymxiety_alternative: 'Cable Chest Fly'
   },
   {
     name: 'Cable Chest Fly',
-    equipment: ['Cables'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
+    primary_muscle: 'chest',
+    secondary_muscles: [],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Step a little forward so the cable lane stays clear.'
+    description: 'Cable fly isolating the chest with adjustable angles.',
+    gymxiety_alternative: 'Pec Deck Fly'
   },
   {
-    name: 'Kneeling Push-Up',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
+    name: 'Cable Low-to-High Fly',
+    primary_muscle: 'chest',
+    secondary_muscles: ['shoulders'],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Use a mat and leave space for others nearby.'
+    description: 'Upward cable fly emphasizing upper chest.',
+    gymxiety_alternative: 'Cable Chest Fly'
   },
   {
-    name: 'Dumbbell Floor Press',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Chest',
-    movement_pattern: 'Horizontal Push',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Claim a corner of the floor so walkways stay open.'
+    name: 'Push-Up',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps', 'shoulders'],
+    equipment: 'bodyweight',
+    intimidation_level: 'low',
+    description: 'Bodyweight chest press movement.',
+    gymxiety_alternative: 'Incline Push-Up'
+  },
+  {
+    name: 'Incline Push-Up',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps'],
+    equipment: 'bodyweight',
+    intimidation_level: 'low',
+    description: 'Beginner-friendly push-up variation using an elevated surface.',
+    gymxiety_alternative: 'Machine Chest Press'
   },
 
   // Back
   {
-    name: 'Lat Pulldown Machine',
-    equipment: ['Lat Pulldown Machine'],
-    muscle_group: 'Back',
-    movement_pattern: 'Vertical Pull',
+    name: 'Lat Pulldown (Wide Grip)',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Keep the bar steady - no need to lean back far.'
+    description: 'Wide-grip pulldown targeting lats.',
+    gymxiety_alternative: 'Seated Cable Row'
   },
   {
-    name: 'Seated Row Machine',
-    equipment: ['Seated Row Machine'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
+    name: 'Lat Pulldown (Neutral Grip)',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Sit tall and pull smoothly - no rushing needed.'
+    description: 'Neutral-grip pulldown for lats and upper back.',
+    gymxiety_alternative: 'Seated Cable Row'
   },
   {
-    name: 'Single-Arm Dumbbell Row',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
+    name: 'Seated Cable Row',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'cable',
+    intimidation_level: 'low',
+    description: 'Cable row targeting mid-back.',
+    gymxiety_alternative: 'Machine Row'
+  },
+  {
+    name: 'Machine Row',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Guided row machine ideal for beginners.',
+    gymxiety_alternative: 'Seated Cable Row'
+  },
+  {
+    name: 'Chest-Supported Row',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Supported row reducing lower-back strain.',
+    gymxiety_alternative: 'Machine Row'
+  },
+  {
+    name: 'Dumbbell Row (Supported)',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Single-arm dumbbell row using a bench for support.',
+    gymxiety_alternative: 'Machine Row'
+  },
+  {
+    name: 'Barbell Row',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'barbell',
     intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Re-rack the dumbbell before wiping the bench.'
+    description: 'Barbell row targeting lats and mid-back.',
+    gymxiety_alternative: 'Seated Cable Row'
   },
   {
-    name: 'Band Row',
-    equipment: ['Bands'],
-    muscle_group: 'Back',
-    movement_pattern: 'Horizontal Pull',
+    name: 'Assisted Pull-Up Machine',
+    primary_muscle: 'back',
+    secondary_muscles: ['biceps'],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Unclip the band so the anchor point is free when you finish.'
+    description: 'Beginner-friendly pull-up assistance machine.',
+    gymxiety_alternative: 'Lat Pulldown (Neutral Grip)'
+  },
+
+  // Shoulders
+  {
+    name: 'Barbell Overhead Press',
+    primary_muscle: 'shoulders',
+    secondary_muscles: ['triceps'],
+    equipment: 'barbell',
+    intimidation_level: 'high',
+    description: 'Standing barbell press targeting shoulders and triceps.',
+    gymxiety_alternative: 'Dumbbell Shoulder Press'
   },
   {
-    name: 'Pull-Up Bar Hang',
-    equipment: ['Pull-Up Bar (Bodyweight)'],
-    muscle_group: 'Back',
-    movement_pattern: 'Vertical Pull',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    etiquette_tip: 'Give others a little space when possible.'
+    name: 'Dumbbell Shoulder Press',
+    primary_muscle: 'shoulders',
+    secondary_muscles: ['triceps'],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Beginner-friendly overhead press using dumbbells.',
+    gymxiety_alternative: 'Machine Shoulder Press'
+  },
+  {
+    name: 'Machine Shoulder Press',
+    primary_muscle: 'shoulders',
+    secondary_muscles: ['triceps'],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Guided overhead press machine.',
+    gymxiety_alternative: 'Dumbbell Shoulder Press'
+  },
+  {
+    name: 'Dumbbell Lateral Raise',
+    primary_muscle: 'shoulders',
+    secondary_muscles: [],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Isolation movement for side delts.',
+    gymxiety_alternative: 'Cable Lateral Raise'
+  },
+  {
+    name: 'Cable Lateral Raise',
+    primary_muscle: 'shoulders',
+    secondary_muscles: [],
+    equipment: 'cable',
+    intimidation_level: 'low',
+    description: 'Cable variation of lateral raise.',
+    gymxiety_alternative: 'Dumbbell Lateral Raise'
   },
   {
     name: 'Cable Face Pull',
-    equipment: ['Cables'],
-    muscle_group: 'Back',
-    movement_pattern: 'Accessory',
+    primary_muscle: 'shoulders',
+    secondary_muscles: ['upper back'],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Lower the rope gently and reset the height when done.'
+    description: 'Cable pull targeting rear delts and upper back.',
+    gymxiety_alternative: 'Dumbbell Lateral Raise'
   },
 
-  // Arms
+  // Biceps
   {
-    name: 'Cable Biceps Curl',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Accessory',
+    name: 'Dumbbell Bicep Curl',
+    primary_muscle: 'biceps',
+    secondary_muscles: [],
+    equipment: 'dumbbell',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Share the cable by alternating if someone is waiting.'
+    description: 'Simple dumbbell curl for biceps.',
+    gymxiety_alternative: 'Cable Bicep Curl'
   },
   {
-    name: 'Dumbbell Hammer Curl',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Accessory',
+    name: 'Hammer Curl',
+    primary_muscle: 'biceps',
+    secondary_muscles: ['forearms'],
+    equipment: 'dumbbell',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Carry the dumbbells a few steps from the rack before curling.'
+    description: 'Neutral-grip curl targeting biceps and forearms.',
+    gymxiety_alternative: 'Cable Bicep Curl'
   },
   {
-    name: 'Cable Triceps Pushdown',
-    equipment: ['Cables'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Accessory',
+    name: 'Cable Bicep Curl',
+    primary_muscle: 'biceps',
+    secondary_muscles: [],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Set the pin back to a lighter weight for the next lifter.'
+    description: 'Cable curl with constant tension.',
+    gymxiety_alternative: 'Dumbbell Bicep Curl'
   },
   {
-    name: 'Bench Triceps Dip',
-    equipment: ['Bench'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Accessory',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Leave room behind the bench so people can walk by.'
+    name: 'Cable Rope Curl',
+    primary_muscle: 'biceps',
+    secondary_muscles: [],
+    equipment: 'cable',
+    intimidation_level: 'low',
+    description: 'Rope attachment curl for biceps.',
+    gymxiety_alternative: 'Dumbbell Bicep Curl'
   },
   {
-    name: 'Assisted Dip Machine',
-    equipment: ['Assisted Dip Machine'],
-    muscle_group: 'Arms',
-    movement_pattern: 'Accessory',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Pick a weight that helps you.'
+    name: 'Machine Bicep Curl',
+    primary_muscle: 'biceps',
+    secondary_muscles: [],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Guided bicep curl machine.',
+    gymxiety_alternative: 'Cable Bicep Curl'
   },
 
-  // Legs
+  // Triceps
   {
-    name: 'Leg Press Machine',
-    equipment: ['Leg Press Machine'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
+    name: 'Cable Tricep Pushdown',
+    primary_muscle: 'triceps',
+    secondary_muscles: [],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Adjust the seat depth so it feels comfortable.'
+    description: 'Cable pushdown isolating triceps.',
+    gymxiety_alternative: 'Dumbbell Overhead Tricep Extension'
   },
   {
-    name: 'Hamstring Curl Machine',
-    equipment: ['Hamstring Curl Machine'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Hinge',
+    name: 'Cable Overhead Tricep Extension',
+    primary_muscle: 'triceps',
+    secondary_muscles: [],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Make sure the pad sits just above your ankles.'
+    description: 'Overhead cable extension for long head of triceps.',
+    gymxiety_alternative: 'Dumbbell Overhead Tricep Extension'
+  },
+  {
+    name: 'Dumbbell Overhead Tricep Extension',
+    primary_muscle: 'triceps',
+    secondary_muscles: [],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Beginner-friendly overhead tricep movement.',
+    gymxiety_alternative: 'Cable Tricep Pushdown'
+  },
+  {
+    name: 'Dumbbell Kickback',
+    primary_muscle: 'triceps',
+    secondary_muscles: [],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Isolation movement for triceps.',
+    gymxiety_alternative: 'Cable Tricep Pushdown'
+  },
+  {
+    name: 'Machine Tricep Extension',
+    primary_muscle: 'triceps',
+    secondary_muscles: [],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Guided tricep extension machine.',
+    gymxiety_alternative: 'Cable Tricep Pushdown'
+  },
+
+  // Quads
+  {
+    name: 'Barbell Back Squat',
+    primary_muscle: 'quads',
+    secondary_muscles: ['glutes', 'hamstrings'],
+    equipment: 'barbell',
+    intimidation_level: 'high',
+    description: 'A compound squat using a barbell. High intimidation due to setup and balance.',
+    gymxiety_alternative: 'Leg Press'
+  },
+  {
+    name: 'Barbell Front Squat',
+    primary_muscle: 'quads',
+    secondary_muscles: ['glutes'],
+    equipment: 'barbell',
+    intimidation_level: 'high',
+    description: 'Front-loaded squat emphasizing quads.',
+    gymxiety_alternative: 'Goblet Squat'
+  },
+  {
+    name: 'Leg Press',
+    primary_muscle: 'quads',
+    secondary_muscles: ['glutes'],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Beginner-friendly leg press machine.',
+    gymxiety_alternative: 'Goblet Squat'
+  },
+  {
+    name: 'Leg Extension',
+    primary_muscle: 'quads',
+    secondary_muscles: [],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Quad isolation machine.',
+    gymxiety_alternative: 'Goblet Squat'
   },
   {
     name: 'Goblet Squat',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Set the dumbbell down softly so the floor stays clear.'
+    primary_muscle: 'quads',
+    secondary_muscles: ['glutes'],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Beginner-friendly squat using a dumbbell.',
+    gymxiety_alternative: 'Leg Press'
   },
   {
     name: 'Step-Up',
-    equipment: ['Bench'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Lunge',
+    primary_muscle: 'quads',
+    secondary_muscles: ['glutes'],
+    equipment: 'dumbbell',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Return the bench to flat once you finish stepping.'
+    description: 'Step-up movement targeting quads and glutes.',
+    gymxiety_alternative: 'Leg Press'
+  },
+
+  // Hamstrings
+  {
+    name: 'Barbell Romanian Deadlift',
+    primary_muscle: 'hamstrings',
+    secondary_muscles: ['glutes'],
+    equipment: 'barbell',
+    intimidation_level: 'high',
+    description: 'Barbell hinge movement targeting hamstrings.',
+    gymxiety_alternative: 'Dumbbell Romanian Deadlift'
   },
   {
-    name: 'Bodyweight Split Squat',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Lunge',
+    name: 'Dumbbell Romanian Deadlift',
+    primary_muscle: 'hamstrings',
+    secondary_muscles: ['glutes'],
+    equipment: 'dumbbell',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Face one direction so you do not block traffic.'
+    description: 'Beginner-friendly hinge movement.',
+    gymxiety_alternative: 'Machine Leg Curl'
   },
   {
-    name: 'Rack Supported Squat Hold',
-    equipment: ['Squat Rack'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Squat',
-    intimidation_level: 'moderate',
-    gymxiety_safe: false,
-    etiquette_tip: 'Share the rack by stepping aside during rest.'
+    name: 'Machine Leg Curl',
+    primary_muscle: 'hamstrings',
+    secondary_muscles: [],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Hamstring isolation machine.',
+    gymxiety_alternative: 'Dumbbell Romanian Deadlift'
   },
   {
-    name: 'Banded Terminal Knee Extension',
-    equipment: ['Bands'],
-    muscle_group: 'Legs',
-    movement_pattern: 'Accessory',
+    name: 'Cable Pull-Through',
+    primary_muscle: 'hamstrings',
+    secondary_muscles: ['glutes'],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Step slightly to the side so the stretched band is not a trip hazard.'
+    description: 'Cable hinge movement for glutes and hamstrings.',
+    gymxiety_alternative: 'Dumbbell Romanian Deadlift'
   },
 
   // Glutes
   {
-    name: 'Glute Bridge',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Hinge',
+    name: 'Machine Hip Abduction',
+    primary_muscle: 'glutes',
+    secondary_muscles: [],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Use a mat or towel and wipe it down afterward.'
+    description: 'Hip abduction machine targeting glutes.',
+    gymxiety_alternative: 'Step-Up'
   },
   {
-    name: 'Cable Pull-Through',
-    equipment: ['Cables'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Hinge',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Face away from the stack so the cable path stays open.'
-  },
-  {
-    name: 'Band Monster Walk',
-    equipment: ['Bands'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Carry',
+    name: 'Machine Hip Adduction',
+    primary_muscle: 'glutes',
+    secondary_muscles: ['inner thighs'],
+    equipment: 'machine',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Pick a short lane and turn around instead of wandering.'
+    description: 'Adduction machine targeting inner thighs with some glute involvement.',
+    gymxiety_alternative: 'Step-Up'
   },
   {
-    name: 'Dumbbell Romanian Deadlift',
-    equipment: ['Dumbbells'],
-    muscle_group: 'Glutes',
-    movement_pattern: 'Hinge',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Set dumbbells down quietly before resetting your grip.'
+    name: 'Step-Up (Glutes)',
+    primary_muscle: 'glutes',
+    secondary_muscles: ['quads'],
+    equipment: 'dumbbell',
+    intimidation_level: 'low',
+    description: 'Step-up variation focusing on glutes and quads.',
+    gymxiety_alternative: 'Leg Press'
+  },
+  {
+    name: 'Cable Kickback',
+    primary_muscle: 'glutes',
+    secondary_muscles: ['hamstrings'],
+    equipment: 'cable',
+    intimidation_level: 'low',
+    description: 'Cable kickback isolating the glutes.',
+    gymxiety_alternative: 'Machine Hip Abduction'
   },
 
   // Core
   {
-    name: 'Dead Bug',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
+    name: 'Cable Crunch',
+    primary_muscle: 'core',
+    secondary_muscles: [],
+    equipment: 'cable',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Stay centered on your mat so others have room.'
+    description: 'Kneeling cable crunch targeting the abs.',
+    gymxiety_alternative: 'Plank'
+  },
+  {
+    name: 'Machine Crunch',
+    primary_muscle: 'core',
+    secondary_muscles: [],
+    equipment: 'machine',
+    intimidation_level: 'low',
+    description: 'Abdominal crunch machine for controlled core work.',
+    gymxiety_alternative: 'Plank'
   },
   {
     name: 'Plank',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
+    primary_muscle: 'core',
+    secondary_muscles: ['shoulders', 'glutes'],
+    equipment: 'bodyweight',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Roll out a mat and keep your space tidy.'
+    description: 'Isometric core hold in a straight-body position.',
+    gymxiety_alternative: 'Dead Bug'
   },
   {
-    name: 'Side Plank',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
+    name: 'Dead Bug',
+    primary_muscle: 'core',
+    secondary_muscles: ['hip flexors'],
+    equipment: 'bodyweight',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Face one direction so walkways stay open.'
-  },
-  {
-    name: 'Mountain Climbers',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'moderate',
-    gymxiety_safe: true,
-    etiquette_tip: 'Stay in one lane so no one has to step over you.'
+    description: 'Supine core stability exercise with alternating arm and leg movement.',
+    gymxiety_alternative: 'Plank'
   },
   {
     name: 'Bird Dog',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
+    primary_muscle: 'core',
+    secondary_muscles: ['lower back', 'glutes'],
+    equipment: 'bodyweight',
     intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Choose a lane on the turf so you are not blocking anyone.'
-  },
-  {
-    name: 'Hollow Hold',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Use a mat and lower slowly so it stays quiet.'
-  },
-  {
-    name: 'Bicycle Crunches',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Keep the motion compact so you do not kick nearby people.'
-  },
-  {
-    name: 'Flutter Kicks',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Stay on your mat and keep shoes away from others.'
-  },
-  {
-    name: 'Pallof Press',
-    equipment: ['Cables'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Stand perpendicular to the stack so the cable lane is clear.'
-  },
-  {
-    name: 'Plank on Bench',
-    equipment: ['Bench'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Leave enough space behind the bench for people to pass.'
-  },
-  {
-    name: 'Ab Curl Machine Crunch',
-    equipment: ['Ab Curl Machine'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Use a light weight and move slow.'
-  },
-  {
-    name: 'Rotary Torso Machine Twist',
-    equipment: ['Rotary Torso Machine'],
-    muscle_group: 'Core',
-    movement_pattern: 'Core',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Choose a small range of motion - no need to twist far.'
-  },
-
-  // Cardio
-  {
-    name: 'Low-Impact March',
-    equipment: ['Bodyweight'],
-    muscle_group: 'Cardio',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Face the same direction so others can pass behind you.'
-  },
-  {
-    name: 'Treadmill Walk',
-    equipment: ['Cardio Machines'],
-    muscle_group: 'Cardio',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Step off to the side if you need a break.'
-  },
-  {
-    name: 'Bike',
-    equipment: ['Cardio Machines'],
-    muscle_group: 'Cardio',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Towel off the seat and handles before leaving.'
-  },
-  {
-    name: 'Elliptical Glide',
-    equipment: ['Cardio Machines'],
-    muscle_group: 'Cardio',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Let others know if you will return before you step away.'
-  },
-  {
-    name: 'Rower',
-    equipment: ['Cardio Machines'],
-    muscle_group: 'Cardio',
-    movement_pattern: 'Conditioning',
-    intimidation_level: 'low',
-    gymxiety_safe: true,
-    etiquette_tip: 'Slide the seat forward and wipe the handle when done.'
+    description: 'Quadruped stability exercise extending opposite arm and leg.',
+    gymxiety_alternative: 'Dead Bug'
   }
 ];
 
+export const EXERCISES = EXERCISE_LIBRARY.map(buildLegacyExercise);
+
 const DEFAULT_WORKOUT_NAMES = [
   'Goblet Squat',
-  'Bodyweight Split Squat',
-  'Cable Chest Fly',
-  'Single-Arm Dumbbell Row',
-  'Cable Biceps Curl',
-  'Cable Triceps Pushdown',
-  'Glute Bridge',
-  'Dead Bug',
-  'Low-Impact March'
+  'Dumbbell Bench Press',
+  'Lat Pulldown (Neutral Grip)',
+  'Seated Cable Row',
+  'Dumbbell Shoulder Press',
+  'Dumbbell Bicep Curl',
+  'Cable Tricep Pushdown',
+  'Plank',
+  'Dead Bug'
 ];
 
 export const DEFAULT_BEGINNER_WORKOUT = DEFAULT_WORKOUT_NAMES
@@ -482,3 +581,5 @@ export const DEFAULT_BEGINNER_WORKOUT = DEFAULT_WORKOUT_NAMES
 
 export const BEGINNER_EQUIPMENT = [...EQUIPMENT_LIST];
 export const BEGINNER_MUSCLES = [...MUSCLE_GROUPS];
+
+export const RAW_EXERCISE_LIBRARY = EXERCISE_LIBRARY;
