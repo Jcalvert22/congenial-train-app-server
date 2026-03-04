@@ -130,6 +130,27 @@ function collectMusclesFromRows(rows = []) {
   return Array.from(set);
 }
 
+function buildMuscleSet(values = []) {
+  const set = new Set();
+  values.forEach(value => {
+    const token = value?.toString().trim().toLowerCase();
+    if (token) {
+      set.add(token);
+    }
+  });
+  return set;
+}
+
+function filterFavoritesByMuscles(entries = [], muscleSet) {
+  if (!muscleSet || !muscleSet.size) {
+    return entries;
+  }
+  return entries.filter(entry => {
+    const muscleToken = entry?.muscle?.toString().trim().toLowerCase();
+    return muscleToken && muscleSet.has(muscleToken);
+  });
+}
+
 function buildFavoriteSet(favoriteNames = []) {
   const set = new Set();
   favoriteNames.forEach(name => {
@@ -518,20 +539,18 @@ function renderFavoritesSection(entries = []) {
   const hasEntries = Array.isArray(entries) && entries.length > 0;
   const countLabel = hasEntries
     ? (entries.length === 1 ? '1 favorite saved' : `${entries.length} favorites saved`)
-    : 'Save your go-to moves so swaps feel easy.';
+    : '';
   const cards = hasEntries ? entries.map(renderFavoriteCard).join('') : '';
+  const hiddenAttr = hasEntries ? '' : ' hidden';
   return `
-    <section class="landing-section summary-spacing-md summary-favorites-section" data-favorites-section>
+    <section class="landing-section summary-spacing-md summary-favorites-section" data-favorites-section${hiddenAttr}>
       <div class="summary-favorites-header">
         <p class="landing-subtext">Favorite exercises</p>
         <p class="supportive-text" data-favorites-count>${escapeHTML(countLabel)}</p>
       </div>
-      <div class="landing-grid" data-favorites-list ${hasEntries ? '' : 'hidden'}>
+      <div class="landing-grid" data-favorites-list>
         ${cards}
       </div>
-      <article class="landing-card favorites-empty-card" data-favorites-empty ${hasEntries ? 'hidden' : ''}>
-        <p class="supportive-text">Tap "Add to favorites" on any exercise to pin it here for quick swaps.</p>
-      </article>
     </section>
   `;
 }
@@ -931,6 +950,9 @@ export function renderWorkoutSummaryPage(state) {
   const favoriteSet = buildFavoriteSet(favoriteNames);
   const favoriteEntries = resolveFavoriteEntries(favoriteNames);
 
+  const planMuscles = collectMusclesFromRows(normalizedRows);
+  const planMuscleSet = buildMuscleSet(planMuscles);
+
   const sections = `
     ${renderHeader(firstName, true, goalText, gymxietyMode)}
     ${gymxietyMode ? renderGymxietyIntroCard() : ''}
@@ -946,7 +968,7 @@ export function renderWorkoutSummaryPage(state) {
       sectionClass: 'summary-spacing-md summary-exercises-section',
       title: 'Exercise rundown'
     })}
-    ${renderFavoritesSection(favoriteEntries)}
+    ${renderFavoritesSection(filterFavoritesByMuscles(favoriteEntries, planMuscleSet))}
     ${renderCtaSection({
       sectionClass: 'summary-spacing-md summary-cta-section'
     })}
@@ -1007,22 +1029,30 @@ export function attachWorkoutSummaryEvents(root, state) {
       return;
     }
     const listNode = section.querySelector('[data-favorites-list]');
-    const emptyNode = section.querySelector('[data-favorites-empty]');
     const countNode = section.querySelector('[data-favorites-count]');
+    const latestState = getState();
+    const planRows = latestState.ui?.plannerResult?.planRows || [];
+    const muscleSet = buildMuscleSet(collectMusclesFromRows(planRows));
     const favoriteNames = getFavoriteExercises();
-    const entries = resolveFavoriteEntries(favoriteNames);
+    const entries = filterFavoritesByMuscles(resolveFavoriteEntries(favoriteNames), muscleSet);
     const hasEntries = entries.length > 0;
+    section.hidden = !hasEntries;
+    if (!hasEntries) {
+      if (listNode) {
+        listNode.innerHTML = '';
+      }
+      if (countNode) {
+        countNode.textContent = '';
+      }
+      return;
+    }
     if (listNode) {
       listNode.innerHTML = entries.map(renderFavoriteCard).join('');
-      listNode.hidden = !hasEntries;
-    }
-    if (emptyNode) {
-      emptyNode.hidden = hasEntries;
     }
     if (countNode) {
-      countNode.textContent = hasEntries
-        ? (entries.length === 1 ? '1 favorite saved' : `${entries.length} favorites saved`)
-        : 'Save your go-to moves so swaps feel easy.';
+      countNode.textContent = entries.length === 1
+        ? '1 favorite saved'
+        : `${entries.length} favorites saved`;
     }
   };
 

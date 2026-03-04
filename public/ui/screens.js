@@ -54,6 +54,7 @@ import { getAuth, ensureAuthInitialized } from '../auth/state.js';
 import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 import { EXERCISES } from '../data/exercises.js';
+import { getFavoriteExercises } from '../utils/favoriteExercises.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
 let lastRenderedHash = null;
@@ -1501,6 +1502,12 @@ function renderPlanGenerator(state) {
 }
 
 function renderLibrary() {
+  const toSlug = value => value?.toString().trim().toLowerCase() || '';
+  const favoriteSet = new Set(
+    getFavoriteExercises()
+      .map(name => toSlug(name))
+      .filter(Boolean)
+  );
   const normalizedExercises = EXERCISES.map((exercise, index) => {
     const equipmentList = Array.isArray(exercise.equipment) && exercise.equipment.length
       ? exercise.equipment
@@ -1508,6 +1515,7 @@ function renderLibrary() {
         ? [exercise.equipment]
         : ['Bodyweight'];
     const displayName = getExerciseDisplayName(exercise) || exercise.name || 'Exercise';
+    const slug = toSlug(exercise.name || displayName);
     const movement = exercise.movement_pattern || 'General';
     const movementKey = movement.toLowerCase();
     const muscle = exercise.muscle_group || 'Full Body';
@@ -1518,6 +1526,7 @@ function renderLibrary() {
     const gymxietySafe = Boolean(exercise.gymxiety_safe);
     const howto = exercise.howto || 'Move slowly, breathe through each rep, and adjust the setup until it feels steady.';
     const searchText = `${displayName} ${muscle} ${movement} ${equipmentList.join(' ')}`.toLowerCase();
+    const isFavorite = favoriteSet.has(slug);
     return {
       id: index,
       name: displayName,
@@ -1534,7 +1543,9 @@ function renderLibrary() {
       equipmentLabel: equipmentList.join(', ') || 'Bodyweight',
       equipmentKeys,
       howto,
-      searchText
+      searchText,
+      slug,
+      isFavorite
     };
   });
 
@@ -1570,6 +1581,7 @@ function renderLibrary() {
 
   const cards = normalizedExercises.map(exercise => {
     const equipmentDataset = exercise.equipmentKeys.join('|');
+    const favoriteBadge = exercise.isFavorite ? '<span class="confidence-tag">Favorited</span>' : '';
     return `
       <article
         class="landing-card"
@@ -1580,9 +1592,11 @@ function renderLibrary() {
         data-equipment="${escapeHTML(equipmentDataset)}"
         data-intimidation="${escapeHTML(exercise.intimidation)}"
         data-gymxiety="${exercise.gymxietySafe ? 'safe' : 'standard'}"
+        data-favorite="${exercise.isFavorite ? 'true' : 'false'}"
       >
         <p class="landing-subtext">${escapeHTML(exercise.muscle)}</p>
         <h3>${escapeHTML(exercise.displayName)}</h3>
+        ${favoriteBadge}
         ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
         <p>${escapeHTML(exercise.howto)}</p>
         <div class="landing-pill-list">
@@ -1621,6 +1635,10 @@ function renderLibrary() {
           <input type="checkbox" data-filter="gymxiety">
           Show Gymxiety-safe only
         </label>
+        <label class="profile-toggle landing-grid-span">
+          <input type="checkbox" data-filter="favorites">
+          Show favorites only
+        </label>
         <div class="landing-actions landing-space-top-sm landing-grid-span">
           <button class="landing-button secondary" type="button" data-action="reset-library">Reset filters</button>
         </div>
@@ -1651,6 +1669,7 @@ function attachLibraryEvents(root) {
   const getSelectValue = name => (filterForm.querySelector(`[data-filter="${name}"]`)?.value || '').toLowerCase();
   const getSearchValue = () => (filterForm.querySelector('[data-filter="search"]')?.value || '').trim().toLowerCase();
   const isGymxietyOnly = () => Boolean(filterForm.querySelector('[data-filter="gymxiety"]')?.checked);
+  const isFavoritesOnly = () => Boolean(filterForm.querySelector('[data-filter="favorites"]')?.checked);
 
   const applyFilters = () => {
     const query = getSearchValue();
@@ -1659,6 +1678,7 @@ function attachLibraryEvents(root) {
     const equipment = getSelectValue('equipment');
     const intimidation = getSelectValue('intimidation');
     const gymxietyOnly = isGymxietyOnly();
+    const favoritesOnly = isFavoritesOnly();
     let visible = 0;
 
     cards.forEach(card => {
@@ -1668,6 +1688,7 @@ function attachLibraryEvents(root) {
       const cardEquipment = card.dataset.equipment || '';
       const cardIntimidation = card.dataset.intimidation || '';
       const cardGymxiety = card.dataset.gymxiety === 'safe';
+       const cardFavorite = card.dataset.favorite === 'true';
       const equipmentTokens = cardEquipment ? cardEquipment.split('|') : [];
 
       const matchesSearch = query ? name.includes(query) : true;
@@ -1676,8 +1697,9 @@ function attachLibraryEvents(root) {
       const matchesEquipment = equipment ? equipmentTokens.includes(equipment) : true;
       const matchesIntimidation = intimidation ? cardIntimidation === intimidation : true;
       const matchesGymxiety = gymxietyOnly ? cardGymxiety : true;
+      const matchesFavorite = favoritesOnly ? cardFavorite : true;
 
-      const shouldShow = matchesSearch && matchesMovement && matchesMuscle && matchesEquipment && matchesIntimidation && matchesGymxiety;
+      const shouldShow = matchesSearch && matchesMovement && matchesMuscle && matchesEquipment && matchesIntimidation && matchesGymxiety && matchesFavorite;
       card.hidden = !shouldShow;
       if (shouldShow) {
         visible++;

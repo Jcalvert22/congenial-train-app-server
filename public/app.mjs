@@ -1,6 +1,7 @@
 import { EXERCISE_LIBRARY_CHECKSUM, EXERCISE_LIBRARY_VERSION } from './data/exercises.js';
 import { startApp } from './ui/screens.js';
 import { initializeDislikedExercises } from './utils/dislikedExercises.js';
+import { initializeFavoriteExercises } from './utils/favoriteExercises.js';
 
 console.info('Exercise Library Version:', EXERCISE_LIBRARY_VERSION);
 console.info('Exercise Library Checksum:', EXERCISE_LIBRARY_CHECKSUM);
@@ -20,6 +21,7 @@ function renderFatalMessage() {
 async function bootstrap() {
   try {
     initializeDislikedExercises();
+    initializeFavoriteExercises();
     await startApp();
   } catch (error) {
     console.error('Failed to start AllAroundAthlete', error);
