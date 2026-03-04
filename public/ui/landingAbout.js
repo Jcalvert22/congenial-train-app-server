@@ -6,12 +6,13 @@ import { renderFooter } from './footer.js';
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
 
+function getCtaAttrs(cta) {
+  return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
+}
+
 function resolveCta(state) {
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start Your Beginner Journey' };
-  }
-  function getCtaAttrs(cta) {
-    return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
   }
   if (!state?.profile?.onboardingComplete) {
     return { href: '#/onboarding', label: 'Resume Onboarding' };
@@ -52,6 +53,45 @@ function buildHero(cta) {
         </div>
       </div>
     </header>
+  `;
+}
+
+function buildStoryCardsSection() {
+  const cards = [
+    {
+      tag: 'Why we built it',
+      title: 'Created for unsure starters',
+      body: 'AllAroundAthlete was created for anyone who wants to start lifting but feels unsure, intimidated, or overwhelmed by gym culture. We built a calm space that translates the basics into plain language and gentle steps.'
+    },
+    {
+      tag: 'Who it is for',
+      title: 'Support for absolute beginners',
+      body: 'This app is for absolute beginners who want to feel safe, supported, and confident in the gym. We focus on helping you understand the equipment, move with control, and build healthy habits at your own pace.'
+    },
+    {
+      tag: 'How it helps',
+      title: 'Calm guidance every visit',
+      body: 'AllAroundAthlete guides you through clear workouts, explains every exercise in simple terms, and helps you plan each visit so you never feel lost. You will learn how to lift safely, navigate the gym without fear, and keep showing up for yourself.'
+    }
+  ];
+  return `
+    <section class="landing-section">
+      <p class="landing-subtext">About cards</p>
+      <h2>Understand the mission at a glance.</h2>
+      <div class="landing-grid">
+        ${cards
+          .map(
+            card => `
+              <article class="landing-card">
+                <p class="landing-subtext">${card.tag}</p>
+                <h3>${card.title}</h3>
+                <p>${card.body}</p>
+              </article>
+            `
+          )
+          .join('')}
+      </div>
+    </section>
   `;
 }
 
@@ -132,6 +172,7 @@ export function renderAboutLanding(options = {}) {
     <section class="landing-page">
       <div class="landing-container">
         ${buildHero(cta)}
+        ${buildStoryCardsSection()}
         ${buildWhySection()}
         ${buildHowSection()}
         ${buildFounderSection()}
