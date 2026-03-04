@@ -14,6 +14,11 @@ import { confidenceAlternativeMap } from '../data/confidenceAlternativeMap.js';
 import { buildPlanRowsFromExercises } from '../logic/workout.js';
 import { EXERCISES, DEFAULT_BEGINNER_WORKOUT } from '../data/exercises.js';
 import { getDislikedExercises, addDislikedExercise } from '../utils/dislikedExercises.js';
+import {
+  getFavoriteExercises,
+  addFavoriteExercise,
+  removeFavoriteExercise
+} from '../utils/favoriteExercises.js';
 import { applyGoalPrescription } from '../utils/generateWorkout.js';
 import { collectEquipmentEtiquette, getExerciseEtiquetteLines } from '../utils/etiquette.js';
 import { addSavedWorkout, generateSavedWorkoutId } from '../utils/savedWorkouts.js';
@@ -47,6 +52,20 @@ const DEFAULT_CONFIDENCE_LABEL = 'Moderate';
 const DEFAULT_INSTRUCTIONS = 'Move slowly, breathe through the hardest part, and stop if form slips.';
 const SWAP_MODAL_MAX_OPTIONS = 8;
 const SAVE_TOAST_DURATION_MS = 2200;
+const FAVORITE_SWAP_LIMIT = 4;
+
+const EXERCISE_LOOKUP = (() => {
+  const map = new Map();
+  if (Array.isArray(EXERCISES)) {
+    EXERCISES.forEach(entry => {
+      const key = normalizeExerciseName(entry?.name || entry?.display_name);
+      if (key && !map.has(key)) {
+        map.set(key, entry);
+      }
+    });
+  }
+  return map;
+})();
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -109,6 +128,57 @@ function collectMusclesFromRows(rows = []) {
     }
   });
   return Array.from(set);
+}
+
+function buildFavoriteSet(favoriteNames = []) {
+  const set = new Set();
+  favoriteNames.forEach(name => {
+    const key = normalizeExerciseName(name);
+    if (key) {
+      set.add(key);
+    }
+  });
+  return set;
+}
+
+function findExerciseByName(name) {
+  if (!name) {
+    return null;
+  }
+  const key = normalizeExerciseName(name);
+  if (!key) {
+    return null;
+  }
+  return EXERCISE_LOOKUP.get(key) || null;
+}
+
+function resolveFavoriteEntries(favoriteNames = []) {
+  if (!Array.isArray(favoriteNames) || !favoriteNames.length) {
+    return [];
+  }
+  return favoriteNames
+    .map(label => {
+      const storedName = label;
+      const match = findExerciseByName(label);
+      const muscle = match?.muscle_group || 'Full body';
+      const equipmentValue = match?.equipment;
+      const equipment = Array.isArray(equipmentValue)
+        ? equipmentValue.join(', ')
+        : equipmentValue || 'Bodyweight';
+      const intimidation = match?.intimidation_level
+        ? match.intimidation_level.charAt(0).toUpperCase() + match.intimidation_level.slice(1)
+        : '';
+      const displayName = match?.display_name || match?.name || storedName;
+      return {
+        id: normalizeExerciseName(storedName),
+        name: displayName,
+        storedName,
+        muscle,
+        equipment,
+        intimidation
+      };
+    })
+    .filter(entry => entry?.id);
 }
 
 function formatRestTime(row) {
@@ -335,8 +405,10 @@ function resolveConfidenceCopy(label, gymxietyMode) {
 }
 
 function renderExerciseCard(row, index, options = {}) {
-  const { gymxietyMode } = options;
+  const { gymxietyMode, favoriteSet } = options;
   const exerciseName = row?.exercise || `Movement ${index + 1}`;
+  const exerciseSlug = normalizeExerciseName(exerciseName);
+  const isFavorited = favoriteSet?.has(exerciseSlug);
   const instructions = row?.description || 'Move slowly, breathe through the hardest part, and stop if form slips.';
   const restLabel = formatRestTime(row);
   const sets = row?.sets || '3 sets';
@@ -360,9 +432,24 @@ function renderExerciseCard(row, index, options = {}) {
         .map(line => `<p class="supportive-text">${escapeHTML(line)}</p>`)
         .join('')}</div>`
     : '';
+  const favoriteLabel = isFavorited ? 'Remove from favorites' : 'Add to favorites';
+  const favoriteButton = `
+      <button
+        class="secondary-btn favorite-toggle${isFavorited ? ' is-active' : ''}"
+        type="button"
+        data-action="favorite-exercise"
+        data-exercise-index="${index}"
+        data-exercise-name="${escapeHTML(exerciseName)}"
+        data-exercise-slug="${escapeHTML(exerciseSlug)}"
+        data-favorited="${isFavorited ? 'true' : 'false'}"
+      >
+        ${escapeHTML(favoriteLabel)}
+      </button>
+    `;
   const actionButtons = `
     <div class="exercise-card-actions">
       <button class="secondary-btn" type="button" data-action="change-exercise" data-exercise-index="${index}">Change</button>
+      ${favoriteButton}
       <button class="subtle-link" type="button" data-action="dislike-exercise" data-exercise-index="${index}">Don't show this exercise again</button>
     </div>
   `;
@@ -409,6 +496,42 @@ function renderExercisesSection(rows, options = {}) {
       <div class="landing-grid">
         ${cards.join('')}
       </div>
+    </section>
+  `;
+}
+
+function renderFavoriteCard(entry) {
+  const intimidation = entry?.intimidation ? ` · ${escapeHTML(entry.intimidation)}` : '';
+  return `
+    <article class="landing-card favorites-card" data-favorite-card>
+      <p class="landing-subtext">${escapeHTML(entry.muscle || 'Full body')}</p>
+      <h3>${escapeHTML(entry.name)}</h3>
+      <p class="supportive-text">${escapeHTML(entry.equipment || 'Bodyweight')}${intimidation}</p>
+      <button class="subtle-link" type="button" data-action="remove-favorite" data-favorite-name="${escapeHTML(entry.storedName)}">
+        Remove from favorites
+      </button>
+    </article>
+  `;
+}
+
+function renderFavoritesSection(entries = []) {
+  const hasEntries = Array.isArray(entries) && entries.length > 0;
+  const countLabel = hasEntries
+    ? (entries.length === 1 ? '1 favorite saved' : `${entries.length} favorites saved`)
+    : 'Save your go-to moves so swaps feel easy.';
+  const cards = hasEntries ? entries.map(renderFavoriteCard).join('') : '';
+  return `
+    <section class="landing-section summary-spacing-md summary-favorites-section" data-favorites-section>
+      <div class="summary-favorites-header">
+        <p class="landing-subtext">Favorite exercises</p>
+        <p class="supportive-text" data-favorites-count>${escapeHTML(countLabel)}</p>
+      </div>
+      <div class="landing-grid" data-favorites-list ${hasEntries ? '' : 'hidden'}>
+        ${cards}
+      </div>
+      <article class="landing-card favorites-empty-card" data-favorites-empty ${hasEntries ? 'hidden' : ''}>
+        <p class="supportive-text">Tap "Add to favorites" on any exercise to pin it here for quick swaps.</p>
+      </article>
     </section>
   `;
 }
@@ -598,6 +721,51 @@ function buildAlternativeOptions(plan, targetRow, options = {}) {
   return mapExercisesToOptions(candidates, goalKey, gymxietyMode);
 }
 
+function buildFavoriteSwapOptions(plan, targetRow, options = {}) {
+  if (!plan || !targetRow) {
+    return [];
+  }
+  const favoriteNames = getFavoriteExercises();
+  if (!Array.isArray(favoriteNames) || !favoriteNames.length) {
+    return [];
+  }
+  const normalizedMuscle = (targetRow?.muscle || '').toString().trim().toLowerCase();
+  const equipmentSelection = resolveEquipmentSelection(plan, targetRow, options.profile);
+  const equipmentSet = buildEquipmentSet(equipmentSelection);
+  const avoidNames = Array.isArray(options.avoidNames) ? options.avoidNames : [];
+  const avoidSet = new Set(avoidNames.map(name => normalizeExerciseName(name)).filter(Boolean));
+  const gymxietyMode = Boolean(options.gymxietyMode);
+  const goalKey = plan.selectedGoal || 'general';
+  const results = [];
+  favoriteNames.forEach(name => {
+    if (results.length >= FAVORITE_SWAP_LIMIT) {
+      return;
+    }
+    const match = findExerciseByName(name);
+    if (!match) {
+      return;
+    }
+    const slug = normalizeExerciseName(match.name || name);
+    if (!slug || avoidSet.has(slug)) {
+      return;
+    }
+    const matchMuscle = (match.muscle_group || '').toString().trim().toLowerCase();
+    if (normalizedMuscle && matchMuscle && matchMuscle !== normalizedMuscle) {
+      return;
+    }
+    if (!matchesEquipmentRequirement(match, equipmentSet)) {
+      return;
+    }
+    const prescribed = applyGoalPrescription(match, goalKey, gymxietyMode);
+    const rows = buildPlanRowsFromExercises([prescribed], gymxietyMode) || [];
+    if (!rows.length) {
+      return;
+    }
+    results.push({ exercise: prescribed, row: rows[0], isFavorite: true });
+  });
+  return results;
+}
+
 function renderSwapOptionCard(option, index, { gymxietyMode }) {
   const row = option?.row;
   if (!row) {
@@ -607,6 +775,10 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
   const confidence = gymxietyMode
     ? `<span class="confidence-tag">${escapeHTML(row.confidence || 'Moderate')}</span>`
     : '';
+  const favoriteBadge = option?.isFavorite
+    ? '<span class="confidence-tag">Favorite</span>'
+    : '';
+  const badges = `${confidence}${favoriteBadge}`;
   const iconMarkup = buildExerciseIconMarkup(
     {
       exerciseName: row.exercise,
@@ -621,7 +793,7 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
       <div class="swap-option-body">
         <div class="swap-option-header">
           <h4>${escapeHTML(row.exercise)}</h4>
-          ${confidence}
+          ${badges}
         </div>
         <p class="swap-option-meta">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
         <p class="swap-option-prescription">${escapeHTML(row.sets)}</p>
@@ -721,9 +893,13 @@ function animateExerciseCardSwap(root, index, row, options = {}) {
   if (!targetCard) {
     return;
   }
+  const renderOptions = {
+    ...options,
+    favoriteSet: options.favoriteSet || buildFavoriteSet(getFavoriteExercises())
+  };
   targetCard.classList.remove('visible');
   window.setTimeout(() => {
-    targetCard.outerHTML = renderExerciseCard(row, index, options);
+    targetCard.outerHTML = renderExerciseCard(row, index, renderOptions);
     const nextCard = root.querySelector(`[data-exercise-card][data-exercise-index="${index}"]`);
     if (nextCard) {
       requestAnimationFrame(() => nextCard.classList.add('visible'));
@@ -751,6 +927,10 @@ export function renderWorkoutSummaryPage(state) {
     return renderPageShell(sections, { isLoading });
   }
 
+  const favoriteNames = getFavoriteExercises();
+  const favoriteSet = buildFavoriteSet(favoriteNames);
+  const favoriteEntries = resolveFavoriteEntries(favoriteNames);
+
   const sections = `
     ${renderHeader(firstName, true, goalText, gymxietyMode)}
     ${gymxietyMode ? renderGymxietyIntroCard() : ''}
@@ -762,9 +942,11 @@ export function renderWorkoutSummaryPage(state) {
     })}
     ${renderExercisesSection(normalizedRows, {
       gymxietyMode,
+      favoriteSet,
       sectionClass: 'summary-spacing-md summary-exercises-section',
       title: 'Exercise rundown'
     })}
+    ${renderFavoritesSection(favoriteEntries)}
     ${renderCtaSection({
       sectionClass: 'summary-spacing-md summary-cta-section'
     })}
@@ -819,6 +1001,45 @@ export function attachWorkoutSummaryEvents(root, state) {
     targetId: null
   };
 
+  const refreshFavoritesSection = () => {
+    const section = root.querySelector('[data-favorites-section]');
+    if (!section) {
+      return;
+    }
+    const listNode = section.querySelector('[data-favorites-list]');
+    const emptyNode = section.querySelector('[data-favorites-empty]');
+    const countNode = section.querySelector('[data-favorites-count]');
+    const favoriteNames = getFavoriteExercises();
+    const entries = resolveFavoriteEntries(favoriteNames);
+    const hasEntries = entries.length > 0;
+    if (listNode) {
+      listNode.innerHTML = entries.map(renderFavoriteCard).join('');
+      listNode.hidden = !hasEntries;
+    }
+    if (emptyNode) {
+      emptyNode.hidden = hasEntries;
+    }
+    if (countNode) {
+      countNode.textContent = hasEntries
+        ? (entries.length === 1 ? '1 favorite saved' : `${entries.length} favorites saved`)
+        : 'Save your go-to moves so swaps feel easy.';
+    }
+  };
+
+  const syncFavoriteButtons = () => {
+    const favoriteSet = buildFavoriteSet(getFavoriteExercises());
+    root.querySelectorAll('[data-action="favorite-exercise"]').forEach(button => {
+      const slug = button.getAttribute('data-exercise-slug');
+      const isFavorited = slug && favoriteSet.has(slug);
+      button.dataset.favorited = isFavorited ? 'true' : 'false';
+      button.textContent = isFavorited ? 'Remove from favorites' : 'Add to favorites';
+      button.classList.toggle('is-active', Boolean(isFavorited));
+    });
+  };
+
+  refreshFavoritesSection();
+  syncFavoriteButtons();
+
   const closeSwapModal = () => {
     if (!swapModal) {
       return;
@@ -845,17 +1066,50 @@ export function attachWorkoutSummaryEvents(root, state) {
       ? addDislikedExercise(targetRow.exercise)
       : getDislikedExercises();
     const avoidNames = [...buildAvoidNameList(plan.planRows, index), targetRow.exercise];
-    const options = buildAlternativeOptions(plan, targetRow, {
+    const favoriteOptions = buildFavoriteSwapOptions(plan, targetRow, {
+      profile: latestState.profile,
+      gymxietyMode,
+      avoidNames
+    });
+    const extendedAvoidNames = [
+      ...avoidNames,
+      ...favoriteOptions.map(option => option?.row?.exercise).filter(Boolean)
+    ];
+    const suggestions = buildAlternativeOptions(plan, targetRow, {
       profile: latestState.profile,
       gymxietyMode,
       dislikedExercises: dislikedList,
-      avoidNames
+      avoidNames: extendedAvoidNames
     });
+    const combinedOptions = [...favoriteOptions, ...suggestions];
     swapModalState.index = index;
     swapModalState.targetId = targetRow.id ?? index;
-    swapModalState.options = options;
-    swapList.innerHTML = options.length
-      ? options.map((option, optionIndex) => renderSwapOptionCard(option, optionIndex, { gymxietyMode })).join('')
+    swapModalState.options = combinedOptions;
+    const favoriteMarkup = favoriteOptions.length
+      ? `
+          <div class="swap-option-group">
+            <p class="swap-group-label" style="margin:12px 0 6px;font-weight:600;">Your favorites</p>
+            ${favoriteOptions
+              .map((option, optionIndex) => renderSwapOptionCard(option, optionIndex, { gymxietyMode }))
+              .join('')}
+          </div>
+        `
+      : '';
+    const suggestionMarkup = suggestions.length
+      ? `
+          <div class="swap-option-group">
+            ${favoriteOptions.length ? '<p class="swap-group-label" style="margin:12px 0 6px;font-weight:600;">Suggested swaps</p>' : ''}
+            ${suggestions
+              .map((option, optionIndex) =>
+                renderSwapOptionCard(option, favoriteOptions.length + optionIndex, { gymxietyMode })
+              )
+              .join('')}
+          </div>
+        `
+      : '';
+    const combinedMarkup = `${favoriteMarkup}${suggestionMarkup}`;
+    swapList.innerHTML = combinedOptions.length
+      ? combinedMarkup
       : renderSwapEmptyState(targetRow.muscle);
     swapModal.hidden = false;
     swapModal.setAttribute('aria-hidden', 'false');
@@ -949,13 +1203,47 @@ export function attachWorkoutSummaryEvents(root, state) {
       if (targetCard) {
         targetCard.classList.remove('visible');
         window.setTimeout(() => {
-          targetCard.outerHTML = renderExerciseCard(updatedRow, index, { gymxietyMode });
+          const renderOptions = { gymxietyMode, favoriteSet: buildFavoriteSet(getFavoriteExercises()) };
+          targetCard.outerHTML = renderExerciseCard(updatedRow, index, renderOptions);
           const nextCard = root.querySelector(`[data-exercise-card][data-exercise-index="${index}"]`);
           if (nextCard) {
             requestAnimationFrame(() => nextCard.classList.add('visible'));
           }
         }, SUMMARY_CARD_TRANSITION_MS);
       }
+      return;
+    }
+
+    const favoriteTrigger = event.target.closest('[data-action="favorite-exercise"]');
+    if (favoriteTrigger) {
+      const index = Number.parseInt(favoriteTrigger.dataset.exerciseIndex, 10);
+      const latestState = getState();
+      const plan = latestState.ui?.plannerResult;
+      const row = Number.isFinite(index) && Array.isArray(plan?.planRows) ? plan.planRows[index] : null;
+      const exerciseName = row?.exercise || favoriteTrigger.getAttribute('data-exercise-name');
+      if (!exerciseName) {
+        return;
+      }
+      const isFavorited = favoriteTrigger.dataset.favorited === 'true';
+      if (isFavorited) {
+        removeFavoriteExercise(exerciseName);
+      } else {
+        addFavoriteExercise(exerciseName);
+      }
+      refreshFavoritesSection();
+      syncFavoriteButtons();
+      return;
+    }
+
+    const removeFavoriteTrigger = event.target.closest('[data-action="remove-favorite"]');
+    if (removeFavoriteTrigger) {
+      const targetName = removeFavoriteTrigger.getAttribute('data-favorite-name');
+      if (!targetName) {
+        return;
+      }
+      removeFavoriteExercise(targetName);
+      refreshFavoritesSection();
+      syncFavoriteButtons();
       return;
     }
 

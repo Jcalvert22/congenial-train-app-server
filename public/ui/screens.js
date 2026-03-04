@@ -1728,11 +1728,9 @@ function renderDashboard(state) {
   const displayName = auth.user?.name?.trim() || state.profile?.name || 'Friend';
   const firstName = displayName.split(' ')[0];
   const stats = calculateWorkoutStats();
-  const nextWorkout = state.program?.nextWorkout || 'Pick your next focus';
   const quickStats = [
     { label: 'Workout streak', value: `${stats.streak || 0} days` },
-    { label: 'Sessions logged', value: `${stats.total || 0}` },
-    { label: 'Next workout', value: nextWorkout }
+    { label: 'Sessions logged', value: `${stats.total || 0}` }
   ];
   const recentSessions = (state.workouts || []).slice(0, 4).map((iso, index) => {
     const date = new Date(iso);
@@ -1786,9 +1784,9 @@ function renderDashboard(state) {
         </div>
       </div>
       <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Next focus</p>
-        <h3>${escapeHTML(nextWorkout)}</h3>
-        <p>Keep it short, calm, and confident.</p>
+        <p class="landing-subtext">Today</p>
+        <h3>Check in with your energy.</h3>
+        <p>Pick a calm generator session whenever you're ready.</p>
       </div>
     </header>
     <section class="landing-section">

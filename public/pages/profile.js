@@ -190,7 +190,6 @@ function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
 function renderPreferenceCard(profile) {
   const equipment = profile.equipment || 'Bodyweight focus';
   const location = profile.location || 'Location not set';
-  const nextWorkout = profile.nextWorkout || 'Pick a focus when ready';
   return `
     <section class="landing-section">
       <article class="landing-card card-pop-in" data-profile-card>
@@ -203,10 +202,6 @@ function renderPreferenceCard(profile) {
           <div>
             <p class="landing-subtext">Location</p>
             <strong>${escapeHTML(location)}</strong>
-          </div>
-          <div>
-            <p class="landing-subtext">Next workout</p>
-            <strong>${escapeHTML(nextWorkout)}</strong>
           </div>
         </div>
       </article>
@@ -270,8 +265,7 @@ export function renderProfilePage(state = getState()) {
     ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode })}
     ${renderPreferenceCard({
       equipment: profile.equipment,
-      location: profile.location,
-      nextWorkout: state.program?.nextWorkout
+      location: profile.location
     })}
     ${renderActionsSection()}
   `;
