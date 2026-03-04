@@ -391,6 +391,13 @@
   transform: translateX(2px);
 }
 
+.chrome-footer-link-note {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
 .chrome-footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: var(--spacing-sm);

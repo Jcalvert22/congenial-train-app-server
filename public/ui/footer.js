@@ -1,13 +1,28 @@
 const EXPLORE_LINKS = [
-  { label: 'Workout Program Generator', href: '#/program-generator' },
-  { label: 'Exercise Library', href: '#/exercise-library' },
-  { label: 'Workout Summary', href: '#/summary' },
-  { label: 'Timer', href: '#/timer' },
-  { label: 'Progress Tracking', href: '#/progress-tracking' },
-  { label: 'Beginner Onboarding', href: '#/beginner-onboarding' },
+  {
+    label: 'Workout Program Generator',
+    href: '#/program-generator',
+    description: 'Coming soon — builds weekly plans that last as long as you want support.',
+    comingSoonMessage: 'The Workout Program Generator is still in progress. Weekly plans will unlock soon.'
+  },
+  {
+    label: 'Exercise Library',
+    href: '#/library',
+    description: 'Opens the full move library with calm, plain-language cues.'
+  },
+  {
+    label: 'Progress Tracking',
+    href: '#/progress-tracking',
+    description: 'Coming soon — tracks streaks, collects lift feedback by muscle group, and celebrates consistent days.',
+    comingSoonMessage: 'Progress Tracking is under construction. Streaks and feedback insights will arrive soon.'
+  },
   { label: 'Training Philosophy', href: '#/relaxed-training' },
   { label: 'Pricing', href: '#/pricing' }
 ];
+
+function escapeAttribute(value = '') {
+  return String(value).replace(/"/g, '&quot;');
+}
 
 const COMPANY_LINKS = [
   { label: 'About', href: '#/about' },
@@ -25,13 +40,17 @@ function renderLinkGroup(title, links) {
       <p class="chrome-footer-heading">${title}</p>
       <ul class="chrome-footer-links">
         ${links
-          .map(
-            link => `
+          .map(link => {
+            const comingSoonAttrs = link.comingSoonMessage
+              ? ` data-coming-message="${escapeAttribute(link.comingSoonMessage)}" onclick="event.preventDefault(); alert(this.dataset.comingMessage);"`
+              : '';
+            return `
               <li>
-                <a class="chrome-footer-link" href="${link.href}">${link.label}</a>
+                <a class="chrome-footer-link" href="${link.href}"${comingSoonAttrs}>${link.label}</a>
+                ${link.description ? `<p class="chrome-footer-link-note">${link.description}</p>` : ''}
               </li>
-            `
-          )
+            `;
+          })
           .join('')}
       </ul>
     </div>
