@@ -16,7 +16,6 @@ const PUBLIC_LINKS = [
 const APP_LINKS = [
   { label: 'Dashboard', href: '#/dashboard' },
   { label: 'Generate', href: '#/generate' },
-  { label: 'Library', href: '#/library' },
   { label: 'Gym Confidence', href: '#/gym-confidence' },
   { label: 'History', href: '#/history' },
   { label: 'Profile', href: '#/profile' }

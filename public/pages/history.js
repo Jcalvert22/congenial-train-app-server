@@ -90,13 +90,19 @@ function formatExerciseCount(entry) {
 }
 
 function renderHeader(savedCount) {
+  const description = savedCount
+    ? 'Browse every plan you saved for low-planning days.'
+    : 'When you save a workout, it appears here for future sessions.';
   return `
     <section class="landing-section history-header">
-      <span class="landing-tag">Workout history</span>
-      <h1>Workout Library</h1>
-      <p class="landing-subtext lead">
-        ${savedCount ? 'Browse every plan you saved for low-planning days.' : 'When you save a workout, it appears here for future sessions.'}
-      </p>
+      <div class="history-header-top" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;">
+        <div class="history-header-copy" style="flex:1 1 260px;min-width:240px;">
+          <span class="landing-tag">Workout history</span>
+          <h1>Workout Library</h1>
+          <p class="landing-subtext lead">${escapeHTML(description)}</p>
+        </div>
+        <a class="landing-button secondary" style="flex:0 0 auto;min-width:220px;text-align:center;" href="#/library">Open Exercise Library</a>
+      </div>
     </section>
   `;
 }
