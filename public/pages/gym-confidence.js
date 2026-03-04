@@ -113,7 +113,7 @@ export function renderGymConfidencePage() {
       .gc-bullet-list li { display: flex; gap: 8px; font-size: 0.9rem; color: #1f2a37; align-items: flex-start; }
       .gc-bullet-list li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #0ea5e9; margin-top: 6px; flex-shrink: 0; }
       .gc-situations-card { min-height: 0; }
-      .gc-situations-list { max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+      .gc-situations-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
       .gc-situation-card { border: 1px solid #e5e9f2; border-radius: 16px; padding: 14px 16px; background: #fdfefe; }
       .gc-situation-card-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: #111827; }
       .gc-situation-card-tip { margin: 6px 0 0; font-size: 0.82rem; color: #4b5563; line-height: 1.4; }
