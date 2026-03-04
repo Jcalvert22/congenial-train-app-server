@@ -84,8 +84,13 @@ export const EQUIPMENT_ETIQUETTE = {
   Barbell: 'Share the rack by stepping away during rest periods.',
   Dumbbells: 'Pick up your weights and take a few steps back from the rack.',
   Cables: 'Reset the pin and attachment so the next person can start quickly.',
-  Machine: 'Adjust the seat and handles to fit you—everyone does.',
+  Machine: 'Adjust the seat and handles to fit you and leave the pin on a light weight.',
+  Machines: 'Adjust the setup, wipe it down, and leave the pin on a light weight.',
   Bodyweight: 'Give nearby lifters a little space before you start.',
+  Bench: 'Wipe the pad and move the bench back if you rolled it to a new spot.',
+  Bands: 'Coil the band and hang it back on the rack so it does not tangle.',
+  'Cardio Machines': 'Wipe the handles and console, then step aside so the next person can hop on.',
+  'Squat Rack': 'Strip the plates in order and clear clips or belts off the platform.',
   'Smith Machine': 'Set the safeties first so you can rack the bar whenever you need.'
 };
 
@@ -126,7 +131,7 @@ if (typeof console !== 'undefined') {
 const DEFAULT_WORKOUT_NAMES = [
   'Goblet Squat',
   'dumbbell bench press',
-  'Lat Pulldown (Neutral Grip)',
+  'Lat Pulldown',
   'Seated Cable Row',
   'Dumbbell Shoulder Press',
   'Dumbbell Bicep Curl',
@@ -135,9 +140,23 @@ const DEFAULT_WORKOUT_NAMES = [
   'Dead Bug'
 ];
 
+const normalizeExerciseNameKey = value => value?.toString().trim().toLowerCase() || '';
+const EXERCISE_NAME_LOOKUP = new Map(
+  EXERCISES.map(exercise => [normalizeExerciseNameKey(exercise?.name), exercise])
+);
+
 export const DEFAULT_BEGINNER_WORKOUT = DEFAULT_WORKOUT_NAMES
-  .map(name => EXERCISES.find(exercise => exercise.name === name))
+  .map(name => EXERCISE_NAME_LOOKUP.get(normalizeExerciseNameKey(name)))
   .filter(Boolean);
+
+if (typeof console !== 'undefined' && DEFAULT_BEGINNER_WORKOUT.length !== DEFAULT_WORKOUT_NAMES.length) {
+  const missingDefaults = DEFAULT_WORKOUT_NAMES.filter(
+    name => !EXERCISE_NAME_LOOKUP.has(normalizeExerciseNameKey(name))
+  );
+  if (missingDefaults.length) {
+    console.warn('[exercise-library] missing default exercises:', missingDefaults.join(', '));
+  }
+}
 
 export const BEGINNER_EQUIPMENT = [...EQUIPMENT_LIST];
 export const BEGINNER_MUSCLES = [...MUSCLE_GROUPS];

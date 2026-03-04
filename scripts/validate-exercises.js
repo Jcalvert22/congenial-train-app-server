@@ -1,5 +1,3 @@
-pendingAlternatives.forEach(reference => {
-pendingAlternatives.forEach(reference => {
 #!/usr/bin/env node
 import process from 'node:process';
 import { writeFile } from 'node:fs/promises';
