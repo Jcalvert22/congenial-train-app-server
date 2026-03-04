@@ -135,7 +135,7 @@
     }
 
     document.addEventListener('click', async event => {
-      const trialButton = event.target.closest('#start-trial');
+      const trialButton = event.target.closest('[data-start-trial]');
       if (trialButton) {
         event.preventDefault();
         openPlanModal();

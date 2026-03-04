@@ -44,6 +44,16 @@ export function renderFooter() {
     <footer class="chrome-footer" aria-label="Site footer">
       <div class="chrome-footer-inner">
         <div class="chrome-footer-columns chrome-footer-columns-only">
+          <div class="chrome-footer-brand">
+            <img
+              class="chrome-footer-logo"
+              src="./images/allaroundathletelogo.png"
+              alt="AllAroundAthlete logo"
+              loading="lazy"
+              decoding="async"
+            />
+            <p class="chrome-footer-description">Gentle structure, calm cues, every rep.</p>
+          </div>
           ${renderLinkGroup('Explore', EXPLORE_LINKS)}
           ${renderLinkGroup('Company', COMPANY_LINKS)}
           ${renderLinkGroup('Legal', LEGAL_LINKS)}
@@ -51,6 +61,7 @@ export function renderFooter() {
         <div class="chrome-footer-bottom">
           <p>&copy; ${year} AllAroundAthlete. Built for everyday consistency.</p>
           <div class="chrome-footer-meta-links">
+            <a class="chrome-footer-link" href="#/contact">Contact</a>
             <a class="chrome-footer-link" href="#/contact">Support</a>
             <a class="chrome-footer-link" href="#/privacy">Privacy</a>
             <a class="chrome-footer-link" href="#/terms">Terms</a>

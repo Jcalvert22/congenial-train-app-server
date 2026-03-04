@@ -146,6 +146,7 @@ footer {
   display: flex;
   align-items: center;
   gap: 0.625rem;
+  flex-wrap: wrap;
 }
 
 .chrome-cta-pair .chrome-button {

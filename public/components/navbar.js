@@ -9,7 +9,6 @@ const PUBLIC_LINKS = [
   { label: 'Features', href: '#/features' },
   { label: 'Gym Confidence', href: '#/gym-confidence' },
   { label: 'Pricing', href: '#/pricing' },
-  { label: 'About', href: '#/about' },
   { label: 'Contact', href: '#/contact' }
 ];
 
@@ -77,7 +76,15 @@ function renderNavbarMarkup({ tagline, links, primaryAction, secondaryAction }) 
     <header class="chrome-header">
       <div class="chrome-inner">
         <a class="chrome-brand" href="#/">
-          <span class="chrome-mark" aria-hidden="true">AA</span>
+          <span class="chrome-mark" aria-hidden="true">
+            <img
+              src="./images/allaroundathletelogo.png"
+              alt=""
+              loading="lazy"
+              decoding="async"
+              class="chrome-logo"
+            />
+          </span>
           <span class="chrome-brand-text">
             <strong>AllAroundAthlete</strong>
             <span>${tagline}</span>
@@ -93,11 +100,15 @@ function renderNavbarMarkup({ tagline, links, primaryAction, secondaryAction }) 
           <div class="chrome-links" role="list">
             ${navLinks}
           </div>
-          <div class="chrome-ctas">
+          <div class="chrome-ctas chrome-ctas-mobile">
             ${secondaryAction || ''}
             ${primaryAction || ''}
           </div>
         </nav>
+        <div class="chrome-ctas chrome-ctas-desktop">
+          ${secondaryAction || ''}
+          ${primaryAction || ''}
+        </div>
       </div>
     </header>
   `;
@@ -122,15 +133,15 @@ export function renderPublicNavbar() {
     primaryAction: `
       <div class="chrome-cta-pair">
         <a class="chrome-button ghost" href="#/login">Log in</a>
-        <button class="chrome-button" id="start-trial" type="button" data-plan="${getSelectedPlan()}">Start free trial</button>
+        <button class="chrome-button" type="button" data-start-trial data-plan="${getSelectedPlan()}">Start free trial</button>
       </div>
     `
   });
   mountNavbar(html, container => {
-    const button = container.querySelector('#start-trial');
-    if (button) {
+    const buttons = container.querySelectorAll('[data-start-trial]');
+    buttons.forEach(button => {
       button.dataset.plan = getSelectedPlan();
-    }
+    });
   });
 }
 
@@ -142,15 +153,14 @@ export function renderAppNavbar() {
     primaryAction: `<button class="chrome-button" type="button" data-nav-logout>Logout</button>`
   });
   mountNavbar(html, container => {
-    const logoutBtn = container.querySelector('[data-nav-logout]');
-    if (logoutBtn) {
+    container.querySelectorAll('[data-nav-logout]').forEach(logoutBtn => {
       logoutBtn.addEventListener('click', event => {
         event.preventDefault();
         logout().finally(() => {
           window.location.hash = '#/';
         });
       });
-    }
+    });
   });
 }
 

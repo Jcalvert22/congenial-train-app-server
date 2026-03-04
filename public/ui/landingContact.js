@@ -5,13 +5,15 @@ import { renderFooter } from './footer.js';
 
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
+const SUPPORT_EMAIL = 'useallaroundathlete@gmail.com';
+
+function getCtaAttrs(cta) {
+  return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
+}
 
 function resolveCta(state) {
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start Trial' };
-  }
-  function getCtaAttrs(cta) {
-    return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
   }
   if (!state?.profile?.onboardingComplete) {
     return { href: '#/onboarding', label: 'Resume Onboarding' };
@@ -27,6 +29,10 @@ function buildHero() {
         <h1>Let's talk.</h1>
         <p class="landing-subtext lead">Have a question or need help getting started? I'm here to support you.</p>
         <p>Reach out any time. Whether you are nervous about equipment, wondering how to begin, or need help unlocking a feature, I respond with the same calm clarity you feel throughout the app.</p>
+        <div class="landing-actions">
+          <a class="landing-button" href="mailto:useallaroundathlete@gmail.com">Email support</a>
+          <a class="landing-button secondary" href="#/start-trial">Start trial</a>
+        </div>
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Direct line</p>
@@ -52,8 +58,8 @@ function buildContactSection() {
           <input type="email" name="email" placeholder="you@example.com" required>
         </label>
         <label class="landing-card landing-card-compact landing-grid-span">
-          <span class="landing-subtext">Message</span>
-          <textarea name="message" rows="4" placeholder="Share your question or situation" required></textarea>
+          <span class="landing-subtext">What is the problem or need for support?</span>
+          <textarea name="message" rows="5" placeholder="Describe what you need help with" required></textarea>
         </label>
         <button class="landing-button landing-grid-span" type="submit">Send Message</button>
       </form>
@@ -131,6 +137,21 @@ export function renderContactLanding(options = {}) {
     if (form) {
       form.addEventListener('submit', event => {
         event.preventDefault();
+        const formData = new FormData(form);
+        const name = (formData.get('name') || '').trim();
+        const email = (formData.get('email') || '').trim();
+        const message = (formData.get('message') || '').trim();
+        const subjectName = name || 'AllAroundAthlete user';
+        const subject = encodeURIComponent(`Support request from ${subjectName}`);
+        const bodyLines = [
+          `Name: ${subjectName}`,
+          `Email: ${email || 'not provided'}`,
+          '',
+          message || 'No message provided.'
+        ];
+        const body = encodeURIComponent(bodyLines.join('\n'));
+        const mailtoLink = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+        window.location.href = mailtoLink;
       });
     }
   };

@@ -33,10 +33,11 @@ function savePlan(plan) {
   }
 }
 
-function applyPlanToButton(plan) {
-  const button = typeof document !== 'undefined' ? document.getElementById('start-trial') : null;
-  if (button) {
-    button.dataset.plan = plan;
+function applyPlanToButtons(plan) {
+  if (typeof document !== 'undefined') {
+    document.querySelectorAll('[data-start-trial]').forEach(button => {
+      button.dataset.plan = plan;
+    });
   }
   if (typeof window !== 'undefined') {
     window.__aaaSelectedPlan = plan;
@@ -44,7 +45,7 @@ function applyPlanToButton(plan) {
 }
 
 currentPlan = loadStoredPlan();
-applyPlanToButton(currentPlan);
+applyPlanToButtons(currentPlan);
 
 export function getSelectedPlan() {
   return currentPlan;
@@ -88,6 +89,6 @@ export async function startCheckout(priceId = currentPlan) {
 export function setTrialPlan(plan = currentPlan) {
   const nextPlan = normalizePlan(plan);
   currentPlan = nextPlan;
-  applyPlanToButton(nextPlan);
+  applyPlanToButtons(nextPlan);
   savePlan(nextPlan);
 }

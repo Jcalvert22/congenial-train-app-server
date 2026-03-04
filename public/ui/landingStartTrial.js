@@ -153,7 +153,8 @@ export function renderStartTrial(options = {}) {
           btn.classList.toggle('is-active', isActive);
         });
       };
-      const currentPlan = document.getElementById('start-trial')?.dataset.plan || 'monthly';
+      const planSource = document.querySelector('[data-start-trial]');
+      const currentPlan = planSource?.dataset.plan || 'monthly';
       setTrialPlan(currentPlan);
       setActive(currentPlan);
       planButtons.forEach(button => {

@@ -43,12 +43,14 @@
 }
 
 .chrome-inner {
+  position: relative;
   max-width: var(--layout-max-width);
   margin: 0 auto;
   padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 4vw, 1.5rem);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--spacing-lg);
+  gap: clamp(0.75rem, 2vw, 1.5rem);
 }
 
 .chrome-brand {
@@ -56,6 +58,7 @@
   align-items: center;
   gap: 0.625rem;
   text-decoration: none;
+  grid-column: 1;
 }
 
 .chrome-brand:hover .chrome-brand-text strong {
@@ -63,22 +66,37 @@
 }
 
 .chrome-mark {
-  width: clamp(2.5rem, 6vw, 2.75rem);
-  height: clamp(2.5rem, 6vw, 2.75rem);
-  border-radius: 0.75rem;
-  background: var(--color-accent);
-  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  width: clamp(3.25rem, 7vw, 3.75rem);
+  height: auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.chrome-logo {
+  width: clamp(3rem, 7vw, 3.5rem);
+  height: auto;
+  display: block;
 }
 
 .chrome-ctas {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
+}
+
+.chrome-ctas-desktop {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.chrome-ctas-mobile {
+  display: none;
 }
 
 .chrome-button {
@@ -206,27 +224,31 @@
 }
 
 .chrome-menu {
+  grid-column: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-lg);
-  flex: 1;
+  justify-content: flex-start;
+  gap: var(--spacing-md);
+  min-width: 0;
 }
 
 .chrome-links {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.625rem;
+  flex-wrap: nowrap;
+  gap: clamp(0.35rem, 1vw, 0.75rem);
+  min-width: 0;
 }
 
 .chrome-link {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.35rem clamp(0.6rem, 1.4vw, 0.85rem);
   border-radius: 999px;
   text-decoration: none;
   color: var(--color-text);
   font-weight: 500;
+  font-size: 0.95rem;
+  white-space: nowrap;
   transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -262,6 +284,9 @@
   padding: 0.5rem;
   border-radius: 0.65rem;
   cursor: pointer;
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
 }
 
 .chrome-burger span {
@@ -285,6 +310,27 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg-xl);
+}
+
+.chrome-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  max-width: min(20rem, 100%);
+}
+
+.chrome-footer-logo {
+  width: clamp(5rem, 18vw, 7.5rem);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.35));
+}
+
+.chrome-footer-description {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.5;
 }
 
 .chrome-footer-columns-only {
@@ -348,11 +394,13 @@
 
 @media (max-width: 60rem) {
   .chrome-inner {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr auto;
+    align-items: center;
     gap: var(--spacing-md);
   }
 
   .chrome-menu {
+    grid-column: 1 / -1;
     position: absolute;
     left: 0;
     right: 0;
@@ -381,9 +429,22 @@
     width: 100%;
   }
 
-  .chrome-ctas {
+  .chrome-ctas-desktop {
+    display: none;
+  }
+
+  .chrome-ctas-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+  }
+
+  .chrome-cta-pair {
     width: 100%;
     flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
   }
 
   .chrome-button,
@@ -393,6 +454,7 @@
 
   .chrome-burger {
     display: inline-flex;
+    grid-column: 2;
   }
 }
 
