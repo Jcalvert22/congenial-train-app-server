@@ -127,7 +127,9 @@ footer {
 }
 
 @media (min-width: 37.5rem) {
-  font-weight: 600;
+  .plan-modal-option {
+    font-weight: 600;
+  }
 }
 
 .plan-modal-option-detail {
