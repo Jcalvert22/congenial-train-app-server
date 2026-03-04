@@ -33,6 +33,8 @@ import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderAboutLanding } from './landingAbout.js';
 import { renderContactLanding } from './landingContact.js';
+import { renderTermsPage } from './landingTerms.js';
+import { renderPrivacyPage } from './landingPrivacy.js';
 import { renderPricingLanding } from './landingPricing.js';
 import { renderStartTrial } from './landingStartTrial.js';
 import { renderWelcome } from './landingWelcome.js';
@@ -78,6 +80,8 @@ const ROUTE_HASHES = {
   summary: '#/summary',
   workout: '#/workout',
   about: '#/about',
+  terms: '#/terms',
+  privacy: '#/privacy',
   contact: '#/contact',
   'start-trial': '#/start-trial',
   'create-account': '#/create-account',
@@ -925,6 +929,10 @@ function resolveRoute(hash, state, auth) {
       return landingResult(renderAboutLanding);
     case '#/contact':
       return landingResult(renderContactLanding);
+    case '#/terms':
+      return landingResult(renderTermsPage);
+    case '#/privacy':
+      return landingResult(renderPrivacyPage);
     case '#/program-generator':
       return landingResult(renderProgramGeneratorLanding);
     case '#/exercise-library':

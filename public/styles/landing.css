@@ -494,6 +494,25 @@
   min-height: 100vh;
 }
 
+.legal-page .landing-section {
+  gap: var(--spacing-sm);
+}
+
+.legal-page .landing-section h3 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.legal-list {
+  margin: var(--spacing-sm) 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.7;
+  color: var(--color-text);
+}
+
+.legal-list li + li {
+  margin-top: 0.35rem;
+}
+
 .landing-container {
   max-width: min(65rem, 100%);
   margin: 0 auto;
