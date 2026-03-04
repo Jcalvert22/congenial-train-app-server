@@ -51,7 +51,7 @@ export const GYM_SITUATIONS = [
   },
   {
     id: 'moving_plates',
-    title: 'You need to move someone's plates',
+    title: 'You need to move someone\'s plates',
     tip: 'Ask, "Are you using this?" If not, it is yours to use.'
   },
   {
