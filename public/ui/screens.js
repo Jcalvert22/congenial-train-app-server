@@ -46,6 +46,7 @@ import { renderSignupPage, attachSignupPageEvents } from '../pages/signup.js';
 import { renderPaywall, attachPaywallEvents } from '../pages/paywall.js';
 import { renderSuccessPage, attachSuccessPageEvents } from '../pages/success.js';
 import { renderCanceledPage, attachCanceledPageEvents } from '../pages/canceled.js';
+import { renderGymConfidencePage, attachGymConfidenceEvents } from '../pages/gym-confidence.js';
 import { renderFooter } from './footer.js';
 import { revealPageContent } from '../components/stateCards.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
@@ -85,6 +86,7 @@ const ROUTE_HASHES = {
   'progress-tracking': '#/progress-tracking',
   'beginner-onboarding': '#/beginner-onboarding',
   'relaxed-training': '#/relaxed-training',
+  'gym-confidence': '#/gym-confidence',
   '404': '#/404'
 };
 
@@ -993,6 +995,8 @@ function resolveRoute(hash, state, auth) {
       );
     case '#/subscribe':
       return { html: renderSubscribe(state), afterRender: attachSubscribeEvents };
+    case '#/gym-confidence':
+      return { html: renderGymConfidencePage(), afterRender: attachGymConfidenceEvents };
     case '#/onboarding':
       return { html: renderOnboarding(state), afterRender: attachOnboardingEvents };
     case '#/timer':
@@ -1853,6 +1857,7 @@ function renderOnboarding(state) {
         <span class="badge">Welcome</span>
         <h2>Let's get acquainted first</h2>
         <p class="onboarding-lede">We ask for a few basics so every plan respects your goals, body, and available space. This stays private on your device.</p>
+        <p class="supportive-text onboarding-guide-link">Need a calm walkthrough first? <a class="supportive-link" href="${ROUTE_HASHES['gym-confidence']}">Open the Gym Confidence guide</a>.</p>
       </div>
       <article class="landing-card landing-card-dark onboarding-card">
         <form class="landing-form onboarding-form" data-form="onboarding">

@@ -7,6 +7,7 @@ const NAVBAR_MENU_ID = 'aaa-chrome-menu';
 const PUBLIC_LINKS = [
   { label: 'Home', href: '#/' },
   { label: 'Features', href: '#/features' },
+  { label: 'Gym Confidence', href: '#/gym-confidence' },
   { label: 'Pricing', href: '#/pricing' },
   { label: 'About', href: '#/about' },
   { label: 'Contact', href: '#/contact' }
@@ -16,6 +17,7 @@ const APP_LINKS = [
   { label: 'Dashboard', href: '#/dashboard' },
   { label: 'Generate', href: '#/generate' },
   { label: 'Library', href: '#/library' },
+  { label: 'Gym Confidence', href: '#/gym-confidence' },
   { label: 'History', href: '#/history' },
   { label: 'Profile', href: '#/profile' }
 ];
