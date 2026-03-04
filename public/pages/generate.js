@@ -4,6 +4,7 @@ import { getState } from '../logic/state.js';
 import { storePlannerResult } from '../logic/workout.js';
 import { generateWorkout } from '../utils/generateWorkout.js';
 import { EQUIPMENT_LIST, MUSCLE_GROUPS } from '../data/exercises.js';
+import { MUSCLE_PAIRINGS } from '../data/musclePairings.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 import { getDislikedExercises } from '../utils/dislikedExercises.js';
 
@@ -18,6 +19,9 @@ const GOAL_OPTIONS = [
   { label: 'General Fitness', value: 'general' }
 ];
 const DEFAULT_GOAL = 'general';
+const MUSCLE_PAIRING_ALIASES = {
+  quads: 'legs'
+};
 
 function renderHeader() {
   return `
@@ -46,6 +50,64 @@ function renderChecklist(list, fieldName, selectedValues = [], disabled = false)
             <label class="equipment-item">
               <input type="checkbox" name="${escapeHTML(fieldName)}" value="${escapeHTML(item)}" ${checked} ${lock}>
               <span>${escapeHTML(item)}</span>
+            </label>
+          `;
+        })
+        .join('')}
+    </div>
+  `;
+}
+
+function formatPairingText(pairings = []) {
+  return pairings
+    .map(value => {
+      if (!value) {
+        return '';
+      }
+      if (value.toLowerCase() === 'any') {
+        return 'Any muscle';
+      }
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    })
+    .filter(Boolean)
+    .join(', ');
+}
+
+function resolvePairingsForMuscle(muscleName = '') {
+  const normalized = muscleName.toString().trim().toLowerCase();
+  if (!normalized) {
+    return [];
+  }
+  if (MUSCLE_PAIRINGS[normalized]) {
+    return MUSCLE_PAIRINGS[normalized];
+  }
+  const alias = MUSCLE_PAIRING_ALIASES[normalized];
+  return alias ? MUSCLE_PAIRINGS[alias] || [] : [];
+}
+
+function renderMuscleChecklist(list, selectedValues = [], disabled = false) {
+  return `
+    <div class="equipment-list" data-checklist="muscles">
+      ${list
+        .map(item => {
+          const normalized = item.toString().trim().toLowerCase();
+          const pairings = resolvePairingsForMuscle(normalized);
+          const hasPairings = pairings.length > 0;
+          const isChecked = selectedValues.includes(item);
+          const checked = isChecked ? 'checked' : '';
+          const lock = disabled ? 'disabled' : '';
+          const pairingLabel = hasPairings ? formatPairingText(pairings) : '';
+          const shouldShowPairing = isChecked && !disabled;
+          const pairingMarkup = hasPairings
+            ? `<p class="muscle-pairing-hint text-xs text-gray-500 mt-1" data-muscle-pairing="${escapeHTML(normalized)}"${shouldShowPairing ? '' : ' hidden'}>
+                Recommended pairing: ${escapeHTML(pairingLabel)}
+              </p>`
+            : '';
+          return `
+            <label class="equipment-item" data-muscle-card="${escapeHTML(normalized)}">
+              <input type="checkbox" name="muscles" value="${escapeHTML(item)}" ${checked} ${lock}>
+              <span>${escapeHTML(item)}</span>
+              ${pairingMarkup}
             </label>
           `;
         })
@@ -99,7 +161,7 @@ function renderGenerateShell(state) {
           <fieldset class="generate-step" data-muscle-step>
             <legend class="landing-subtext">Step 2 · Muscles to nudge</legend>
             <p class="landing-subtext">Unlocks after you pick equipment.</p>
-            ${renderChecklist(MUSCLE_GROUPS, 'muscles', defaultMuscles, lockMuscles)}
+            ${renderMuscleChecklist(MUSCLE_GROUPS, defaultMuscles, lockMuscles)}
             <p class="supportive-text" data-muscle-helper>${lockMuscles ? MUSCLE_HELPER_LOCKED : MUSCLE_HELPER_READY}</p>
           </fieldset>
           ${renderGoalSelector(normalizedGoal)}
@@ -201,6 +263,17 @@ export function attachGeneratePageEvents(root) {
     errorBox.textContent = message;
   };
 
+  const refreshMusclePairingHints = () => {
+    const equipmentLocked = selectedEquipment.length === 0;
+    muscleInputs.forEach(input => {
+      const pairingNode = input.closest('[data-muscle-card]')?.querySelector('[data-muscle-pairing]');
+      if (!pairingNode) {
+        return;
+      }
+      pairingNode.hidden = equipmentLocked || !input.checked;
+    });
+  };
+
   const updateHelpers = () => {
     const hasEquipment = selectedEquipment.length > 0;
     if (equipmentHelper) {
@@ -218,6 +291,7 @@ export function attachGeneratePageEvents(root) {
     if (submitButton) {
       submitButton.disabled = !(selectedEquipment.length && selectedMuscles.length);
     }
+    refreshMusclePairingHints();
   };
 
   const syncMuscleState = () => {

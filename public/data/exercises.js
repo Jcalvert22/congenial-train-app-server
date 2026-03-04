@@ -14,7 +14,17 @@ function loadJsonSync(relativePath, fallback) {
 }
 
 const EXERCISES_JSON_FALLBACK = { exercises: {} };
+const EXERCISE_META_FALLBACK = {
+  version: 'development',
+  checksum: 'missing-meta',
+  entries: 0,
+  generatedAt: null
+};
 const raw = loadJsonSync('./exercises.json', EXERCISES_JSON_FALLBACK);
+const meta = loadJsonSync('./exercises.meta.json', EXERCISE_META_FALLBACK);
+
+export const EXERCISE_LIBRARY_VERSION = meta.version;
+export const EXERCISE_LIBRARY_CHECKSUM = meta.checksum;
 
 const EQUIPMENT_LABELS = {
   barbell: 'Barbell',
@@ -97,6 +107,21 @@ export const RAW_EXERCISE_LIBRARY = raw;
 
 export const EXERCISE_LIBRARY = flattenExercises(RAW_EXERCISE_LIBRARY.exercises);
 export const EXERCISES = EXERCISE_LIBRARY.map(buildLegacyExercise);
+
+if (typeof console !== 'undefined') {
+  const checksumPreview = (EXERCISE_LIBRARY_CHECKSUM || 'missing').slice(0, 12);
+  const message = `exercise-library v${EXERCISE_LIBRARY_VERSION} (${EXERCISE_LIBRARY.length} entries, checksum ${checksumPreview}…)`;
+  if (meta.checksum === 'missing-meta') {
+    console.warn(`[exercise-library] metadata missing, using fallback. ${message}`);
+  } else {
+    console.info(`[exercise-library] ${message}`);
+  }
+  if (meta.entries && meta.entries !== EXERCISE_LIBRARY.length) {
+    console.warn(
+      `[exercise-library] entry count mismatch (meta ${meta.entries} vs runtime ${EXERCISE_LIBRARY.length}).`
+    );
+  }
+}
 
 const DEFAULT_WORKOUT_NAMES = [
   'Goblet Squat',
