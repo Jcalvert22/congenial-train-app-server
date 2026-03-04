@@ -53,6 +53,8 @@ export function renderFooter() {
               decoding="async"
             />
             <p class="chrome-footer-description">Gentle structure, calm cues, every rep.</p>
+            <a class="chrome-footer-support" href="#/contact">Contact support</a>
+            <a class="chrome-footer-email" href="mailto:useallaroundathlete@gmail.com">useallaroundathlete@gmail.com</a>
           </div>
           ${renderLinkGroup('Explore', EXPLORE_LINKS)}
           ${renderLinkGroup('Company', COMPANY_LINKS)}

@@ -333,6 +333,23 @@
   line-height: 1.5;
 }
 
+.chrome-footer-support,
+.chrome-footer-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: 0.35rem;
+  word-break: break-all;
+}
+
+.chrome-footer-support:hover,
+.chrome-footer-email:hover {
+  color: var(--color-accent);
+}
+
 .chrome-footer-columns-only {
   width: 100%;
 }

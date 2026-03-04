@@ -4,21 +4,16 @@ import { getSelectedPlan } from '../js/checkout.js';
 const NAVBAR_CONTAINER_ID = 'navbar';
 const NAVBAR_MENU_ID = 'aaa-chrome-menu';
 
-const PUBLIC_LINKS = [
-  { label: 'Home', href: '#/' },
-  { label: 'Features', href: '#/features' },
-  { label: 'Gym Confidence', href: '#/gym-confidence' },
-  { label: 'Pricing', href: '#/pricing' },
-  { label: 'Contact', href: '#/contact' }
-];
-
-const APP_LINKS = [
+const CORE_APP_LINKS = [
   { label: 'Dashboard', href: '#/dashboard' },
   { label: 'Generate', href: '#/generate' },
   { label: 'Gym Confidence', href: '#/gym-confidence' },
   { label: 'History', href: '#/history' },
   { label: 'Profile', href: '#/profile' }
 ];
+
+const PUBLIC_LINKS = [...CORE_APP_LINKS];
+const APP_LINKS = [...CORE_APP_LINKS];
 
 function ensureNavbarContainer() {
   let container = document.getElementById(NAVBAR_CONTAINER_ID);
