@@ -85,7 +85,6 @@ export function updateProfileMessage(user, profile = {}) {
   const resolvedPeriodEnd = resolveBillingPeriodEnd(user, profile);
   const daysLeft = getTrialDaysLeft(resolvedPeriodEnd);
   const memberSince = new Date(user.created_at).toLocaleDateString();
-  const nextBilling = formatDate(resolvedPeriodEnd);
 
   const normalizedStatus = normalizeStatus(profile.subscription_status);
 
@@ -104,8 +103,7 @@ export function updateProfileMessage(user, profile = {}) {
   } else if (normalizedStatus === 'active') {
     el.textContent =
       `Member since ${memberSince}. ` +
-      `You've been using the app for ${daysUsingApp} days. ` +
-      `Your next billing date is ${nextBilling}.`;
+      `You've been using the app for ${daysUsingApp} days.`;
 
     if (progressContainer) {
       progressContainer.style.display = 'none';

@@ -75,12 +75,12 @@ function wrapProfileContent(content) {
         <div id="trial-progress-bar" class="trial-progress-bar"></div>
       </div>
 
+      <!-- rest of your profile UI -->
+      ${content}
+
       <button id="cancel-subscription-btn" class="cancel-sub-btn" style="display:none;">
         Manage Subscription
       </button>
-
-      <!-- rest of your profile UI -->
-      ${content}
     </div>
   `;
 }
