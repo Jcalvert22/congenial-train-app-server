@@ -4,22 +4,36 @@ import { renderFooter } from './footer.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 import { setTrialPlan } from '../js/checkout.js';
+import { areSignupsEnabled } from '../js/supabaseClient.js';
 
-function buildHero() {
+function buildHero(signupsOpen) {
   const primaryCtaHref = '#/create-account';
   const secondaryHref = '#/pricing';
   const heroLead = 'No pressure. No confusion. Just a clear path to confidence.';
+  const primaryAction = signupsOpen
+    ? `<a class="landing-button" href="${primaryCtaHref}">Create Account</a>`
+    : `
+        <button class="landing-button is-disabled" type="button" disabled>
+          Create Account
+          <span class="landing-button-pill">Closed</span>
+        </button>
+      `;
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Trial</span>
-        <h1>Start your free trial.</h1>
+        <h1>${signupsOpen ? 'Start your free trial.' : 'Trials are closed until launch.'}</h1>
         <p class="landing-subtext lead">${heroLead}</p>
-        <p>AllAroundAthlete slows everything down so you can step into the gym with a calm plan, gentle cues, and supportive reminders.</p>
+        <p>
+          ${signupsOpen
+            ? 'AllAroundAthlete slows everything down so you can step into the gym with a calm plan, gentle cues, and supportive reminders.'
+            : 'We are keeping the doors closed while we finish launch polish. Existing members can still log in from the top navigation.'}
+        </p>
         <div class="landing-actions">
-          <a class="landing-button" href="${primaryCtaHref}">Create Account</a>
+          ${primaryAction}
           <a class="landing-button secondary" href="${secondaryHref}">See pricing</a>
         </div>
+        ${signupsOpen ? '' : '<p class="supportive-text">Need to get in touch? Email useallaroundathlete@gmail.com.</p>'}
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Soft preview</p>
@@ -89,7 +103,20 @@ function buildGymxietySection(gymxietyEnabled = false) {
   `;
 }
 
-function buildCtaSection() {
+function buildCtaSection(signupsOpen) {
+  if (!signupsOpen) {
+    return `
+      <section class="landing-section landing-cta">
+        <p class="landing-subtext">Next step</p>
+        <h2>Invites reopen soon.</h2>
+        <p>We will email the early list before launch so you can hop in without waiting.</p>
+        <div class="landing-actions">
+          <a class="landing-button secondary" href="#/login">Log in</a>
+          <a class="landing-button secondary" href="#/contact">Ask about access</a>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="landing-section landing-cta">
       <p class="landing-subtext">Next step</p>
@@ -130,40 +157,43 @@ export function renderStartTrial(options = {}) {
   }
   ensureLandingStyles();
   const gymxietyEnabled = getGymxietyPreference();
+  const signupsOpen = areSignupsEnabled();
 
   const html = `
     <section class="landing-page">
       <div class="landing-container">
-        ${buildHero()}
-        ${buildPlanPicker()}
+        ${buildHero(signupsOpen)}
+        ${signupsOpen ? buildPlanPicker() : ''}
         ${buildTrialDetails()}
         ${buildGymxietySection(gymxietyEnabled)}
-        ${buildCtaSection()}
+        ${buildCtaSection(signupsOpen)}
       </div>
       ${includeFooter ? renderFooter() : ''}
     </section>
   `;
 
   const afterRender = root => {
-    const planButtons = Array.from(root.querySelectorAll('[data-plan-select]'));
-    if (planButtons.length) {
-      const setActive = nextPlan => {
-        planButtons.forEach(btn => {
-          const isActive = btn.dataset.planSelect === nextPlan;
-          btn.classList.toggle('is-active', isActive);
+    if (signupsOpen) {
+      const planButtons = Array.from(root.querySelectorAll('[data-plan-select]'));
+      if (planButtons.length) {
+        const setActive = nextPlan => {
+          planButtons.forEach(btn => {
+            const isActive = btn.dataset.planSelect === nextPlan;
+            btn.classList.toggle('is-active', isActive);
+          });
+        };
+        const planSource = document.querySelector('[data-start-trial]');
+        const currentPlan = planSource?.dataset.plan || 'monthly';
+        setTrialPlan(currentPlan);
+        setActive(currentPlan);
+        planButtons.forEach(button => {
+          button.addEventListener('click', () => {
+            const plan = button.dataset.planSelect || 'monthly';
+            setTrialPlan(plan);
+            setActive(plan);
+          });
         });
-      };
-      const planSource = document.querySelector('[data-start-trial]');
-      const currentPlan = planSource?.dataset.plan || 'monthly';
-      setTrialPlan(currentPlan);
-      setActive(currentPlan);
-      planButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          const plan = button.dataset.planSelect || 'monthly';
-          setTrialPlan(plan);
-          setActive(plan);
-        });
-      });
+      }
     }
 
     const toggle = root.querySelector('[data-gymxiety-trial-toggle]');

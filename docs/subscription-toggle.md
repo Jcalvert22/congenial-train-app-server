@@ -11,6 +11,21 @@ These edits are live today:
   - The inline landing script imports `showSubscriptionAlert()` and calls it for both the modal plan options and any `[data-checkout-plan]` trigger.
   - All login/checkout logic inside the landing page modal was removed because the helper blocks everything centrally.
 
+## Account creation gate (signup freeze)
+We also locked down the create-account flow so only existing users can log in:
+- [public/js/supabaseClient.js](public/js/supabaseClient.js)
+  - `SIGNUPS_ENABLED` is `false`, so any actual Supabase signup call returns the "New account creation is closed" error.
+- [public/ui/landingCreateAccount.js](public/ui/landingCreateAccount.js) and [public/ui/landingStartTrial.js](public/ui/landingStartTrial.js)
+  - Both pages call `areSignupsEnabled()`. When it is `false` they swap their forms/CTAs for disabled buttons + explanatory copy and keep only the login/contact options active.
+- [public/index.html](public/index.html)
+  - Adds `<meta name="next-public-subscriptions-enabled" content="false" />`. The navbar "Start free trial" button reads this flag (via `areSubscriptionsEnabled()`) and stays disabled everywhere until you flip it back.
+
+### Re-open signups on launch day
+1. Set `SIGNUPS_ENABLED` to `true` in [public/js/supabaseClient.js](public/js/supabaseClient.js). That re-enables the Supabase signup helper and automatically unlocks the create-account/start-trial forms.
+2. Update the meta flag in [public/index.html](public/index.html) to `content="true"` (or remove the tag). This brings the global "Start free trial" button back to its clickable state.
+3. Verify the CTA pages: visit `#/start-trial` and `#/create-account`. With the flag flipped, the original forms render again and the submit button posts to Supabase.
+4. If you ever need to lock things again, revert those two changes: set the constant back to `false` and set the meta `content="false"`.
+
 ## Launch Mode (restore real checkout)
 When launch day arrives, undo the alert-only behavior and re-enable Stripe checkout.
 

@@ -93,6 +93,7 @@ export function renderCompactCard({
     .filter(Boolean)
     .map(badge => `<span class="compact-card-badge">${badge}</span>`)
     .join('');
+  const detailHint = '<span class="compact-card-detail-hint">More details</span>';
   return `
     <article class="compact-card${className ? ` ${className}` : ''}" data-expanded="${stateAttr}" ${attrString}>
       <button class="compact-card-collapsed" type="button" data-compact-toggle aria-expanded="${stateAttr}">
@@ -109,6 +110,7 @@ export function renderCompactCard({
         <div class="compact-card-aside">
           ${media || ''}
           ${badgesMarkup}
+          ${detailHint}
           <span class="compact-card-chevron" aria-hidden="true"></span>
         </div>
       </button>

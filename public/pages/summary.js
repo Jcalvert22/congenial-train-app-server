@@ -507,6 +507,12 @@ function renderExerciseCard(row, index, options = {}) {
     ? `<p class="supportive-text reassurance-text">${escapeHTML(reassurance)}</p>`
     : '';
   const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>`;
+  const collapsedExtras = `
+    <div class="exercise-card-extra">
+      <p class="supportive-text">Targets: ${escapeHTML(muscle)}</p>
+      <p class="supportive-text">Equipment: ${escapeHTML(equipment)}</p>
+    </div>
+  `;
   const etiquetteLines = getExerciseEtiquetteLines(row, { gymxietyMode });
   const etiquetteMarkup = etiquetteLines.length
     ? `<div class="exercise-etiquette">${etiquetteLines
@@ -604,6 +610,7 @@ function renderExerciseCard(row, index, options = {}) {
     badges,
     media: videoThumb,
     meta: collapsedMeta,
+    collapsedExtras,
     expandedContent,
     className: 'fade-transition exercise-card',
     attributes: {

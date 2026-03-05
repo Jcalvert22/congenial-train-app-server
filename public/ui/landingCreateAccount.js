@@ -4,15 +4,22 @@ import { renderFooter } from './footer.js';
 import { login } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
+import { areSignupsEnabled } from '../js/supabaseClient.js';
 
-function buildHero() {
+function buildHero(signupsOpen) {
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Account</span>
-        <h1>Create your account.</h1>
-        <p class="landing-subtext lead">Just a few details to get you started.</p>
-        <p>Your information is safe and never shared. We use it only to personalize your calm plan.</p>
+        <h1>${signupsOpen ? 'Create your account.' : 'Invites are currently closed.'}</h1>
+        <p class="landing-subtext lead">
+          ${signupsOpen ? 'Just a few details to get you started.' : 'We are pausing new accounts until launch to keep things stable.'}
+        </p>
+        <p>
+          ${signupsOpen
+            ? 'Your information is safe and never shared. We use it only to personalize your calm plan.'
+            : 'Existing members can still log in below. Need access? Email useallaroundathlete@gmail.com and we will reach out when spots open again.'}
+        </p>
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Need help?</p>
@@ -23,7 +30,26 @@ function buildHero() {
   `;
 }
 
-function buildFormSection(gymxietyEnabled = false) {
+function buildFormSection(gymxietyEnabled = false, signupsOpen = true) {
+  if (!signupsOpen) {
+    return `
+      <section class="landing-section">
+        <p class="landing-subtext">Access</p>
+        <h2>New account creation is paused.</h2>
+        <p class="supportive-text">
+          We are finishing final launch prep. Existing members can <a href="#/login">log in</a> like usual.
+          Tap the button below once invites reopen.
+        </p>
+        <button class="landing-button is-disabled" type="button" disabled>
+          Create Account
+          <span class="landing-button-pill">Closed</span>
+        </button>
+        <div class="landing-actions landing-space-top-sm">
+          <a class="landing-button secondary" href="#/login">Go to login</a>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="landing-section">
       <p class="landing-subtext">Setup</p>
@@ -67,7 +93,20 @@ function buildFormSection(gymxietyEnabled = false) {
   `;
 }
 
-function buildCtaSection() {
+function buildCtaSection(signupsOpen) {
+  if (!signupsOpen) {
+    return `
+      <section class="landing-section landing-cta">
+        <p class="landing-subtext">Next</p>
+        <h2>Keep an eye on your inbox.</h2>
+        <p>We will email you before launch so you can claim a spot without racing anyone.</p>
+        <div class="landing-actions">
+          <a class="landing-button secondary" href="#/login">Log in</a>
+          <a class="landing-button secondary" href="#/contact">Ask a question</a>
+        </div>
+      </section>
+    `;
+  }
   return `
     <section class="landing-section landing-cta">
       <p class="landing-subtext">Next</p>
@@ -88,19 +127,23 @@ export function renderCreateAccount(options = {}) {
   }
   ensureLandingStyles();
   const gymxietyEnabled = getGymxietyPreference();
+  const signupsOpen = areSignupsEnabled();
 
   const html = `
     <section class="landing-page">
       <div class="landing-container">
-        ${buildHero()}
-        ${buildFormSection(gymxietyEnabled)}
-        ${buildCtaSection()}
+        ${buildHero(signupsOpen)}
+        ${buildFormSection(gymxietyEnabled, signupsOpen)}
+        ${buildCtaSection(signupsOpen)}
       </div>
       ${includeFooter ? renderFooter() : ''}
     </section>
   `;
 
   const afterRender = root => {
+    if (!signupsOpen) {
+      return;
+    }
     const form = root.querySelector('[data-form="create-account"]');
     const gymxietyToggle = root.querySelector('[data-gymxiety-create-toggle]');
     const gymxietyStatus = root.querySelector('[data-gymxiety-create-status]');

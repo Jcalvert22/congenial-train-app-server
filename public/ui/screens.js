@@ -1264,8 +1264,8 @@ function renderGeneratePreview() {
               <div class="landing-chip-row">
                 ${goalChips}
               </div>
-              <button class="landing-button landing-space-top-sm" type="button" disabled>Generate workout (preview)</button>
-              <p class="supportive-text">Button unlocks once you create an account.</p>
+              <a class="landing-button landing-space-top-sm" href="${trialHref}"${trialAttr}>Unlock generator access</a>
+              <p class="supportive-text">Generating calm workouts is a member-only feature. Start your free trial to make this step active.</p>
             </article>
           </div>
         </section>
