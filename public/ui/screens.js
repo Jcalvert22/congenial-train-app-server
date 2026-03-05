@@ -1003,6 +1003,9 @@ function resolveRoute(hash, state, auth) {
       }
       return protectRoute(() => ({ html: renderDashboard(state) }), { onLocked: renderPaywallGate });
     case '#/history':
+      if (!auth?.loggedIn) {
+        return { html: renderHistoryPreview() };
+      }
       return protectRoute(
         () => ({ html: renderHistoryPage(state), afterRender: attachHistoryPageEvents }),
         { onLocked: renderPaywallGate }
@@ -1031,6 +1034,9 @@ function resolveRoute(hash, state, auth) {
         { onLocked: renderPaywallGate }
       );
     case '#/profile':
+      if (!auth?.loggedIn) {
+        return { html: renderProfilePreview() };
+      }
       return protectRoute(
         () => ({ html: renderProfilePage(state), afterRender: attachProfilePageEvents }),
         { onLocked: renderPaywallGate }
@@ -1287,6 +1293,185 @@ function renderGeneratePreview() {
     </section>
   `;
 }
+
+    function renderHistoryPreview() {
+      const trialHref = START_TRIAL_HASH || '#/start-trial';
+      const trialAttr = checkoutAttrFromHref(trialHref);
+      const filters = ['Past week', 'Past month', 'All time'];
+      const filterChips = filters.map(label => `
+            <label class="landing-chip">
+              <input type="radio" name="history-range" disabled ${label === 'Past week' ? 'checked' : ''}>
+              <span>${escapeHTML(label)}</span>
+            </label>
+          `).join('');
+      const logItems = [
+        { title: 'Upper Push Support', date: 'Mon · Feb 24', detail: 'Chest · Shoulders · Triceps', status: 'Completed · 38 min' },
+        { title: 'Lower Body Reset', date: 'Wed · Feb 26', detail: 'Glutes · Hamstrings · Quads', status: 'Completed · 36 min' },
+        { title: 'Core Stability Practice', date: 'Fri · Feb 28', detail: 'Core · Glutes', status: 'Completed · 24 min' },
+        { title: 'Full Body Confidence', date: 'Sun · Mar 2', detail: 'Whole body', status: 'Logged with notes' }
+      ];
+      const logCards = logItems.map(item => `
+            <article class="landing-card" aria-disabled="true">
+              <span class="badge">Preview</span>
+              <p class="landing-subtext">${escapeHTML(item.date)}</p>
+              <h3>${escapeHTML(item.title)}</h3>
+              <p>${escapeHTML(item.detail)}</p>
+              <p class="supportive-text">${escapeHTML(item.status)}</p>
+            </article>
+          `).join('');
+      const insightList = [
+        'Logs every workout with date, focus, and duration.',
+        'Allows gentle notes so you can remember how each session felt.',
+        'Filters help you review streaks without spreadsheets.'
+      ].map(item => `<li>${escapeHTML(item)}</li>`).join('');
+      return `
+        <section class="landing-page">
+          <div class="landing-container">
+            <header class="landing-hero">
+              <div class="landing-hero-content">
+                <span class="landing-tag">Preview</span>
+                <h1>Workout history log</h1>
+                <p class="landing-subtext lead">See how the app tracks every calm session you complete.</p>
+                <p class="supportive-text">Preview mode &mdash; filters and cards are locked until you unlock the app.</p>
+                <div class="landing-actions">
+                  <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+                  <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+                </div>
+              </div>
+              <div class="landing-card" aria-hidden="true">
+                <p class="landing-subtext">What you can do</p>
+                <ul class="landing-list">
+                  <li>Filter by range, plan, or muscle focus</li>
+                  <li>Open any entry to see cues and notes</li>
+                  <li>Export a calm recap for accountability</li>
+                </ul>
+              </div>
+            </header>
+            <section class="landing-section">
+              <p class="landing-subtext">Filters (sample)</p>
+              <div class="landing-chip-row">
+                ${filterChips}
+              </div>
+              <p class="supportive-text">Locked for preview. Inside the app you can pivot between ranges and tags.</p>
+            </section>
+            <section class="landing-section">
+              <p class="landing-subtext">Recent logs</p>
+              <div class="landing-grid">
+                ${logCards}
+              </div>
+            </section>
+            <section class="landing-section landing-card">
+              <p class="landing-subtext">Why it matters</p>
+              <ul class="landing-list">
+                ${insightList}
+              </ul>
+            </section>
+            <section class="landing-section landing-cta">
+              <p class="landing-subtext">Bring the log to life</p>
+              <h2>Unlock editable history.</h2>
+              <p>When you start a trial you can open entries, add reflections, and track progress trends.</p>
+              <div class="landing-actions">
+                <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+                <a class="landing-button secondary" href="#/login">Log in</a>
+              </div>
+            </section>
+          </div>
+          ${renderFooter()}
+        </section>
+      `;
+    }
+
+    function renderProfilePreview() {
+      const trialHref = START_TRIAL_HASH || '#/start-trial';
+      const trialAttr = checkoutAttrFromHref(trialHref);
+      const basics = [
+        { label: 'Name', value: 'Jordan Riley' },
+        { label: 'Membership', value: 'Gymxiety Mode Preview' },
+        { label: 'Goal', value: 'Build steady strength' }
+      ];
+      const basicsGrid = basics.map(item => `
+            <article class="landing-card" aria-disabled="true">
+              <span class="badge">Preview</span>
+              <p class="landing-subtext">${escapeHTML(item.label)}</p>
+              <h3>${escapeHTML(item.value)}</h3>
+            </article>
+          `).join('');
+      const preferences = [
+        { label: 'Gymxiety Mode', detail: 'Keeps guidance calm and swaps intimidating lifts.', enabled: true },
+        { label: 'Session reminders', detail: 'Gentle push notifications 2x per week.', enabled: true },
+        { label: 'Etiquette tips', detail: 'Surface shared-space reminders during workouts.', enabled: false }
+      ];
+      const preferenceList = preferences.map(pref => `
+            <label class="profile-toggle" aria-disabled="true">
+              <input type="checkbox" ${pref.enabled ? 'checked' : ''} disabled>
+              <div>
+                <strong>${escapeHTML(pref.label)}</strong>
+                <p class="supportive-text">${escapeHTML(pref.detail)}</p>
+              </div>
+            </label>
+          `).join('');
+      const equipmentList = ['Dumbbells', 'Bench', 'Bands', 'Treadmill'].map(item => `
+            <label class="landing-chip" aria-disabled="true">
+              <input type="checkbox" checked disabled>
+              <span>${escapeHTML(item)}</span>
+            </label>
+          `).join('');
+      return `
+        <section class="landing-page">
+          <div class="landing-container">
+            <header class="landing-hero">
+              <div class="landing-hero-content">
+                <span class="landing-tag">Preview</span>
+                <h1>Profile & preferences</h1>
+                <p class="landing-subtext lead">See where you control goals, equipment, and confidence settings.</p>
+                <p class="supportive-text">Everything below is frozen in preview mode so you can explore safely.</p>
+                <div class="landing-actions">
+                  <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+                  <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+                </div>
+              </div>
+              <div class="landing-card" aria-hidden="true">
+                <p class="landing-subtext">Inside the real profile</p>
+                <ul class="landing-list">
+                  <li>Edit contact info and comfort level</li>
+                  <li>Update available equipment</li>
+                  <li>Manage reminders and Gymxiety Mode</li>
+                </ul>
+              </div>
+            </header>
+            <section class="landing-section">
+              <p class="landing-subtext">Account snapshot</p>
+              <div class="landing-grid landing-grid-two">
+                ${basicsGrid}
+              </div>
+            </section>
+            <section class="landing-section">
+              <p class="landing-subtext">Equipment on file</p>
+              <div class="landing-chip-row" aria-disabled="true">
+                ${equipmentList}
+              </div>
+              <p class="supportive-text">Real members toggle these to match whatever is actually available.</p>
+            </section>
+            <section class="landing-section landing-card">
+              <p class="landing-subtext">Preferences</p>
+              <div class="landing-stack">
+                ${preferenceList}
+              </div>
+            </section>
+            <section class="landing-section landing-cta">
+              <p class="landing-subtext">Ready to personalize?</p>
+              <h2>Unlock editable profile controls.</h2>
+              <p>When you log in you can change goals, comfort settings, and notification cadence any time.</p>
+              <div class="landing-actions">
+                <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+                <a class="landing-button secondary" href="#/login">Log in</a>
+              </div>
+            </section>
+          </div>
+          ${renderFooter()}
+        </section>
+      `;
+    }
 
 function resolvePrimaryCta(state, auth) {
   const defaultCta = { href: ROUTE_HASHES['start-trial'] || '#/start-trial', label: 'Start free trial' };
