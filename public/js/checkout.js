@@ -52,6 +52,14 @@ export function getSelectedPlan() {
 }
 
 export async function startCheckout(priceId = currentPlan) {
+  const envSubscriptionFlag =
+    typeof process !== 'undefined' && process?.env
+      ? process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED
+      : 'true';
+  if (envSubscriptionFlag !== 'true') {
+    console.warn('Subscriptions are disabled in this environment.');
+    return;
+  }
   const normalizedPlan = normalizePlan(priceId);
   try {
     const user = await getCurrentUser();

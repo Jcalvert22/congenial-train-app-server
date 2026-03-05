@@ -30,7 +30,9 @@ Rebuilt from scratch for **CIS 486 - Spring 2026** to meet the full-stack MVC SP
 		 ```ini
 		 PORT=3000
 		 MONGODB_URI=mongodb://127.0.0.1:27017/allaroundathlete_dev
+		 NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED=true
 		 ```
+	 - Deployments should set `NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED=false` until subscriptions go live. Preview/test builds can override it to `true` so the Subscribe button stays interactive.
 3. **MongoDB**
 	 - Run a local Mongo instance (Docker example):
 		 ```bash

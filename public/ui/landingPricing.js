@@ -2,7 +2,6 @@ import { render } from './render.js';
 import { getState } from '../logic/state.js';
 import { ensureLandingStyles } from './landingStyles.js';
 import { renderFooter } from './footer.js';
-import { startCheckout, setTrialPlan } from '../js/checkout.js';
 import { getCurrentUser } from '../auth/state.js';
 import { redirectToLogin } from '../auth/guard.js';
 import { areSubscriptionsEnabled } from '../js/subscriptionAccess.js';
@@ -10,7 +9,16 @@ import { areSubscriptionsEnabled } from '../js/subscriptionAccess.js';
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
 const SUBSCRIPTIONS_ENABLED = areSubscriptionsEnabled();
-const SUBSCRIPTION_PILL_TEXT = 'Subscriptions coming soon';
+const COMING_SOON_MESSAGE = '<div class="comingSoonMessage" className="comingSoonMessage">Subscriptions Coming Soon</div>';
+
+let checkoutModulePromise = null;
+
+function loadCheckoutModule() {
+  if (!checkoutModulePromise) {
+    checkoutModulePromise = import('../js/checkout.js');
+  }
+  return checkoutModulePromise;
+}
 
 function getCtaAttrs(cta) {
   if (cta?.disabled) {
@@ -37,24 +45,14 @@ function renderPrimaryCta(cta) {
     return '';
   }
   if (cta.disabled) {
-    return `
-      <button class="landing-button is-disabled" type="button" disabled>
-        ${cta.label}
-        <span class="landing-button-pill">${SUBSCRIPTION_PILL_TEXT}</span>
-      </button>
-    `;
+    return COMING_SOON_MESSAGE;
   }
   return `<a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>`;
 }
 
 function renderCheckoutButton(label, plan) {
   if (!SUBSCRIPTIONS_ENABLED) {
-    return `
-      <button class="checkout-btn is-disabled" type="button" disabled>
-        ${label}
-        <span class="landing-button-pill">${SUBSCRIPTION_PILL_TEXT}</span>
-      </button>
-    `;
+    return COMING_SOON_MESSAGE;
   }
   return `<button class="checkout-btn" data-plan="${plan}">${label}</button>`;
 }
@@ -223,9 +221,10 @@ function attachCheckoutButtons(root) {
         return;
       }
       const plan = (button.dataset.plan || 'monthly').trim() || 'monthly';
-      setTrialPlan(plan);
       button.disabled = true;
       try {
+        const { setTrialPlan, startCheckout } = await loadCheckoutModule();
+        setTrialPlan(plan);
         const user = await getCurrentUser();
         if (!user) {
           redirectToLogin();
