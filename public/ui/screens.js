@@ -64,6 +64,34 @@ import { getFavoriteExercises } from '../utils/favoriteExercises.js';
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
 let lastRenderedHash = null;
 
+const SESSION_FOCUS_ROTATION = [
+  {
+    title: 'Upper Push Support',
+    muscles: ['Chest', 'Shoulders', 'Triceps'],
+    summaryLabel: 'Focus'
+  },
+  {
+    title: 'Upper Pull Flow',
+    muscles: ['Back', 'Biceps'],
+    summaryLabel: 'Focus'
+  },
+  {
+    title: 'Lower Body Reset',
+    muscles: ['Glutes', 'Hamstrings', 'Quads'],
+    summaryLabel: 'Focus'
+  },
+  {
+    title: 'Core Stability Practice',
+    muscles: ['Core', 'Glutes'],
+    summaryLabel: 'Focus'
+  },
+  {
+    title: 'Full Body Confidence',
+    muscles: ['Full Body'],
+    summaryLabel: 'Focus'
+  }
+];
+
 const ROUTE_HASHES = {
   home: '#/',
   generate: '#/generate',
@@ -1832,14 +1860,24 @@ function renderDashboard(state) {
     { label: 'Workout streak', value: `${stats.streak || 0} days` },
     { label: 'Sessions logged', value: `${stats.total || 0}` }
   ];
+  const focusRotation = SESSION_FOCUS_ROTATION.length
+    ? SESSION_FOCUS_ROTATION
+    : [{ title: 'Calm Session', muscles: ['Full Body'], summaryLabel: 'Focus' }];
   const recentSessions = (state.workouts || []).slice(0, 4).map((iso, index) => {
     const date = new Date(iso);
-    const friendly = Number.isNaN(date.getTime()) ? 'Recently' : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const friendly = Number.isNaN(date.getTime())
+      ? 'Recently'
+      : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const focus = focusRotation[index % focusRotation.length];
+    const muscles = focus?.muscles?.length ? focus.muscles : ['Full Body'];
+    const title = focus?.title || `${muscles.join(' + ')} Session`;
+    const summaryLabel = focus?.summaryLabel || 'Focus';
+    const summary = `${summaryLabel}: ${muscles.join(' · ')}`;
     return {
       id: `${iso}-${index}`,
       date: friendly,
-      title: index === 0 ? 'Most recent lift' : `Session ${index + 1}`,
-      summary: 'Calm strength practice'
+      title,
+      summary
     };
   });
   const quickLinks = [

@@ -54,9 +54,7 @@
 
   <script type="module" src="./app.mjs"></script>
   <script type="module">
-    import { startCheckout, setTrialPlan, getSelectedPlan } from './js/checkout.js';
-    import { getCurrentUser } from './auth/state.js';
-    import { redirectToLogin } from './auth/guard.js';
+    import { showSubscriptionAlert, setTrialPlan, getSelectedPlan } from './js/checkout.js';
 
     const PLAN_OPTIONS = [
       { id: 'monthly', title: 'Monthly', detail: '$7.99 billed each month' },
@@ -105,7 +103,7 @@
         </button>
       `).join('');
 
-      optionsContainer.addEventListener('click', async event => {
+      optionsContainer.addEventListener('click', event => {
         const option = event.target.closest('[data-plan-option]');
         if (!option) {
           return;
@@ -115,13 +113,7 @@
         highlightPlanOption(plan);
         option.disabled = true;
         try {
-          console.log('Top-right plan selection:', plan);
-          const user = await getCurrentUser();
-          if (!user) {
-            redirectToLogin();
-            return;
-          }
-          await startCheckout(plan);
+          showSubscriptionAlert();
         } finally {
           option.disabled = false;
           closePlanModal();
@@ -171,7 +163,7 @@
       isModalOpen = false;
     }
 
-    document.addEventListener('click', async event => {
+    document.addEventListener('click', event => {
       const trialButton = event.target.closest('[data-start-trial]');
       if (trialButton) {
         event.preventDefault();
@@ -186,12 +178,7 @@
       event.preventDefault();
       const plan = (checkoutTarget.getAttribute('data-checkout-plan') || 'monthly').trim() || 'monthly';
       setTrialPlan(plan);
-      const user = await getCurrentUser();
-      if (!user) {
-        redirectToLogin();
-        return;
-      }
-      await startCheckout(plan);
+      showSubscriptionAlert();
     });
   </script>
 </body>

@@ -3,6 +3,11 @@ import { redirectToLogin } from '../auth/guard.js';
 
 const STORAGE_KEY = 'aaa-selected-plan';
 let currentPlan = 'monthly';
+const SUBSCRIPTION_ALERT_MESSAGE = 'Subscriptions coming soon. Check Instagram for the official launch date.';
+
+export function showSubscriptionAlert() {
+  alert(SUBSCRIPTION_ALERT_MESSAGE);
+}
 
 function normalizePlan(plan) {
   const value = (plan || '').toLowerCase();
@@ -52,46 +57,9 @@ export function getSelectedPlan() {
 }
 
 export async function startCheckout(priceId = currentPlan) {
-  const envSubscriptionFlag =
-    typeof process !== 'undefined' && process?.env
-      ? process.env.NEXT_PUBLIC_SUBSCRIPTIONS_ENABLED
-      : 'true';
-  if (envSubscriptionFlag !== 'true') {
-    console.warn('Subscriptions are disabled in this environment.');
-    return;
-  }
   const normalizedPlan = normalizePlan(priceId);
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      redirectToLogin();
-      throw new Error('Login required before checkout.');
-    }
-    console.log('Starting checkout with plan:', normalizedPlan);
-    const response = await fetch('/create-checkout-session', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Checkout request failed: ${errorText || response.status}`);
-    }
-
-    const data = await response.json();
-    if (data?.url) {
-      window.location.href = data.url;
-      return;
-    }
-
-    throw new Error('Checkout URL missing from response.');
-  } catch (error) {
-    console.error('Unable to start checkout', error);
-    alert('We could not start your checkout right now. Please try again in a moment.');
-  }
+  showSubscriptionAlert();
+  console.warn('Checkout blocked. Subscriptions are not available yet.', { plan: normalizedPlan });
 }
 
 export function setTrialPlan(plan = currentPlan) {
