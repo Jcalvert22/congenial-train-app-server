@@ -1656,44 +1656,6 @@ function renderHome(state, auth) {
         </ul>
       </div>
     </section>
-    <section class="landing-section">
-      <div class="landing-card">
-        <h2>Because confidence comes before intensity.</h2>
-        <p class="landing-text">
-          Walking into a gym can feel overwhelming &mdash; the equipment, the people, the pressure to "know what you're doing." Gymxiety Mode helps you take the first step without fear. Every workout is designed to feel approachable, doable, and safe.
-        </p>
-      </div>
-    </section>
-    <section class="landing-section">
-      <div class="landing-card">
-        <h2>Beginner-friendly workouts, built intelligently.</h2>
-        <p class="landing-text">
-          When Gymxiety Mode is on, your workouts automatically adjust to your comfort level:
-        </p>
-        <ul class="landing-list">
-          <li>Complex barbell lifts become simple, stable alternatives</li>
-          <li>Heavy free-weight movements become machine-based options</li>
-          <li>Technical cues become easy, supportive guidance</li>
-          <li>Volume adjusts to a pace that feels manageable</li>
-        </ul>
-        <p class="landing-text">
-          You still get effective, full-body training &mdash; just without the intimidation.
-        </p>
-      </div>
-    </section>
-    <section class="landing-section">
-      <div class="landing-card">
-        <h2>What makes Gymxiety Mode different?</h2>
-        <ul class="landing-list">
-          <li>Confidence-based exercise selection</li>
-          <li>Easier alternatives for intimidating movements</li>
-          <li>Supportive microcopy throughout your workout</li>
-          <li>Calmer transitions and pacing</li>
-          <li>Beginner-friendly instructions</li>
-          <li>No pressure, no jargon, no judgment</li>
-        </ul>
-      </div>
-    </section>
     ${buildPhilosophySection()}
     ${buildSubscriptionBenefitsSection(cta)}
     <section class="landing-section">

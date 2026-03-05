@@ -101,7 +101,24 @@ export function renderGymConfidencePage() {
       .gc-hero p + p { margin-top: 8px; }
       .gc-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
       .gc-chip { padding: 6px 14px; border-radius: 999px; background: rgba(16, 185, 129, 0.15); color: #065f46; font-size: 0.85rem; font-weight: 600; }
-      .gc-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .gc-highlight-card {
+        background: #ffffff;
+        border-radius: 26px;
+        border: 1px solid #e5e9f2;
+        padding: clamp(22px, 4vw, 34px);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      }
+      .gc-highlight-card h2 {
+        margin: 0 0 12px;
+        font-size: clamp(1.35rem, 3vw, 2rem);
+        color: #0f1a1b;
+      }
+      .gc-highlight-card p {
+        margin: 0;
+        color: #425066;
+        line-height: 1.55;
+      }
+      .gc-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: stretch; }
       .gc-card { background: #fff; border-radius: 24px; border: 1px solid #e7ecf3; padding: 24px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06); display: flex; flex-direction: column; gap: 14px; min-height: 0; }
       .gc-card h3 { margin: 0; font-size: 1rem; color: #0f1a1b; }
       .gc-card p { margin: 0; color: #4b5563; font-size: 0.9rem; line-height: 1.5; }
@@ -112,8 +129,8 @@ export function renderGymConfidencePage() {
       .gc-bullet-list { list-style: none; padding: 0; margin: 4px 0 0; display: flex; flex-direction: column; gap: 8px; }
       .gc-bullet-list li { display: flex; gap: 8px; font-size: 0.9rem; color: #1f2a37; align-items: flex-start; }
       .gc-bullet-list li::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #0ea5e9; margin-top: 6px; flex-shrink: 0; }
-      .gc-situations-card { min-height: 0; }
-      .gc-situations-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .gc-situations-card { min-height: 0; display: flex; flex-direction: column; max-height: 520px; }
+      .gc-situations-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); max-height: 420px; overflow-y: auto; padding-right: 0.4rem; margin-right: -0.4rem; }
       .gc-situation-card { border: 1px solid #e5e9f2; border-radius: 16px; padding: 14px 16px; background: #fdfefe; }
       .gc-situation-card-title { margin: 0; font-size: 0.95rem; font-weight: 600; color: #111827; }
       .gc-situation-card-tip { margin: 6px 0 0; font-size: 0.82rem; color: #4b5563; line-height: 1.4; }
@@ -123,7 +140,8 @@ export function renderGymConfidencePage() {
       .gc-card-footer { margin-top: auto; }
       @media (max-width: 600px) {
         .gc-card { padding: 20px; }
-        .gc-situations-list { max-height: 280px; }
+        .gc-situations-card { max-height: none; }
+        .gc-situations-list { max-height: none; overflow: visible; }
       }
     </style>
   `;
@@ -138,6 +156,10 @@ export function renderGymConfidencePage() {
           <p>${escapeHTML('You\'ll learn simple etiquette and how to handle common situations.')}</p>
           <div class="gc-chip-row">${renderChips()}</div>
         </header>
+        <article class="gc-highlight-card">
+          <h2>Because confidence comes before intensity.</h2>
+          <p>Walking into a gym can feel overwhelming &mdash; the equipment, the people, the pressure to "know what you're doing." Gymxiety Mode helps you take the first step without fear. Every workout is designed to feel approachable, doable, and safe.</p>
+        </article>
         <div class="gc-grid">
           <article class="gc-card">
             <div>

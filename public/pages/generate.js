@@ -24,6 +24,22 @@ const MUSCLE_PAIRING_ALIASES = {
   quads: 'legs'
 };
 
+const GYMXIETY_PREVIEW_POINTS = [
+  'Complex barbell lifts become simple, stable alternatives',
+  'Heavy free-weight movements become machine-based options',
+  'Technical cues become easy, supportive guidance',
+  'Volume adjusts to a pace that feels manageable'
+];
+
+const GYMXIETY_DIFFERENTIATORS = [
+  'Confidence-based exercise selection',
+  'Easier alternatives for intimidating movements',
+  'Supportive microcopy throughout your workout',
+  'Calmer transitions and pacing',
+  'Beginner-friendly instructions',
+  'No pressure, no jargon, no judgment'
+];
+
 const COMFORT_OPTIONS = [
   { label: 'Low', value: 'low', helper: 'Stick with machines and ultra-stable moves.' },
   { label: 'Medium', value: 'medium', helper: 'Use the usual calm mix.' },
@@ -240,9 +256,43 @@ function renderGenerateShell(state) {
   `;
 }
 
+function renderGymxietyPreview() {
+  const previewList = GYMXIETY_PREVIEW_POINTS
+    .map(point => `<li>${escapeHTML(point)}</li>`)
+    .join('');
+  const differentiatorList = GYMXIETY_DIFFERENTIATORS
+    .map(point => `<li>${escapeHTML(point)}</li>`)
+    .join('');
+  return `
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>Beginner-friendly workouts, built intelligently.</h2>
+        <p class="landing-text">
+          When Gymxiety Mode is on, your workouts automatically adjust to your comfort level:
+        </p>
+        <ul class="landing-list">
+          ${previewList}
+        </ul>
+        <p class="landing-text">
+          You still get effective, full-body training &mdash; just without the intimidation.
+        </p>
+      </div>
+    </section>
+    <section class="landing-section">
+      <div class="landing-card">
+        <h2>What makes Gymxiety Mode different?</h2>
+        <ul class="landing-list">
+          ${differentiatorList}
+        </ul>
+      </div>
+    </section>
+  `;
+}
+
 export function renderGeneratePage(state = getState()) {
   const sections = `
     ${renderHeader()}
+    ${renderGymxietyPreview()}
     ${renderGenerateShell(state)}
   `;
   return renderPageShell(sections, { isLoading: false });
