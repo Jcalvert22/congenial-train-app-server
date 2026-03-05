@@ -998,6 +998,9 @@ function resolveRoute(hash, state, auth) {
         { requireSubscription: false }
       );
     case '#/dashboard':
+      if (!auth?.loggedIn) {
+        return { html: renderDashboardPreview() };
+      }
       return protectRoute(() => ({ html: renderDashboard(state) }), { onLocked: renderPaywallGate });
     case '#/history':
       return protectRoute(
@@ -1005,6 +1008,9 @@ function resolveRoute(hash, state, auth) {
         { onLocked: renderPaywallGate }
       );
     case '#/generate':
+      if (!auth?.loggedIn) {
+        return { html: renderGeneratePreview() };
+      }
       return protectRoute(
         () => ({ html: renderGeneratePage(state), afterRender: attachGeneratePageEvents }),
         { onLocked: renderPaywallGate }
@@ -1068,6 +1074,216 @@ function renderFeaturePlaceholder(title, description) {
       <h2 style="margin:12px 0 8px;">${escapeHTML(title)}</h2>
       <p style="color:var(--muted);line-height:1.6;max-width:720px;">${escapeHTML(description)}</p>
       <a class="cta-btn" href="${ROUTE_HASHES['start-trial']}"${checkoutAttrFromHref(ROUTE_HASHES['start-trial'])} style="display:inline-flex;margin-top:18px;">Start Trial</a>
+    </section>
+  `;
+}
+
+function renderDashboardPreview() {
+  const trialHref = START_TRIAL_HASH || '#/start-trial';
+  const trialAttr = checkoutAttrFromHref(trialHref);
+  const stats = [
+    { label: 'Workout streak', value: '6 days', helper: 'Tracks how many calm sessions you complete in a row.' },
+    { label: 'Sessions logged', value: '18 sessions', helper: 'Updates automatically when you finish a workout.' },
+    { label: 'Next focus', value: 'Upper Push Support', helper: 'Lets you know which muscles the planner selected for today.' }
+  ];
+  const sessions = [
+    { date: 'Mon · 7:00a', title: 'Upper Push Support', summary: 'Focus: Chest · Shoulders · Triceps' },
+    { date: 'Wed · 6:30p', title: 'Lower Body Reset', summary: 'Focus: Glutes · Hamstrings · Quads' },
+    { date: 'Fri · 5:00p', title: 'Core Stability Practice', summary: 'Focus: Core · Glutes' }
+  ];
+  const statsGrid = stats.map(stat => `
+        <article class="landing-card" aria-disabled="true">
+          <span class="badge">Preview</span>
+          <p class="landing-subtext">${escapeHTML(stat.label)}</p>
+          <h3>${escapeHTML(stat.value)}</h3>
+          <p class="supportive-text">${escapeHTML(stat.helper)}</p>
+        </article>
+      `).join('');
+  const sessionGrid = sessions.map(session => `
+        <article class="landing-card" aria-disabled="true">
+          <span class="badge">Preview</span>
+          <p class="landing-subtext">${escapeHTML(session.date)}</p>
+          <h3>${escapeHTML(session.title)}</h3>
+          <p>${escapeHTML(session.summary)}</p>
+          <p class="supportive-text">Tap inside the app to open the detailed cues.</p>
+        </article>
+      `).join('');
+  return `
+    <section class="landing-page">
+      <div class="landing-container">
+        <header class="landing-hero">
+          <div class="landing-hero-content">
+            <span class="landing-tag">Preview</span>
+            <h1>Your calm dashboard</h1>
+            <p class="landing-subtext lead">This is the home base you land on once you unlock Gymxiety Mode.</p>
+            <p class="supportive-text">Preview mode &mdash; cards are read-only until you start a trial.</p>
+            <div class="landing-actions">
+              <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+              <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+            </div>
+          </div>
+          <div class="landing-card" aria-hidden="true">
+            <p class="landing-subtext">What lives here</p>
+            <ul class="landing-list">
+              <li>Personal greeting with a gentle cue</li>
+              <li>Quick stats and streak tracking</li>
+              <li>Recent sessions with muscle focus</li>
+            </ul>
+          </div>
+        </header>
+        <section class="landing-section">
+          <p class="landing-subtext">Sample snapshot</p>
+          <div class="landing-grid landing-grid-two">
+            ${statsGrid}
+          </div>
+        </section>
+        <section class="landing-section">
+          <p class="landing-subtext">Recent sessions preview</p>
+          <div class="landing-grid">
+            ${sessionGrid}
+          </div>
+        </section>
+        <section class="landing-section landing-cta">
+          <p class="landing-subtext">Ready for the real thing?</p>
+          <h2>Unlock the interactive dashboard.</h2>
+          <p>Track streaks, jump into the generator, and mark workouts complete inside the full experience.</p>
+          <div class="landing-actions">
+            <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+            <a class="landing-button secondary" href="#/login">Log in</a>
+          </div>
+        </section>
+      </div>
+      ${renderFooter()}
+    </section>
+  `;
+}
+
+function renderGeneratePreview() {
+  const trialHref = START_TRIAL_HASH || '#/start-trial';
+  const trialAttr = checkoutAttrFromHref(trialHref);
+  const equipment = [
+    { label: 'Dumbbells', checked: true },
+    { label: 'Cable machine', checked: true },
+    { label: 'Bench', checked: false },
+    { label: 'Bodyweight', checked: true }
+  ];
+  const muscles = [
+    { label: 'Chest', checked: true },
+    { label: 'Back', checked: true },
+    { label: 'Glutes', checked: false },
+    { label: 'Core', checked: true }
+  ];
+  const goals = [
+    { label: 'Strength', checked: true },
+    { label: 'Confidence', checked: false },
+    { label: 'Endurance', checked: false }
+  ];
+  const sampleExercises = [
+    { name: 'Goblet Squat', detail: '3 x 10 · Rest 60s · Control the descent' },
+    { name: 'Assisted Row', detail: '3 x 12 · Rest 60s · Elbows stay close' },
+    { name: 'Incline Push-up', detail: '3 x 8 · Rest 75s · Slow tempo' },
+    { name: 'Deadbug Breathing', detail: '2 x 40s · Rest 45s · Breathe through the brace' }
+  ];
+  const equipmentChips = equipment.map(option => `
+        <label class="landing-chip">
+          <input type="checkbox" ${option.checked ? 'checked' : ''} disabled>
+          <span>${escapeHTML(option.label)}</span>
+        </label>
+      `).join('');
+  const muscleChips = muscles.map(option => `
+        <label class="landing-chip">
+          <input type="checkbox" ${option.checked ? 'checked' : ''} disabled>
+          <span>${escapeHTML(option.label)}</span>
+        </label>
+      `).join('');
+  const goalChips = goals.map(option => `
+        <label class="landing-chip">
+          <input type="radio" name="preview-goal" ${option.checked ? 'checked' : ''} disabled>
+          <span>${escapeHTML(option.label)}</span>
+        </label>
+      `).join('');
+  const exerciseList = sampleExercises.map(exercise => `
+        <li>
+          <strong>${escapeHTML(exercise.name)}</strong>
+          <span class="supportive-text" style="display:block;margin-top:6px;">${escapeHTML(exercise.detail)}</span>
+        </li>
+      `).join('');
+  return `
+    <section class="landing-page">
+      <div class="landing-container">
+        <header class="landing-hero">
+          <div class="landing-hero-content">
+            <span class="landing-tag">Preview</span>
+            <h1>Calm workout generator</h1>
+            <p class="landing-subtext lead">Peek at the flow before you tap start.</p>
+            <p class="supportive-text">Nothing here is clickable &mdash; it is a guided tour of the interface.</p>
+            <div class="landing-actions">
+              <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+              <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+            </div>
+          </div>
+          <div class="landing-card" aria-hidden="true">
+            <p class="landing-subtext">Builder highlights</p>
+            <ul class="landing-list">
+              <li>Checks your equipment and space</li>
+              <li>Lets you pick the muscles to nudge</li>
+              <li>Outputs a calm, cue-filled plan</li>
+            </ul>
+          </div>
+        </header>
+        <section class="landing-section">
+          <p class="landing-subtext">Step-by-step builder</p>
+          <div class="landing-grid landing-grid-two">
+            <article class="landing-card" aria-disabled="true">
+              <span class="badge">Preview</span>
+              <p class="landing-subtext">Step 1 · Equipment on hand</p>
+              <div class="landing-chip-row">
+                ${equipmentChips}
+              </div>
+              <p class="supportive-text">In the real app you toggle whatever is nearby.</p>
+            </article>
+            <article class="landing-card" aria-disabled="true">
+              <span class="badge">Preview</span>
+              <p class="landing-subtext">Step 2 · Muscles to nudge</p>
+              <div class="landing-chip-row">
+                ${muscleChips}
+              </div>
+              <p class="supportive-text">These stay disabled here so you can simply see the layout.</p>
+            </article>
+            <article class="landing-card landing-grid-span" aria-disabled="true">
+              <span class="badge">Preview</span>
+              <p class="landing-subtext">Step 3 · Goal & comfort</p>
+              <div class="landing-chip-row">
+                ${goalChips}
+              </div>
+              <button class="landing-button landing-space-top-sm" type="button" disabled>Generate workout (preview)</button>
+              <p class="supportive-text">Button unlocks once you create an account.</p>
+            </article>
+          </div>
+        </section>
+        <section class="landing-section">
+          <p class="landing-subtext">Sample workout output</p>
+          <article class="landing-card" aria-disabled="true">
+            <span class="badge">Preview plan</span>
+            <h3>Full Body Ease</h3>
+            <p class="landing-subtext">Built from the picks above.</p>
+            <ul class="landing-list">
+              ${exerciseList}
+            </ul>
+            <p class="supportive-text">The live generator lets you save, edit, and send this to execution mode.</p>
+          </article>
+        </section>
+        <section class="landing-section landing-cta">
+          <p class="landing-subtext">Bring it to life</p>
+          <h2>Unlock the interactive generator.</h2>
+          <p>When you subscribe, every button here becomes active and plans save directly to your dashboard.</p>
+          <div class="landing-actions">
+            <a class="landing-button" href="${trialHref}"${trialAttr}>Start free trial</a>
+            <a class="landing-button secondary" href="#/login">Log in</a>
+          </div>
+        </section>
+      </div>
+      ${renderFooter()}
     </section>
   `;
 }
