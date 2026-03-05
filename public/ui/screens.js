@@ -2090,37 +2090,3 @@ function attachSubscribeEvents(root) {
   }
 }
 
-function attachOnboardingEvents(root) {
-  const form = root.querySelector('[data-form="onboarding"]');
-  if (!form) {
-    return;
-  }
-  form.addEventListener('submit', event => {
-    event.preventDefault();
-    const data = new FormData(form);
-    setState(prev => {
-      prev.profile.goal = cleanInput(data.get('goal'), prev.profile.goal);
-      const height = sanitizeNumberInput(data.get('height'), { min: 36, max: 96 });
-      const weight = sanitizeNumberInput(data.get('weight'), { min: 70, max: 600 });
-      const age = sanitizeNumberInput(data.get('age'), { min: 13, max: 90 });
-      const sex = data.get('sex');
-      if (height) {
-        prev.profile.height = height;
-      }
-      if (weight) {
-        prev.profile.weight = weight;
-      }
-      if (age) {
-        prev.profile.age = age;
-      }
-      if (SEX_OPTIONS.includes(sex)) {
-        prev.profile.sex = sex;
-      }
-      prev.profile.location = cleanInput(data.get('location'), prev.profile.location);
-      prev.profile.onboardingComplete = true;
-      return prev;
-    });
-    navigateTo('profile');
-  });
-}
-

@@ -5,15 +5,24 @@ import { renderFooter } from './footer.js';
 import { startCheckout, setTrialPlan } from '../js/checkout.js';
 import { getCurrentUser } from '../auth/state.js';
 import { redirectToLogin } from '../auth/guard.js';
+import { areSubscriptionsEnabled } from '../js/subscriptionAccess.js';
 
 const CTA_HASH = '#/start-trial';
 const CHECKOUT_ATTR = 'data-checkout-plan="monthly"';
+const SUBSCRIPTIONS_ENABLED = areSubscriptionsEnabled();
+const SUBSCRIPTION_PILL_TEXT = 'Subscriptions coming soon';
 
 function getCtaAttrs(cta) {
+  if (cta?.disabled) {
+    return '';
+  }
   return cta?.href === CTA_HASH ? ` ${CHECKOUT_ATTR}` : '';
 }
 
 function resolveCta(state) {
+  if (!SUBSCRIPTIONS_ENABLED) {
+    return { href: CTA_HASH, label: 'Start Your Free Trial', disabled: true };
+  }
   if (!state?.isSubscribed) {
     return { href: CTA_HASH, label: 'Start Your Free Trial' };
   }
@@ -21,6 +30,33 @@ function resolveCta(state) {
     return { href: '#/onboarding', label: 'Resume Onboarding' };
   }
   return { href: '#/planner', label: 'Open Planner' };
+}
+
+function renderPrimaryCta(cta) {
+  if (!cta) {
+    return '';
+  }
+  if (cta.disabled) {
+    return `
+      <button class="landing-button is-disabled" type="button" disabled>
+        ${cta.label}
+        <span class="landing-button-pill">${SUBSCRIPTION_PILL_TEXT}</span>
+      </button>
+    `;
+  }
+  return `<a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>`;
+}
+
+function renderCheckoutButton(label, plan) {
+  if (!SUBSCRIPTIONS_ENABLED) {
+    return `
+      <button class="checkout-btn is-disabled" type="button" disabled>
+        ${label}
+        <span class="landing-button-pill">${SUBSCRIPTION_PILL_TEXT}</span>
+      </button>
+    `;
+  }
+  return `<button class="checkout-btn" data-plan="${plan}">${label}</button>`;
 }
 
 function buildHero(cta) {
@@ -32,7 +68,7 @@ function buildHero(cta) {
         <p class="landing-subtext lead">Start your beginner journey with confidence. No pressure, no confusion.</p>
         <p>Every membership includes the same calm tools - no tiers, no upsells. Just steady guidance that keeps things approachable.</p>
         <div class="landing-actions">
-          <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
+          ${renderPrimaryCta(cta)}
           <a class="landing-button secondary" href="#/program-generator">Explore features</a>
         </div>
       </div>
@@ -82,7 +118,7 @@ function buildPlanCard(cta) {
             ${benefits.slice(0, 4).map(item => `<li>${item}</li>`).join('')}
           </ul>
           <div class="landing-actions landing-space-top-md">
-            <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
+            ${renderPrimaryCta(cta)}
           </div>
         </article>
         <article class="landing-card">
@@ -95,8 +131,8 @@ function buildPlanCard(cta) {
         </article>
       </div>
       <div class="landing-actions landing-space-top-md">
-        <button class="checkout-btn" data-plan="monthly">Start Monthly</button>
-        <button class="checkout-btn" data-plan="yearly">Start Yearly</button>
+        ${renderCheckoutButton('Start Monthly', 'monthly')}
+        ${renderCheckoutButton('Start Yearly', 'yearly')}
       </div>
     </section>
   `;
@@ -163,7 +199,7 @@ function buildCtaSection(cta) {
       <h2>Start your free trial today.</h2>
       <p>Sign up when it feels right - no pressure, just steady support.</p>
       <div class="landing-actions">
-        <a class="landing-button" href="${cta.href}"${getCtaAttrs(cta)}>${cta.label}</a>
+        ${renderPrimaryCta(cta)}
         <a class="landing-button secondary" href="#/exercise-library">Preview the library</a>
       </div>
     </section>
@@ -171,6 +207,9 @@ function buildCtaSection(cta) {
 }
 
 function attachCheckoutButtons(root) {
+  if (!SUBSCRIPTIONS_ENABLED) {
+    return;
+  }
   const scope = root && typeof root.querySelector === 'function' ? root : document;
   const buttons = scope.querySelectorAll('.checkout-btn');
   if (!buttons.length) {

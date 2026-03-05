@@ -155,6 +155,16 @@ footer {
   margin: 0;
 }
 
+.chrome-button.is-disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.chrome-button.is-disabled .landing-button-pill {
+  margin-left: 0.5rem;
+}
+
 .badge {
   letter-spacing: 0.08em;
 }

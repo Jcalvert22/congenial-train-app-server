@@ -1,8 +1,11 @@
 import { getAuth, logout } from '../auth/state.js';
 import { getSelectedPlan } from '../js/checkout.js';
+import { areSubscriptionsEnabled } from '../js/subscriptionAccess.js';
 
 const NAVBAR_CONTAINER_ID = 'navbar';
 const NAVBAR_MENU_ID = 'aaa-chrome-menu';
+const SUBSCRIPTIONS_ENABLED = areSubscriptionsEnabled();
+const SUBSCRIPTION_PILL_TEXT = 'Subscriptions coming soon';
 
 const CORE_APP_LINKS = [
   { label: 'Dashboard', href: '#/dashboard' },
@@ -121,6 +124,14 @@ function createLinkMarkup(link, currentHash) {
 }
 
 export function renderPublicNavbar() {
+  const startTrialButton = SUBSCRIPTIONS_ENABLED
+    ? `<button class="chrome-button" type="button" data-start-trial data-plan="${getSelectedPlan()}">Start free trial</button>`
+    : `
+      <button class="chrome-button is-disabled" type="button" data-start-trial data-plan="${getSelectedPlan()}" disabled>
+        Start free trial
+        <span class="landing-button-pill">${SUBSCRIPTION_PILL_TEXT}</span>
+      </button>
+    `;
   const html = renderNavbarMarkup({
     tagline: 'Structure without stress',
     links: PUBLIC_LINKS,
@@ -128,7 +139,7 @@ export function renderPublicNavbar() {
     primaryAction: `
       <div class="chrome-cta-pair">
         <a class="chrome-button ghost" href="#/login">Log in</a>
-        <button class="chrome-button" type="button" data-start-trial data-plan="${getSelectedPlan()}">Start free trial</button>
+        ${startTrialButton}
       </div>
     `
   });
