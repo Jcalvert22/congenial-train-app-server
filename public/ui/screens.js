@@ -1001,7 +1001,10 @@ function resolveRoute(hash, state, auth) {
       if (!auth?.loggedIn) {
         return { html: renderDashboardPreview() };
       }
-      return protectRoute(() => ({ html: renderDashboard(state) }), { onLocked: renderPaywallGate });
+      return protectRoute(
+        () => ({ html: renderDashboard(state) }),
+        { onLocked: renderPaywallGate }
+      );
     case '#/history':
       if (!auth?.loggedIn) {
         return { html: renderHistoryPreview() };
@@ -1061,7 +1064,7 @@ function resolveRoute(hash, state, auth) {
     case '#/beginner-onboarding':
       return { html: renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') };
     case '#/relaxed-training':
-      return { html: renderFeaturePlaceholder('Relaxed Training Philosophy', 'Learn our slow-and-steady approach that favors confidence over intensity.') };
+      return { html: renderRelaxedTraining(state, auth) };
     case '#/404':
       return landingResult(renderNotFound);
     default:
@@ -1159,7 +1162,6 @@ function renderDashboardPreview() {
           </div>
         </section>
       </div>
-      ${renderFooter()}
     </section>
   `;
 }
@@ -1289,7 +1291,6 @@ function renderGeneratePreview() {
           </div>
         </section>
       </div>
-      ${renderFooter()}
     </section>
   `;
 }
@@ -1376,7 +1377,6 @@ function renderGeneratePreview() {
               </div>
             </section>
           </div>
-          ${renderFooter()}
         </section>
       `;
     }
@@ -1468,7 +1468,6 @@ function renderGeneratePreview() {
               </div>
             </section>
           </div>
-          ${renderFooter()}
         </section>
       `;
     }
@@ -1518,6 +1517,94 @@ function renderFeaturesShowcase() {
     </section>
     <section class="plan-grid" style="margin-top:32px;">
       ${cards}
+    </section>
+  `;
+}
+
+function buildPhilosophySection() {
+  return `
+    <section class="landing-section landing-section-dark" id="relaxed">
+      <p class="landing-subtext">Philosophy</p>
+      <h2>A Relaxed Approach to Fitness</h2>
+      <p class="landing-text">AllAroundAthlete is a calm corner of the gym world. We keep steps tiny, words soft, and guidance steady so you can focus on just showing up.</p>
+      <div class="landing-grid landing-grid-two">
+        <article class="landing-card landing-card-dark landing-card-philosophy">
+          <div class="landing-card-image" aria-hidden="true">&#x1F33F;</div>
+          <h3>No overwhelming choices</h3>
+          <p>We pick a handful of moves for you, explain why they matter, and remove extra buttons so you can press start without second-guessing.</p>
+        </article>
+        <article class="landing-card landing-card-dark landing-card-philosophy">
+          <div class="landing-card-image" aria-hidden="true">&#x1F522;</div>
+          <h3>No complicated metrics</h3>
+          <p>You will never see mystery charts or math puzzles. Just plain reps, sets, and soft reminders to breathe and move with control.</p>
+        </article>
+        <article class="landing-card landing-card-dark landing-card-philosophy">
+          <div class="landing-card-image" aria-hidden="true">&#x1F9ED;</div>
+          <h3>Simple, guided workouts</h3>
+          <p>Each session feels like a friend texting you what to do next. Short cues, gentle pacing, and check-ins keep you grounded from warm-up to finisher.</p>
+        </article>
+        <article class="landing-card landing-card-dark landing-card-philosophy">
+          <div class="landing-card-image" aria-hidden="true">&#x1F49B;</div>
+          <h3>Designed for gym anxiety</h3>
+          <p>Etiquette nudges, shared-space tips, and calm language help you walk in with confidence even if gyms have felt scary before.</p>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function buildSubscriptionBenefitsSection(cta) {
+  return `
+    <section class="landing-section landing-section-dark" id="subscription-benefits">
+      <p class="landing-subtext">Membership</p>
+      <h2>What You Get With Your Subscription</h2>
+      <p class="landing-text">Unlock every calm tool we build &mdash; designed for brand-new lifters who want structure without stress.</p>
+      <div class="landing-grid landing-grid-two">
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F9E9;</div>
+          <h3>Personalized training plan</h3>
+          <p>We match your goals and available equipment to short sessions you can actually finish.</p>
+        </article>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F4CB;</div>
+          <h3>Beginner-friendly workouts</h3>
+          <p>Each move comes with simple cues, tempo notes, and manners tips so you always know what to do.</p>
+        </article>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F37D;</div>
+          <h3>Maintenance calorie calculator</h3>
+          <p>Dial in portions with a calm, plain calculator made for real life schedules.</p>
+        </article>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F4C8;</div>
+          <h3>Progress tracking & check-ins</h3>
+          <p>Weekly nudge reminders and streak views keep you accountable without pressure.</p>
+        </article>
+        <article class="landing-card landing-card-dark">
+          <div class="landing-card-image" aria-hidden="true">&#x1F680;</div>
+          <h3>Future modules unlocked</h3>
+          <p>Gain access to every new pack we ship &mdash; running prep, mobility resets, and hybrid training.</p>
+        </article>
+      </div>
+      <article class="landing-card landing-stack landing-card-dark">
+        <div class="landing-grid landing-grid-two">
+          <div>
+            <p class="landing-subtext">Monthly</p>
+            <h3>$7.99</h3>
+            <p class="supportive-text">Cancel anytime after your trial.</p>
+          </div>
+          <div>
+            <p class="landing-subtext">Yearly</p>
+            <h3>$49.99</h3>
+            <p class="supportive-text">Includes two free months.</p>
+          </div>
+        </div>
+        <p class="landing-text">Try it free, stay for the calm coaching. One plan unlocks everything.</p>
+        <div class="landing-actions landing-actions-stack landing-space-top-md">
+          <a class="landing-button" href="${cta.href}"${checkoutAttrFromCta(cta)}>${cta.label}</a>
+          <a class="landing-button secondary" href="${ROUTE_HASHES['pricing']}">See pricing</a>
+        </div>
+      </article>
     </section>
   `;
 }
@@ -1607,84 +1694,8 @@ function renderHome(state, auth) {
         </ul>
       </div>
     </section>
-    <section class="landing-section landing-section-dark" id="relaxed">
-      <p class="landing-subtext">Philosophy</p>
-      <h2>A Relaxed Approach to Fitness</h2>
-      <p class="landing-text">AllAroundAthlete is a calm corner of the gym world. We keep steps tiny, words soft, and guidance steady so you can focus on just showing up.</p>
-      <div class="landing-grid landing-grid-two">
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F33F;</div>
-          <h3>No overwhelming choices</h3>
-          <p>We pick a handful of moves for you, explain why they matter, and remove extra buttons so you can press start without second-guessing.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F522;</div>
-          <h3>No complicated metrics</h3>
-          <p>You will never see mystery charts or math puzzles. Just plain reps, sets, and soft reminders to breathe and move with control.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F9ED;</div>
-          <h3>Simple, guided workouts</h3>
-          <p>Each session feels like a friend texting you what to do next. Short cues, gentle pacing, and check-ins keep you grounded from warm-up to finisher.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F49B;</div>
-          <h3>Designed for gym anxiety</h3>
-          <p>Etiquette nudges, shared-space tips, and calm language help you walk in with confidence even if gyms have felt scary before.</p>
-        </article>
-      </div>
-    </section>
-    <section class="landing-section landing-section-dark" id="subscription-benefits">
-      <p class="landing-subtext">Membership</p>
-      <h2>What You Get With Your Subscription</h2>
-      <p class="landing-text">Unlock every calm tool we build &mdash; designed for brand-new lifters who want structure without stress.</p>
-      <div class="landing-grid landing-grid-two">
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F9E9;</div>
-          <h3>Personalized training plan</h3>
-          <p>We match your goals and available equipment to short sessions you can actually finish.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F4CB;</div>
-          <h3>Beginner-friendly workouts</h3>
-          <p>Each move comes with simple cues, tempo notes, and manners tips so you always know what to do.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F37D;</div>
-          <h3>Maintenance calorie calculator</h3>
-          <p>Dial in portions with a calm, plain calculator made for real life schedules.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F4C8;</div>
-          <h3>Progress tracking & check-ins</h3>
-          <p>Weekly nudge reminders and streak views keep you accountable without pressure.</p>
-        </article>
-        <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F680;</div>
-          <h3>Future modules unlocked</h3>
-          <p>Gain access to every new pack we ship &mdash; running prep, mobility resets, and hybrid training.</p>
-        </article>
-      </div>
-      <article class="landing-card landing-stack landing-card-dark">
-        <div class="landing-grid landing-grid-two">
-          <div>
-            <p class="landing-subtext">Monthly</p>
-            <h3>$7.99</h3>
-            <p class="supportive-text">Cancel anytime after your trial.</p>
-          </div>
-          <div>
-            <p class="landing-subtext">Yearly</p>
-            <h3>$49.99</h3>
-            <p class="supportive-text">Includes two free months.</p>
-          </div>
-        </div>
-        <p class="landing-text">Try it free, stay for the calm coaching. One plan unlocks everything.</p>
-        <div class="landing-actions landing-actions-stack landing-space-top-md">
-          <a class="landing-button" href="${cta.href}"${checkoutAttrFromCta(cta)}>${cta.label}</a>
-          <a class="landing-button secondary" href="${ROUTE_HASHES['pricing']}">See pricing</a>
-        </div>
-      </article>
-    </section>
+    ${buildPhilosophySection()}
+    ${buildSubscriptionBenefitsSection(cta)}
     <section class="landing-section">
       <div class="landing-card">
         <h2>Start feeling confident in the gym &mdash; one workout at a time.</h2>
@@ -1695,6 +1706,36 @@ function renderHome(state, auth) {
       </div>
     </section>
   `;
+}
+
+function renderRelaxedTraining(state, auth) {
+  const cta = resolvePrimaryCta(state, auth);
+  const heroPoints = HOME_CALM_POINTS.slice(0, 4).map(point => `<li>${escapeHTML(point)}</li>`).join('');
+  const sections = `
+    <section class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Training Philosophy</span>
+        <h1>Relaxed strength for anxious beginners.</h1>
+        <p class="landing-subtext lead">We teach you how to train with patience, plain language, and zero bravado.</p>
+        <p>Gymxiety Mode keeps decisions tiny and coaching gentle so you can build consistency without feeling watched or rushed.</p>
+        <div class="landing-actions">
+          <a class="landing-button" href="${cta.href}"${checkoutAttrFromCta(cta)}>${cta.label}</a>
+          <a class="landing-button secondary" href="${ROUTE_HASHES.pricing}">See pricing</a>
+        </div>
+      </div>
+      <div class="landing-hero-aside">
+        <div class="landing-card emphasis">
+          <div class="landing-label">Principles</div>
+          <ul class="landing-list landing-list-check">
+            ${heroPoints}
+          </ul>
+        </div>
+      </div>
+    </section>
+    ${buildPhilosophySection()}
+    ${buildSubscriptionBenefitsSection(cta)}
+  `;
+  return renderAppPage(sections);
 }
 
 
@@ -2029,11 +2070,12 @@ function renderLibrary() {
     `;
   };
 
-  const cards = normalizedExercises.map(exercise => {
-    const equipmentDataset = exercise.equipmentKeys.join('|');
-    const favoriteBadge = exercise.isFavorite ? '<span class="confidence-tag">Favorited</span>' : '';
-    const tutorialMarkup = exercise.hasTutorial
-      ? `
+  const cards = normalizedExercises
+    .map(exercise => {
+      const equipmentDataset = exercise.equipmentKeys.join('|');
+      const favoriteBadge = exercise.isFavorite ? '<span class="confidence-tag">Favorited</span>' : '';
+      const tutorialMarkup = exercise.hasTutorial
+        ? `
         <div class="tutorial-actions">
           <button
             class="tutorial-button"
@@ -2055,34 +2097,35 @@ function renderLibrary() {
           <video controls playsinline preload="metadata" src="${escapeHTML(exercise.videoUrl)}"></video>
         </div>
       `
-      : '';
-    return `
-      <article
-        class="landing-card"
-        data-exercise-card
-        data-name="${escapeHTML(exercise.searchText)}"
-        data-muscle="${escapeHTML(exercise.muscleKey)}"
-        data-movement="${escapeHTML(exercise.movementKey)}"
-        data-equipment="${escapeHTML(equipmentDataset)}"
-        data-intimidation="${escapeHTML(exercise.intimidation)}"
-        data-gymxiety="${exercise.gymxietySafe ? 'safe' : 'standard'}"
-        data-favorite="${exercise.isFavorite ? 'true' : 'false'}"
-      >
-        <p class="landing-subtext">${escapeHTML(exercise.muscle)}</p>
-        <h3>${escapeHTML(exercise.displayName)}</h3>
-        ${favoriteBadge}
-        ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
-        <p>${escapeHTML(exercise.howto)}</p>
-        ${exercise.reassurance ? `<p class="supportive-text reassurance-text">${escapeHTML(exercise.reassurance)}</p>` : ''}
-        <div class="landing-pill-list">
-          <span class="landing-pill">${escapeHTML(exercise.movement)}</span>
-          <span class="landing-pill">${escapeHTML(exercise.equipmentLabel)}</span>
-          <span class="landing-pill">${escapeHTML(exercise.intimidationLabel)}</span>
-        </div>
-        ${tutorialMarkup}
-      </article>
-    `;
-  }).join('');
+        : '';
+      return `
+        <article
+          class="landing-card"
+          data-exercise-card
+          data-name="${escapeHTML(exercise.searchText)}"
+          data-muscle="${escapeHTML(exercise.muscleKey)}"
+          data-movement="${escapeHTML(exercise.movementKey)}"
+          data-equipment="${escapeHTML(equipmentDataset)}"
+          data-intimidation="${escapeHTML(exercise.intimidation)}"
+          data-gymxiety="${exercise.gymxietySafe ? 'safe' : 'standard'}"
+          data-favorite="${exercise.isFavorite ? 'true' : 'false'}"
+        >
+          <p class="landing-subtext">${escapeHTML(exercise.muscle)}</p>
+          <h3>${escapeHTML(exercise.displayName)}</h3>
+          ${favoriteBadge}
+          ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
+          <p>${escapeHTML(exercise.howto)}</p>
+          ${exercise.reassurance ? `<p class="supportive-text reassurance-text">${escapeHTML(exercise.reassurance)}</p>` : ''}
+          <div class="landing-pill-list">
+            <span class="landing-pill">${escapeHTML(exercise.movement)}</span>
+            <span class="landing-pill">${escapeHTML(exercise.equipmentLabel)}</span>
+            <span class="landing-pill">${escapeHTML(exercise.intimidationLabel)}</span>
+          </div>
+          ${tutorialMarkup}
+        </article>
+      `;
+    })
+    .join('');
 
   const sections = `
     <header class="landing-hero">
@@ -2275,7 +2318,6 @@ function renderDashboard(state) {
     const summaryLabel = focus?.summaryLabel || 'Focus';
     const summary = `${summaryLabel}: ${muscles.join(' · ')}`;
     return {
-      id: `${iso}-${index}`,
       date: friendly,
       title,
       summary
@@ -2287,25 +2329,33 @@ function renderDashboard(state) {
     { label: 'Profile', href: ROUTE_HASHES.profile }
   ];
 
-  const statsGrid = quickStats.map(stat => `
-    <article class="landing-card">
-      <p class="landing-subtext">${escapeHTML(stat.label)}</p>
-      <h3>${escapeHTML(stat.value)}</h3>
-    </article>
-  `).join('');
+  const statsGrid = quickStats
+    .map(
+      stat => `
+        <article class="landing-card">
+          <p class="landing-subtext">${escapeHTML(stat.label)}</p>
+          <h3>${escapeHTML(stat.value)}</h3>
+        </article>
+      `
+    )
+    .join('');
 
   const recentGrid = recentSessions.length
-    ? recentSessions.map(session => `
-        <article class="landing-card">
-          <p class="landing-subtext">${escapeHTML(session.date)}</p>
-          <h3>${escapeHTML(session.title)}</h3>
-          <p>${escapeHTML(session.summary)}</p>
-          <div class="landing-actions landing-space-top-sm">
-            <a class="landing-button secondary" href="${ROUTE_HASHES.history}">View log</a>
-          </div>
-        </article>
-      `).join('')
-    : `<article class="landing-card"><p>No workouts logged yet. Generate your first calm session to see it here.</p></article>`;
+    ? recentSessions
+        .map(
+          session => `
+            <article class="landing-card">
+              <p class="landing-subtext">${escapeHTML(session.date)}</p>
+              <h3>${escapeHTML(session.title)}</h3>
+              <p>${escapeHTML(session.summary)}</p>
+              <div class="landing-actions landing-space-top-sm">
+                <a class="landing-button secondary" href="${ROUTE_HASHES.history}">View log</a>
+              </div>
+            </article>
+          `
+        )
+        .join('')
+    : '<article class="landing-card"><p>No workouts logged yet. Generate your first calm session to see it here.</p></article>';
 
   const linkRow = quickLinks.map(link => `<a class="landing-chip" href="${link.href}">${escapeHTML(link.label)}</a>`).join('');
 
