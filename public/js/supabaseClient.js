@@ -25,6 +25,10 @@ if (!supabase) {
   console.warn(CONFIG_WARNING);
 }
 
+// Set to true once the public launch is live so new accounts can be created again.
+const SIGNUPS_ENABLED = false;
+const SIGNUPS_BLOCKED_MESSAGE = 'New account creation is closed until launch.';
+
 async function handleEmailConfirmation() {
   if (!supabase) {
     return;
@@ -54,7 +58,14 @@ export function isSupabaseConfigured() {
   return Boolean(supabase);
 }
 
+export function areSignupsEnabled() {
+  return SIGNUPS_ENABLED;
+}
+
 export async function signup(email, password) {
+  if (!SIGNUPS_ENABLED) {
+    return { data: null, error: new Error(SIGNUPS_BLOCKED_MESSAGE) };
+  }
   const client = getSupabaseClient();
   const { data, error } = await client.auth.signUp({
     email,

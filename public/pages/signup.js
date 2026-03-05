@@ -1,6 +1,6 @@
 import { refreshAuthState, getAuth } from '../auth/state.js';
 import { redirectIfLoggedIn } from '../auth/guard.js';
-import { signup } from '../js/supabaseClient.js';
+import { signup, areSignupsEnabled } from '../js/supabaseClient.js';
 
 function renderAuthShell(content) {
   return `
@@ -15,6 +15,14 @@ function renderAuthShell(content) {
 export function renderSignupPage() {
   if (redirectIfLoggedIn()) {
     return '';
+  }
+  if (!areSignupsEnabled()) {
+    return renderAuthShell(`
+      <span class="badge">Launch</span>
+      <h1>New accounts opening soon.</h1>
+      <p class="auth-subtext">We are wrapping up the public launch and are not onboarding new members yet.</p>
+      <p class="auth-meta">Already invited? <a href="#/login">Log in</a> with your existing account.</p>
+    `);
   }
   return renderAuthShell(`
     <span class="badge">Account</span>
@@ -37,6 +45,9 @@ export function renderSignupPage() {
 }
 
 export function attachSignupPageEvents(root) {
+  if (!areSignupsEnabled()) {
+    return;
+  }
   const form = root.querySelector('[data-signup-form]');
   const errorEl = root.querySelector('[data-signup-error]');
   if (!form) {
