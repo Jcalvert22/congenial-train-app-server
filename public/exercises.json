@@ -2,46 +2,73 @@
   {
     "name": "Push-up",
     "equipment": ["Bodyweight"],
-    "muscle_group": "Chest"
+    "muscle_group": "Chest",
+    "howItShouldFeel": "Gentle squeeze across your chest while your core stays braced.",
+    "commonMistakes": "Common mistake is letting hips sag and shoulders shrug toward your ears.",
+    "reassurance": "It is okay to drop to your knees or slow down whenever you need."
   },
   {
     "name": "Squat",
     "equipment": ["Bodyweight", "Barbell", "Dumbbells"],
-    "muscle_group": "Legs"
+    "muscle_group": "Legs",
+    "howItShouldFeel": "Even pressure through both feet with warmth in the front of your thighs.",
+    "commonMistakes": "Common mistake is letting knees collapse inward or heels pop up.",
+    "reassurance": "Use a range that feels steady today and pause whenever you need."
   },
   {
     "name": "Bench Press",
     "equipment": ["Barbell", "Bench", "Dumbbells"],
-    "muscle_group": "Chest"
+    "muscle_group": "Chest",
+    "howItShouldFeel": "Calm squeeze through your chest as you press the weight away.",
+    "commonMistakes": "Common mistake is flaring elbows too wide and bouncing the bar.",
+    "reassurance": "Start light - the groove improves each rep."
   },
   {
     "name": "Deadlift",
     "equipment": ["Barbell", "Dumbbells"],
-    "muscle_group": "Back"
+    "muscle_group": "Back",
+    "howItShouldFeel": "Stretchy tension along your hamstrings and lats as you stand tall.",
+    "commonMistakes": "Common mistake is rounding the back instead of hinging at the hips.",
+    "reassurance": "It is okay to keep the bar high on your shins and move slowly."
   },
   {
     "name": "Pull-up",
     "equipment": ["Pull-up Bar"],
-    "muscle_group": "Back"
+    "muscle_group": "Back",
+    "howItShouldFeel": "Smooth pull between your shoulder blades with ribs lifted.",
+    "commonMistakes": "Common mistake is swinging the legs or shrugging the shoulders toward the ears.",
+    "reassurance": "Use a band or step whenever you want support - that still counts."
   },
   {
     "name": "Kettlebell Swing",
     "equipment": ["Kettlebell"],
-    "muscle_group": "Legs"
+    "muscle_group": "Legs",
+    "howItShouldFeel": "Powerful snap from your hips and glutes with relaxed arms.",
+    "commonMistakes": "Common mistake is squatting the movement or lifting with the arms.",
+    "reassurance": "Keep the bell low and short until the hinge feels natural."
   },
   {
     "name": "Banded Row",
     "equipment": ["Resistance Bands"],
-    "muscle_group": "Back"
+    "muscle_group": "Back",
+    "howItShouldFeel": "Light squeeze between your shoulder blades as elbows glide back.",
+    "commonMistakes": "Common mistake is shrugging the shoulders or letting the band snap forward.",
+    "reassurance": "Slow pulls are great. Take tiny steps back until tension feels right."
   },
   {
     "name": "Running",
     "equipment": ["Treadmill"],
-    "muscle_group": "Legs"
+    "muscle_group": "Legs",
+    "howItShouldFeel": "Smooth rhythm through your legs with easy, steady breathing.",
+    "commonMistakes": "Common mistake is tensing the shoulders or holding the breath.",
+    "reassurance": "Dial the pace down anytime - walking breaks still count."
   },
   {
     "name": "Cycling",
     "equipment": ["Stationary Bike"],
-    "muscle_group": "Legs"
+    "muscle_group": "Legs",
+    "howItShouldFeel": "Gentle burn through your quads as you spin in a controlled cadence.",
+    "commonMistakes": "Common mistake is mashing the pedals with locked-out knees or rounded back.",
+    "reassurance": "Keep the resistance light and sit tall - comfort matters more than speed."
   }
 ]

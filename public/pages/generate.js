@@ -7,6 +7,7 @@ import { EQUIPMENT_LIST, MUSCLE_GROUPS } from '../data/exercises.js';
 import { MUSCLE_PAIRINGS } from '../data/musclePairings.js';
 import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
 import { getDislikedExercises } from '../utils/dislikedExercises.js';
+import { loadOnboardingPrefs, deriveComfortFromExperience } from '../utils/onboarding.js';
 
 const EQUIPMENT_HELPER_LOCKED = 'Pick at least one option to keep the plan realistic.';
 const MUSCLE_HELPER_LOCKED = 'Choose equipment first to unlock muscle targets.';
@@ -23,6 +24,19 @@ const MUSCLE_PAIRING_ALIASES = {
   quads: 'legs'
 };
 
+const COMFORT_OPTIONS = [
+  { label: 'Low', value: 'low', helper: 'Stick with machines and ultra-stable moves.' },
+  { label: 'Medium', value: 'medium', helper: 'Use the usual calm mix.' },
+  { label: 'High', value: 'high', helper: 'Open to slightly more challenging variations.' }
+];
+const DEFAULT_COMFORT_LEVEL = 'medium';
+const COMFORT_VALUES = COMFORT_OPTIONS.map(option => option.value);
+
+const normalizeComfortSelection = value => {
+  const token = (value || '').toString().trim().toLowerCase();
+  return COMFORT_VALUES.includes(token) ? token : DEFAULT_COMFORT_LEVEL;
+};
+
 function renderHeader() {
   return `
     <header class="landing-hero">
@@ -30,6 +44,7 @@ function renderHeader() {
         <span class="landing-tag">Planner</span>
         <h1>Generate Your Workout</h1>
         <p class="landing-subtext lead">Pick what you have and what you want to train. We always match those picks.</p>
+        <p class="supportive-text reassurance-text">Your plan adapts to your comfort level. Go at your own pace.</p>
       </div>
       <div class="landing-card" aria-hidden="true">
         <p class="landing-subtext">Calm reminder</p>
@@ -136,14 +151,44 @@ function renderGoalSelector(selectedGoal = DEFAULT_GOAL) {
   `;
 }
 
+function renderComfortSelector(selectedComfort = DEFAULT_COMFORT_LEVEL) {
+  const normalized = normalizeComfortSelection(selectedComfort);
+  return `
+    <fieldset class="generate-step" data-comfort-step>
+      <legend class="landing-subtext">How confident do you feel today?</legend>
+      <p class="landing-subtext">Pick the tone that feels safest right now.</p>
+      <div class="goal-selector" role="radiogroup">
+        ${COMFORT_OPTIONS.map(option => {
+          const checked = option.value === normalized ? 'checked' : '';
+          return `
+            <label class="goal-chip" data-comfort-option="${escapeHTML(option.value)}">
+              <input type="radio" name="comfort-level" value="${escapeHTML(option.value)}" ${checked}>
+              <span>${escapeHTML(option.label)}</span>
+              <small class="landing-subtext">${escapeHTML(option.helper)}</small>
+            </label>
+          `;
+        }).join('')}
+      </div>
+    </fieldset>
+  `;
+}
+
 function renderGenerateShell(state) {
   const lastPlan = state.ui?.plannerResult || {};
-  const defaultEquipment = Array.isArray(lastPlan.selectedEquipment) ? lastPlan.selectedEquipment : [];
+  const onboardingPrefs = loadOnboardingPrefs();
+  const onboardingEquipment = Array.isArray(onboardingPrefs.equipment) ? onboardingPrefs.equipment : [];
+  const planEquipment = Array.isArray(lastPlan.selectedEquipment) ? lastPlan.selectedEquipment : [];
+  const defaultEquipment = planEquipment.length ? planEquipment : onboardingEquipment;
   const defaultMuscles = Array.isArray(lastPlan.selectedMuscleGroups) ? lastPlan.selectedMuscleGroups : [];
   const defaultGoal = typeof lastPlan.selectedGoal === 'string' && lastPlan.selectedGoal
     ? lastPlan.selectedGoal
     : DEFAULT_GOAL;
   const normalizedGoal = GOAL_OPTIONS.some(option => option.value === defaultGoal) ? defaultGoal : DEFAULT_GOAL;
+  const derivedComfort = deriveComfortFromExperience(onboardingPrefs.experienceLevel);
+  const storedComfort = typeof lastPlan.selectedComfortLevel === 'string'
+    ? lastPlan.selectedComfortLevel
+    : lastPlan.comfortLevel || derivedComfort;
+  const normalizedComfort = normalizeComfortSelection(storedComfort);
   const gymxietyEnabled = getGymxietyPreference();
   const lockMuscles = defaultEquipment.length === 0;
 
@@ -152,6 +197,7 @@ function renderGenerateShell(state) {
       <div class="landing-error" data-generate-error hidden role="alert"></div>
       <article class="landing-card" data-generate-form>
         <form class="landing-form" data-form="generate-workout">
+          ${renderComfortSelector(normalizedComfort)}
           <fieldset class="generate-step" data-equipment-step>
             <legend class="landing-subtext">Step 1 · Equipment on hand</legend>
             <p class="landing-subtext">Check only the tools you truly have nearby.</p>
@@ -228,6 +274,8 @@ export function attachGeneratePageEvents(root) {
     return;
   }
 
+  const onboardingPrefs = loadOnboardingPrefs();
+  const experienceLevel = onboardingPrefs.experienceLevel;
   const formCard = root.querySelector('[data-generate-form]');
   const loadingCard = root.querySelector('[data-generate-loading]');
   const fallbackCard = root.querySelector('[data-generate-fallback]');
@@ -242,12 +290,15 @@ export function attachGeneratePageEvents(root) {
   const equipmentInputs = Array.from(form.querySelectorAll('input[name="equipment"]'));
   const muscleInputs = Array.from(form.querySelectorAll('input[name="muscles"]'));
   const goalInputs = Array.from(form.querySelectorAll('input[name="goal"]'));
+  const comfortInputs = Array.from(form.querySelectorAll('input[name="comfort-level"]'));
   const refs = { formCard, loadingCard, fallbackCard };
 
   let selectedEquipment = getCheckedValues(equipmentInputs);
   let selectedMuscles = getCheckedValues(muscleInputs);
   const checkedGoal = goalInputs.find(input => input.checked)?.value || DEFAULT_GOAL;
   let selectedGoal = GOAL_OPTIONS.some(option => option.value === checkedGoal) ? checkedGoal : DEFAULT_GOAL;
+  const checkedComfort = comfortInputs.find(input => input.checked)?.value || DEFAULT_COMFORT_LEVEL;
+  let comfortLevel = normalizeComfortSelection(checkedComfort);
   let gymxietyMode = Boolean(gymxietyToggle?.checked);
 
   const setError = message => {
@@ -331,6 +382,12 @@ export function attachGeneratePageEvents(root) {
     });
   });
 
+  comfortInputs.forEach(input => {
+    input.addEventListener('change', event => {
+      comfortLevel = normalizeComfortSelection(event.target.value);
+    });
+  });
+
   retryButtons.forEach(button => button.addEventListener('click', () => {
     toggleView('form', refs);
     setError('');
@@ -341,8 +398,12 @@ export function attachGeneratePageEvents(root) {
     selectedEquipment = [];
     selectedMuscles = [];
     selectedGoal = DEFAULT_GOAL;
+    comfortLevel = DEFAULT_COMFORT_LEVEL;
     goalInputs.forEach(input => {
       input.checked = input.value === DEFAULT_GOAL;
+    });
+    comfortInputs.forEach(input => {
+      input.checked = input.value === DEFAULT_COMFORT_LEVEL;
     });
     syncMuscleState();
     setError('');
@@ -375,6 +436,8 @@ export function attachGeneratePageEvents(root) {
         selectedEquipment,
         selectedMuscleGroups: selectedMuscles,
         selectedGoal,
+        comfortLevel,
+        experienceLevel,
         gymxietyMode,
         dislikedExercises: getDislikedExercises()
       });

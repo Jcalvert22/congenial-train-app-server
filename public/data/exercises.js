@@ -23,6 +23,94 @@ const EXERCISE_META_FALLBACK = {
 const raw = loadJsonSync('./exercises.json', EXERCISES_JSON_FALLBACK);
 const meta = loadJsonSync('./exercises.meta.json', EXERCISE_META_FALLBACK);
 
+const HOW_IT_SHOULD_FEEL_MAP = {
+  chest: 'Gentle squeeze across the front of your chest while your shoulders stay relaxed.',
+  back: 'Smooth pull between your shoulder blades with ribs tall and neck soft.',
+  shoulders: 'Light lift through your shoulders while your neck and jaw stay calm.',
+  biceps: 'Calm tension through the front of your arms with elbows tucked near your ribs.',
+  triceps: 'Soft press through the back of your arms while wrists stay neutral.',
+  quads: 'Warm, steady work through the front of your thighs as you press through your feet.',
+  hamstrings: 'Stretchy tension down the back of your legs as your hips glide back.',
+  glutes: 'Firm squeeze through your hips as you stand tall without arching.',
+  legs: 'Even pressure through both feet with knees tracking gently over toes.',
+  calves: 'Gentle spring through your lower legs as heels lift and lower with control.',
+  core: 'Gentle hug around your midsection while ribs stay stacked over hips.',
+  bodyweight: 'Light full-body effort with steady breathing and relaxed shoulders.',
+  cardio: 'Easy rhythm in your breathing as your stride stays smooth.',
+  general: 'Calm, steady tension in the target muscle without joint discomfort.'
+};
+
+const COMMON_MISTAKE_MAP = {
+  chest: 'Common mistake is letting shoulders shrug up and taking tension away from the chest.',
+  back: 'Common mistake is yanking with your arms instead of driving elbows back.',
+  shoulders: 'Common mistake is arching the lower back and locking the elbows.',
+  biceps: 'Common mistake is swinging the torso and letting elbows drift forward.',
+  triceps: 'Common mistake is flaring elbows wide and losing control near the bottom.',
+  quads: 'Common mistake is letting knees collapse inward or heels pop up.',
+  hamstrings: 'Common mistake is rounding the back instead of hinging at the hips.',
+  glutes: 'Common mistake is thrusting too fast and skipping the squeeze at the top.',
+  legs: 'Common mistake is rushing the movement and letting balance fall forward.',
+  calves: 'Common mistake is bouncing at the bottom instead of using a full range.',
+  core: 'Common mistake is holding the breath and letting ribs flare open.',
+  bodyweight: 'Common mistake is racing through reps without feeling the target muscle.',
+  cardio: 'Common mistake is gripping handles tightly and tensing the shoulders.',
+  general: 'Common mistake is moving too quickly and letting posture collapse.'
+};
+
+const REASSURANCE_MAP = {
+  chest: 'It is okay if this press feels awkward at first. Move slowly and breathe.',
+  back: 'Start light and focus on guiding elbows back. The rhythm will come.',
+  shoulders: 'Keep the weight light and explore the motion. Your stability will build each rep.',
+  biceps: 'You can pause between reps. Smooth curls beat heavy swinging.',
+  triceps: 'Small presses count. Stop before joints feel pinchy.',
+  quads: 'It is fine to use a small range until knees feel warm.',
+  hamstrings: 'Ease into the hinge. Gentle tension beats forcing depth.',
+  glutes: 'Light squeezes still train your hips. Control matters more than load.',
+  legs: 'Go at a pace that lets you balance. Rest whenever you need.',
+  calves: 'Hold the top for a beat and use the rail if you need balance.',
+  core: 'If breathing feels tricky, slow down and reset. That still counts.',
+  bodyweight: 'Adjust the lever or angle until the move feels steady.',
+  cardio: 'Keep the effort conversational. You can always dial the pace down.',
+  general: 'It is okay to pause or modify anytime. Start light and focus on smooth motion.'
+};
+
+const resolveMuscleCueKey = entry => {
+  const source = entry?.primary_muscle || entry?.muscleGroup || '';
+  const key = source.toString().trim().toLowerCase();
+  return key || 'general';
+};
+
+const normalizeCueValue = (value, fallback) => {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  return trimmed || fallback;
+};
+
+const enrichExerciseEntry = entry => {
+  if (!entry || typeof entry !== 'object') {
+    return;
+  }
+  entry.videoUrl = normalizeCueValue(entry.videoUrl, '');
+  const cueKey = resolveMuscleCueKey(entry);
+  entry.howItShouldFeel = normalizeCueValue(
+    entry.howItShouldFeel,
+    HOW_IT_SHOULD_FEEL_MAP[cueKey] || HOW_IT_SHOULD_FEEL_MAP.general
+  );
+  entry.commonMistakes = normalizeCueValue(
+    entry.commonMistakes,
+    COMMON_MISTAKE_MAP[cueKey] || COMMON_MISTAKE_MAP.general
+  );
+  entry.reassurance = normalizeCueValue(
+    entry.reassurance,
+    REASSURANCE_MAP[cueKey] || REASSURANCE_MAP.general
+  );
+};
+
+Object.values(raw.exercises || {}).forEach(group => {
+  if (Array.isArray(group)) {
+    group.forEach(enrichExerciseEntry);
+  }
+});
+
 export const EXERCISE_LIBRARY_VERSION = meta.version;
 export const EXERCISE_LIBRARY_CHECKSUM = meta.checksum;
 
@@ -66,8 +154,16 @@ const buildLegacyExercise = entry => {
   const equipmentLabel = EQUIPMENT_LABELS[entry.equipment] || 'Bodyweight';
   const muscleGroup = TITLE_CASE(entry.primary_muscle);
   const displayName = TITLE_CASE(entry.name || entry.display_name);
+  const videoUrl = typeof entry.videoUrl === 'string' ? entry.videoUrl.trim() : '';
+  const howItShouldFeel = typeof entry.howItShouldFeel === 'string' ? entry.howItShouldFeel.trim() : '';
+  const commonMistakes = typeof entry.commonMistakes === 'string' ? entry.commonMistakes.trim() : '';
+  const reassurance = typeof entry.reassurance === 'string' ? entry.reassurance.trim() : '';
   return {
     ...entry,
+    videoUrl,
+    howItShouldFeel,
+    commonMistakes,
+    reassurance,
     display_name: displayName,
     equipment_key: entry.equipment,
     equipment: [equipmentLabel],

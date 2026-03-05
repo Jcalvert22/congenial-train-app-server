@@ -86,3 +86,14 @@ export function getExerciseDisplayName(exercise) {
   }
   return '';
 }
+
+export function getExerciseVideoInfo(exercise) {
+  const url = (exercise?.videoUrl ?? '').toString().trim();
+  if (!url) {
+    return { hasVideo: false, url: '' };
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    return { hasVideo: false, url: '' };
+  }
+  return { hasVideo: true, url };
+}

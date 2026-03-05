@@ -152,6 +152,22 @@ EXERCISE_LIBRARY.forEach((exercise, index) => {
       addError(bucketId, 'notes contain stray characters ("**").');
     }
   }
+
+  if (typeof exercise.videoUrl !== 'string') {
+    addError(bucketId, 'invalid type: videoUrl must be a string.');
+  }
+
+  if (typeof exercise.howItShouldFeel !== 'string' || !exercise.howItShouldFeel.trim()) {
+    addError(bucketId, 'missing field: howItShouldFeel must be a non-empty string.');
+  }
+
+  if (typeof exercise.commonMistakes !== 'string' || !exercise.commonMistakes.trim()) {
+    addError(bucketId, 'missing field: commonMistakes must be a non-empty string.');
+  }
+
+  if (typeof exercise.reassurance !== 'string' || !exercise.reassurance.trim()) {
+    addError(bucketId, 'missing field: reassurance must be a non-empty string.');
+  }
 });
 
 const validIds = new Set(seenIds);

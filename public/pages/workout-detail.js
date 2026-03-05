@@ -3,6 +3,7 @@ import { findSavedWorkout, removeSavedWorkout } from '../utils/savedWorkouts.js'
 import { renderErrorStateCard, renderPageShell } from '../components/stateCards.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { machineIcons } from '../data/machineIcons.js';
+import { renderCompactCard, attachCompactCardInteractions, renderStickyReassuranceBar } from '../components/compactCard.js';
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -118,21 +119,31 @@ function renderExerciseCard(exercise) {
     machineIcons
   );
   const prescription = reps ? `${sets} · ${reps}` : sets;
-  return `
-    <article class="landing-card history-exercise-card">
-      <div class="history-exercise-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
-      <div class="history-exercise-text">
-        <h3>${escapeHTML(name)}</h3>
-        <p class="landing-subtext">${escapeHTML(prescription)} · ${escapeHTML(rest)}</p>
-        <div class="history-exercise-meta">
-          <span>${escapeHTML(muscle)}</span>
-          <span>${escapeHTML(equipment)}</span>
-          ${confidence ? `<span>Confidence: ${escapeHTML(confidence)}</span>` : ''}
-        </div>
-        ${exercise.etiquette_tip ? `<p class="supportive-text history-exercise-etiquette">${escapeHTML(exercise.etiquette_tip)}</p>` : ''}
+  const collapsedMeta = [
+    escapeHTML(prescription),
+    escapeHTML(rest)
+  ];
+  const badges = confidence ? [`Confidence: ${escapeHTML(confidence)}`] : [];
+  const expandedContent = `
+    <div class="history-exercise-text">
+      <div class="history-exercise-meta">
+        <span>${escapeHTML(muscle)}</span>
+        <span>${escapeHTML(equipment)}</span>
       </div>
-    </article>
+      ${exercise.instructions ? `<p>${escapeHTML(exercise.instructions)}</p>` : ''}
+      ${exercise.etiquette_tip ? `<p class="supportive-text history-exercise-etiquette">${escapeHTML(exercise.etiquette_tip)}</p>` : ''}
+    </div>
   `;
+  return renderCompactCard({
+    id: exercise.id || name,
+    title: name,
+    subtitle: muscle,
+    icon: iconMarkup,
+    meta: collapsedMeta,
+    badges,
+    expandedContent,
+    className: 'history-exercise-card fade-transition'
+  });
 }
 
 function renderExercisesSection(entry) {
@@ -140,16 +151,22 @@ function renderExercisesSection(entry) {
   if (!list.length) {
     return `
       <section class="landing-section history-exercises">
-        <article class="landing-card history-exercise-card empty">
-          <p class="supportive-text">No exercises were saved with this workout.</p>
-        </article>
+        ${renderStickyReassuranceBar()}
+        ${renderCompactCard({
+          id: 'history-empty-exercises',
+          title: 'No exercises saved',
+          subtitle: 'Saved workout',
+          expandedContent: '<p class="supportive-text">No exercises were saved with this workout.</p>',
+          className: 'history-exercise-card empty'
+        })}
       </section>
     `;
   }
   return `
     <section class="landing-section history-exercises">
       <p class="landing-subtext">Exercises</p>
-      <div class="history-exercise-list">
+      ${renderStickyReassuranceBar()}
+      <div class="history-exercise-list compact-grid">
         ${list.map(renderExerciseCard).join('')}
       </div>
     </section>
@@ -198,6 +215,7 @@ export function attachWorkoutDetailEvents(root) {
   if (typeof window !== 'undefined') {
     window.scrollTo(0, 0);
   }
+  attachCompactCardInteractions(root);
   const deleteButton = root.querySelector('[data-action="delete-saved-workout"]');
   if (!deleteButton) {
     return;

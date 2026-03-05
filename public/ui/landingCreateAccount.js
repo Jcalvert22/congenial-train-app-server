@@ -47,6 +47,10 @@ function buildFormSection(gymxietyEnabled = false) {
               <li>Reassuring cues before every set</li>
               <li>Timers that whisper instead of shout</li>
             </ul>
+            <p class="landing-subtext" style="margin-top: 12px;">
+              Need a calm refresher first?
+              <a href="#/gym-basics">Open Gym Basics</a> for form checks, machine setup, breathing, and warm-up cues.
+            </p>
           </div>
           <div class="landing-toggle-wrap">
             <span class="landing-subtext" data-gymxiety-create-status>${gymxietyEnabled ? 'Gentle mode already on' : 'Toggle it on anytime'}</span>

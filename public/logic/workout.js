@@ -109,7 +109,8 @@ function mapDefaultEntryToExercise(entry) {
     equipment: equipment.length ? equipment : ['Bodyweight'],
     muscle_group: entry.muscle || 'Full Body',
     howto: entry.instructions,
-    video: ''
+    video: '',
+    reassurance: entry.reassurance || 'It is okay to slow down or rest whenever you need.'
   };
 }
 
@@ -227,7 +228,8 @@ function normalizeExerciseEntry(exercise) {
     intimidation_level: (exercise.intimidation_level || DEFAULT_INTIMIDATION_LEVEL).toLowerCase(),
     gymxiety_safe: typeof exercise.gymxiety_safe === 'boolean' ? exercise.gymxiety_safe : false,
     howto: exercise.howto || DEFAULT_GYMXIETY_DESCRIPTION,
-    video: exercise.video || ''
+    video: exercise.video || '',
+    reassurance: exercise.reassurance || ''
   };
 }
 
@@ -1981,6 +1983,34 @@ function sanitizeSelectionList(list = []) {
   return Array.from(new Set(list.map(item => item?.toString().trim()).filter(Boolean)));
 }
 
+function normalizeComfortLevelValue(value = '') {
+  const token = value
+    .toString()
+    .trim()
+    .toLowerCase();
+  if (token === 'low' || token === 'high') {
+    return token;
+  }
+  return 'medium';
+}
+
+function normalizeExperienceLevelValue(value = '') {
+  const token = value
+    .toString()
+    .trim()
+    .toLowerCase();
+  if (token === 'brand_new' || token === 'brand-new') {
+    return 'brand_new';
+  }
+  if (token === 'returning_lifter' || token === 'returning') {
+    return 'returning_lifter';
+  }
+  if (token === 'inconsistent' || token === 'comfortable_but_inconsistent') {
+    return 'inconsistent';
+  }
+  return 'brand_new';
+}
+
 function normalizeGoalToken(value = '') {
   const token = value
     .toString()
@@ -2081,7 +2111,8 @@ export function buildPlanRowsFromExercises(exercises = [], gymxietyMode = false)
       movementPattern: exercise?.movement_pattern,
       intimidation_level: exercise?.intimidation_level,
       gymxiety_safe: exercise?.gymxiety_safe === true,
-      etiquetteTip: exercise?.etiquette_tip || ''
+      etiquetteTip: exercise?.etiquette_tip || '',
+      reassurance: exercise?.reassurance || ''
     };
   });
 }
@@ -2096,7 +2127,9 @@ function buildPlanSummary(planRows = [], payload = {}) {
     focus: focusList,
     repRange: hasTimeBased ? 'Timed intervals' : '10-12 reps',
     setsPerExercise: planRows.length ? planRows[0].sets : payload.gymxietyMode ? '2 sets' : '3 sets',
-    mode: payload.gymxietyMode ? 'Gymxiety' : 'Standard'
+    mode: payload.gymxietyMode ? 'Gymxiety' : 'Standard',
+    comfortLevel: normalizeComfortLevelValue(payload.selectedComfortLevel || payload.comfortLevel),
+    experienceLevel: normalizeExperienceLevelValue(payload.selectedExperienceLevel || payload.experienceLevel)
   };
 }
 
@@ -2112,11 +2145,17 @@ function normalizePlannerResult(result) {
   const normalizedGoal = typeof result.selectedGoal === 'string'
     ? normalizeGoalToken(result.selectedGoal)
     : 'general';
+  const normalizedComfort = normalizeComfortLevelValue(result.selectedComfortLevel || result.comfortLevel);
+  const normalizedExperience = normalizeExperienceLevelValue(result.selectedExperienceLevel || result.experienceLevel);
   const base = {
     exercises: Array.isArray(result.exercises) ? result.exercises : [],
     selectedEquipment: normalizedEquipment,
     selectedMuscleGroups: normalizedMuscles,
     selectedGoal: normalizedGoal,
+    selectedComfortLevel: normalizedComfort,
+    comfortLevel: normalizedComfort,
+    selectedExperienceLevel: normalizedExperience,
+    experienceLevel: normalizedExperience,
     gymxietyMode: Boolean(result.gymxietyMode),
     createdAt: result.createdAt || Date.now()
   };

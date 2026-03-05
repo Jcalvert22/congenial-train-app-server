@@ -1,4 +1,5 @@
 import { EXERCISES, DEFAULT_BEGINNER_WORKOUT, FALLBACK_EQUIPMENT } from '../data/exercises.js';
+import { normalizeExperienceLevel, deriveComfortFromExperience } from './onboarding.js';
 
 const GOAL_REP_SCHEMES = {
   strength: { reps: [4, 6], sets: 3, rest: 120 },
@@ -24,6 +25,11 @@ const GOAL_LABELS = {
   general: 'General Fitness'
 };
 
+const COMFORT_LEVELS = new Set(['low', 'medium', 'high']);
+const DEFAULT_COMFORT_LEVEL = 'medium';
+const STABLE_EQUIPMENT_KEYWORDS = ['machine', 'smith', 'cable', 'bench', 'seated', 'leg press'];
+const CHALLENGE_EQUIPMENT_KEYWORDS = ['barbell', 'dumbbell', 'kettlebell', 'single-leg', 'split squat'];
+
 const TIME_BASED_EXERCISES = [
   'Dead Bug',
   'Mountain Climbers',
@@ -43,6 +49,99 @@ const TIME_BASED_EXERCISES = [
 
 const TIME_BASED_EXERCISE_SET = new Set(TIME_BASED_EXERCISES.map(name => name.toLowerCase()));
 const DEFAULT_GOAL = 'general';
+
+function normalizeComfortLevel(value = DEFAULT_COMFORT_LEVEL) {
+  const token = value.toString().trim().toLowerCase();
+  return COMFORT_LEVELS.has(token) ? token : DEFAULT_COMFORT_LEVEL;
+}
+
+function getEquipmentTokens(exercise = {}) {
+  if (!Array.isArray(exercise.equipment)) {
+    return [];
+  }
+  return exercise.equipment.map(item => item.toString().trim().toLowerCase());
+}
+
+function isStableExercise(exercise) {
+  const tokens = getEquipmentTokens(exercise);
+  return tokens.some(token => STABLE_EQUIPMENT_KEYWORDS.some(keyword => token.includes(keyword)));
+}
+
+function isChallengingExercise(exercise) {
+  const tokens = getEquipmentTokens(exercise);
+  if (tokens.some(token => CHALLENGE_EQUIPMENT_KEYWORDS.some(keyword => token.includes(keyword)))) {
+    return true;
+  }
+  const intimidation = (exercise.intimidation_level || '').toString().trim().toLowerCase();
+  return intimidation === 'high';
+}
+
+function scoreExerciseForComfort(exercise, comfortLevel) {
+  const intimidation = (exercise.intimidation_level || '').toString().trim().toLowerCase();
+  const stable = isStableExercise(exercise);
+  const challenging = isChallengingExercise(exercise);
+  let score = 0;
+  if (comfortLevel === 'low') {
+    if (stable) {
+      score += 3;
+    }
+    if (exercise.gymxiety_safe) {
+      score += 2;
+    }
+    if (intimidation === 'low') {
+      score += 1;
+    }
+    if (challenging) {
+      score -= 2;
+    }
+  } else if (comfortLevel === 'high') {
+    if (challenging) {
+      score += 3;
+    }
+    if (!stable) {
+      score += 1;
+    }
+    if (exercise.gymxiety_safe) {
+      score -= 1;
+    }
+  }
+  return score;
+}
+
+function prioritizeComfort(list = [], comfortLevel = DEFAULT_COMFORT_LEVEL) {
+  if (!list.length || comfortLevel === 'medium') {
+    return list;
+  }
+  const sorted = [...list].sort((a, b) => scoreExerciseForComfort(b, comfortLevel) - scoreExerciseForComfort(a, comfortLevel));
+  if (comfortLevel === 'low') {
+    const nonHigh = sorted.filter(item => (item.intimidation_level || '').toString().trim().toLowerCase() !== 'high');
+    const high = sorted.filter(item => (item.intimidation_level || '').toString().trim().toLowerCase() === 'high');
+    return nonHigh.concat(high.filter(item => !nonHigh.includes(item)));
+  }
+  return sorted;
+}
+
+function applyExperiencePreferences(list = [], experienceLevel = 'brand_new') {
+  if (!list.length) {
+    return list;
+  }
+  if (experienceLevel === 'brand_new') {
+    const safeFirst = list.filter(item => {
+      const intimidation = (item.intimidation_level || '').toString().trim().toLowerCase();
+      return item.gymxiety_safe || intimidation !== 'high';
+    });
+    return safeFirst.length ? safeFirst : list;
+  }
+  if (experienceLevel === 'inconsistent') {
+    const moderate = list.filter(item => (item.intimidation_level || '').toString().trim().toLowerCase() !== 'high');
+    if (!moderate.length) {
+      return list;
+    }
+    const challenging = list.filter(item => !moderate.includes(item));
+    return moderate.concat(challenging);
+  }
+  return list;
+}
 
 function sanitizeSelection(values = []) {
   if (!Array.isArray(values)) {
@@ -172,12 +271,17 @@ export function generateWorkout({
   selectedEquipment = [],
   selectedMuscleGroups = [],
   selectedGoal = DEFAULT_GOAL,
+  comfortLevel = DEFAULT_COMFORT_LEVEL,
+  experienceLevel = 'brand_new',
   gymxietyMode = false,
   dislikedExercises = []
 } = {}) {
   const equipment = sanitizeSelection(selectedEquipment);
   const muscles = sanitizeSelection(selectedMuscleGroups);
   const goalKey = normalizeGoal(selectedGoal);
+  const normalizedExperience = normalizeExperienceLevel(experienceLevel);
+  const fallbackComfort = deriveComfortFromExperience(normalizedExperience);
+  const normalizedComfort = normalizeComfortLevel(comfortLevel || fallbackComfort);
   const dislikedSet = buildNameSet(dislikedExercises);
 
   const strictPool = EXERCISES.filter(exercise =>
@@ -193,34 +297,40 @@ export function generateWorkout({
   muscles.forEach(muscle => {
     const strictMatches = filterDisliked(
       preferGymxiety(
-      strictPool.filter(exercise => exercise.muscle_group === muscle),
-      gymxietyMode
+        strictPool.filter(exercise => exercise.muscle_group === muscle),
+        gymxietyMode
       ),
       dislikedSet
     );
 
-    let chosenPool = pickDeterministic(strictMatches);
+    let chosenPool = pickDeterministic(
+      applyExperiencePreferences(prioritizeComfort(strictMatches, normalizedComfort), normalizedExperience)
+    );
 
     if (!chosenPool.length) {
       const fallbackMatches = filterDisliked(
         preferGymxiety(
-        FALLBACK_POOL.filter(exercise => exercise.muscle_group === muscle),
-        gymxietyMode
+          FALLBACK_POOL.filter(exercise => exercise.muscle_group === muscle),
+          gymxietyMode
         ),
         dislikedSet
       );
-      chosenPool = pickDeterministic(fallbackMatches);
+      chosenPool = pickDeterministic(
+        applyExperiencePreferences(prioritizeComfort(fallbackMatches, normalizedComfort), normalizedExperience)
+      );
     }
 
     if (!chosenPool.length) {
       const defaultMatches = filterDisliked(
         preferGymxiety(
-        DEFAULT_BEGINNER_WORKOUT.filter(exercise => exercise.muscle_group === muscle),
-        gymxietyMode
+          DEFAULT_BEGINNER_WORKOUT.filter(exercise => exercise.muscle_group === muscle),
+          gymxietyMode
         ),
         dislikedSet
       );
-      chosenPool = pickDeterministic(defaultMatches);
+      chosenPool = pickDeterministic(
+        applyExperiencePreferences(prioritizeComfort(defaultMatches, normalizedComfort), normalizedExperience)
+      );
     }
 
     if (!chosenPool.length) {
@@ -228,7 +338,9 @@ export function generateWorkout({
         preferGymxiety(DEFAULT_BEGINNER_WORKOUT, gymxietyMode),
         dislikedSet
       );
-      chosenPool = pickDeterministic(finalFallback);
+      chosenPool = pickDeterministic(
+        applyExperiencePreferences(prioritizeComfort(finalFallback, normalizedComfort), normalizedExperience)
+      );
     }
 
     finalExercises.push(...chosenPool);
@@ -239,7 +351,11 @@ export function generateWorkout({
       preferGymxiety(DEFAULT_BEGINNER_WORKOUT, gymxietyMode),
       dislikedSet
     );
-    finalExercises.push(...pickDeterministic(fallbackPool));
+    finalExercises.push(
+      ...pickDeterministic(
+        applyExperiencePreferences(prioritizeComfort(fallbackPool, normalizedComfort), normalizedExperience)
+      )
+    );
   }
 
   const prescribedExercises = finalExercises.map(exercise =>
@@ -251,7 +367,11 @@ export function generateWorkout({
     selectedEquipment: equipment,
     selectedMuscleGroups: muscles,
     selectedGoal: goalKey,
-     goal: GOAL_LABELS[goalKey] || GOAL_LABELS[DEFAULT_GOAL],
+    selectedComfortLevel: normalizedComfort,
+    comfortLevel: normalizedComfort,
+    selectedExperienceLevel: normalizedExperience,
+    experienceLevel: normalizedExperience,
+    goal: GOAL_LABELS[goalKey] || GOAL_LABELS[DEFAULT_GOAL],
     gymxietyMode: Boolean(gymxietyMode),
     createdAt: Date.now()
   };

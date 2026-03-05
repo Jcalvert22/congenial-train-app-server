@@ -3,6 +3,7 @@ import { getSavedWorkouts } from '../utils/savedWorkouts.js';
 import { renderPageShell } from '../components/stateCards.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { machineIcons } from '../data/machineIcons.js';
+import { renderCompactCard, attachCompactCardInteractions } from '../components/compactCard.js';
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -135,25 +136,33 @@ function renderHistoryCard(entry) {
     },
     machineIcons
   );
-  const detailHash = entry?.id ? `#/history/${encodeURIComponent(entry.id)}` : '#/history';
-  return `
-    <a class="landing-card history-card card-pop-in" data-history-card data-history-id="${escapeHTML(entry?.id || '')}" href="${detailHash}">
-      <div class="history-card-layout">
-        <div class="history-card-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
-        <div class="history-card-text">
-          <p class="history-card-date">${escapeHTML(dateLabel)}</p>
-          <h3>${escapeHTML(goalLabel)}</h3>
-          <p class="history-card-subtext">${escapeHTML(durationLabel)} · ${escapeHTML(exercisesLabel)}</p>
-          <p class="history-card-meta-line">${escapeHTML(equipmentLabel)}</p>
-        </div>
-        <span class="history-card-chip">${escapeHTML(muscleLabel)}</span>
-      </div>
-      <div class="history-card-footer" aria-hidden="true">
-        <span>View details</span>
-        <span class="history-card-arrow">→</span>
-      </div>
-    </a>
+  const collapsedMeta = [
+    escapeHTML(durationLabel),
+    escapeHTML(equipmentLabel)
+  ];
+  const badges = [escapeHTML(muscleLabel)];
+  const expandedContent = `
+    <p class="history-card-subtext">${escapeHTML(exercisesLabel)}</p>
+    <p class="history-card-meta-line">Saved ${escapeHTML(dateLabel)}</p>
+    <div class="history-card-footer">
+      <button class="landing-button secondary" type="button" data-history-open="${escapeHTML(entry?.id || '')}">View details</button>
+    </div>
   `;
+  return renderCompactCard({
+    id: entry?.id || '',
+    title: goalLabel,
+    subtitle: dateLabel,
+    icon: iconMarkup,
+    meta: collapsedMeta,
+    badges,
+    expandedContent,
+    className: 'history-card card-pop-in',
+    attributes: {
+      'data-history-card': true,
+      'data-history-id': entry?.id || '',
+      tabindex: '0'
+    }
+  });
 }
 
 function renderHistoryList(entries) {
@@ -161,7 +170,7 @@ function renderHistoryList(entries) {
   return `
     <section class="landing-section history-list-section">
       <p class="landing-subtext">Saved plans</p>
-      <div class="history-list" data-history-list>
+      <div class="history-list compact-grid" data-history-list>
         ${cards}
       </div>
     </section>
@@ -190,6 +199,7 @@ export function attachHistoryPageEvents(root) {
   if (typeof window !== 'undefined') {
     window.scrollTo(0, 0);
   }
+  attachCompactCardInteractions(root);
   const cards = root.querySelectorAll('[data-history-card]');
   cards.forEach((card, index) => {
     requestAnimationFrame(() => {
@@ -205,12 +215,12 @@ export function attachHistoryPageEvents(root) {
   };
 
   root.addEventListener('click', event => {
-    const card = event.target.closest('[data-history-card]');
-    if (!card || event.target.closest('a')) {
+    const openTrigger = event.target.closest('[data-history-open]');
+    if (!openTrigger) {
       return;
     }
-    const id = card.getAttribute('data-history-id');
-    navigateToDetail(id);
+    const targetId = openTrigger.getAttribute('data-history-open');
+    navigateToDetail(targetId);
   });
 
   root.addEventListener('keydown', event => {
@@ -219,6 +229,9 @@ export function attachHistoryPageEvents(root) {
     }
     const card = event.target.closest('[data-history-card]');
     if (!card) {
+      return;
+    }
+    if (event.target.closest('[data-compact-toggle]')) {
       return;
     }
     event.preventDefault();

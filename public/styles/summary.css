@@ -80,62 +80,28 @@
 }
 
 .swap-option-card {
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  border-radius: 1.125rem;
-  padding: var(--space-md, 1rem);
-  text-align: left;
-  background: rgba(249, 250, 251, 0.6);
-  cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-md, 1rem);
+  background: rgba(249, 250, 251, 0.7);
 }
 
-.swap-option-card:hover {
-  border-color: var(--color-accent, #4CAF50);
-  transform: translateY(-0.125rem);
+.swap-option-card .compact-card-collapsed {
+  padding: 1rem 1.25rem;
 }
 
-.swap-option-icon {
-  width: 3.5rem;
-  height: 3.5rem;
+.swap-option-card .compact-card-icon {
+  width: 3.4rem;
+  height: 3.4rem;
   border-radius: 0.875rem;
   background: #F3F4F6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
-  flex-shrink: 0;
 }
 
-.swap-option-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.swap-option-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-sm, 0.5rem);
-  margin-bottom: var(--space-xs, 0.25rem);
-}
-
-.swap-option-header h4 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.swap-option-meta,
-.swap-option-prescription {
-  margin: 0;
+.swap-option-card .compact-card-meta {
+  background: rgba(15, 23, 42, 0.06);
   color: var(--color-text-muted, #4B5563);
-  font-size: 0.9rem;
 }
 
-.swap-option-prescription {
-  font-weight: 600;
+.swap-option-card .compact-card-badge {
+  background: rgba(17, 24, 39, 0.08);
   color: var(--color-text, #111827);
 }
 

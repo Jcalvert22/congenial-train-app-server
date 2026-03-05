@@ -1,0 +1,50 @@
+{
+  "module": {
+    "id": "gym_basics",
+    "title": "Gym Basics",
+    "tagline": "A calm primer for day-one confidence.",
+    "intro": "This module gives gentle answers to the questions beginners ask most so you can step onto the floor without guessing.",
+    "topics": [
+      {
+        "id": "form-check",
+        "title": "How to know if your form is okay",
+        "summary": "Good form feels steady, lets you breathe smoothly, and keeps joints stacked over each other. If something pinches or wobbles, pause, reset your stance, and try one slower rep. Watching yourself in the mirror for a single set is enough feedback.",
+        "bullets": [
+          "Use light weight for your first set so you can notice how the motion feels.",
+          "Hips, ribs, and head should stay in the same line - adjust if anything drifts forward or back.",
+          "If the rep path suddenly changes, shorten the range or lighten the load before continuing."
+        ]
+      },
+      {
+        "id": "machine-setup",
+        "title": "How to set up machines safely",
+        "summary": "Adjust the seat so joints align with the machine's pivot point and keep pins on lighter weights until you test the motion. You can take as long as you need - most people expect a short setup ritual. If you feel unsure, reread the diagram or ask the staff for a quick check.",
+        "bullets": [
+          "Set pins below what you think you can lift, then increase if the first reps feel easy.",
+          "Move the seat until knees, elbows, or shoulders line up with the rotation point.",
+          "Wipe the pads before and after - it's part of the setup and signals respect for shared equipment."
+        ]
+      },
+      {
+        "id": "breathing",
+        "title": "How to breathe during lifts",
+        "summary": "Inhale on the easy portion of the rep, then exhale gently as you exert effort. If the rhythm slips, stop at the top, take one calm breath, and restart. A relaxed jaw and loose shoulders are cues that you're breathing well.",
+        "bullets": [
+          "Count a slow two on the way down and another two on the way up to keep breaths steady.",
+          "If you catch yourself holding your breath, pause between reps and reset your inhale.",
+          "Open your hands briefly between sets to remind the rest of your body to stay loose."
+        ]
+      },
+      {
+        "id": "warm-up",
+        "title": "How to warm up properly",
+        "summary": "Start with 3-5 minutes of light cardio or walking until you feel warm but not winded. Follow with two slow sets of your first exercise using a very light weight or only body weight. The goal is to get joints moving smoothly, not to tire yourself out.",
+        "bullets": [
+          "Shoot for gentle warmth and light sweat - if you feel out of breath, ease back.",
+          "Use mobility moves that mimic your workout (leg swings before squats, band pull-aparts before presses).",
+          "Drink a few sips of water between warm-up sets so you feel ready when the workout starts."
+        ]
+      }
+    ]
+  }
+}

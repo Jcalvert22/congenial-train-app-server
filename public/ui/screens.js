@@ -25,7 +25,8 @@ import {
   sanitizeNumberInput,
   normalizeSelection,
   clamp,
-  getExerciseDisplayName
+  getExerciseDisplayName,
+  getExerciseVideoInfo
 } from '../utils/helpers.js';
 import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
 import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
@@ -49,6 +50,8 @@ import { renderPaywall, attachPaywallEvents } from '../pages/paywall.js';
 import { renderSuccessPage, attachSuccessPageEvents } from '../pages/success.js';
 import { renderCanceledPage, attachCanceledPageEvents } from '../pages/canceled.js';
 import { renderGymConfidencePage, attachGymConfidenceEvents } from '../pages/gym-confidence.js';
+import { renderGymBasicsPage, attachGymBasicsEvents } from '../pages/gym-basics.js';
+import { renderOnboardingPage, attachOnboardingEvents } from '../pages/onboarding.js';
 import { renderFooter } from './footer.js';
 import { revealPageContent } from '../components/stateCards.js';
 import { protectRoute, redirectIfLoggedIn } from '../auth/guard.js';
@@ -92,6 +95,7 @@ const ROUTE_HASHES = {
   'beginner-onboarding': '#/beginner-onboarding',
   'relaxed-training': '#/relaxed-training',
   'gym-confidence': '#/gym-confidence',
+  'gym-basics': '#/gym-basics',
   '404': '#/404'
 };
 
@@ -1006,8 +1010,10 @@ function resolveRoute(hash, state, auth) {
       return { html: renderSubscribe(state), afterRender: attachSubscribeEvents };
     case '#/gym-confidence':
       return { html: renderGymConfidencePage(), afterRender: attachGymConfidenceEvents };
+    case '#/gym-basics':
+      return { html: renderGymBasicsPage(), afterRender: attachGymBasicsEvents };
     case '#/onboarding':
-      return { html: renderOnboarding(state), afterRender: attachOnboardingEvents };
+      return { html: renderOnboardingPage(), afterRender: attachOnboardingEvents };
     case '#/timer':
       return { html: renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') };
     case '#/progress-tracking':
@@ -1533,6 +1539,9 @@ function renderLibrary() {
     const intimidationLabel = intimidation.charAt(0).toUpperCase() + intimidation.slice(1);
     const gymxietySafe = Boolean(exercise.gymxiety_safe);
     const howto = exercise.howto || 'Move slowly, breathe through each rep, and adjust the setup until it feels steady.';
+    const reassurance = exercise.reassurance || '';
+    const tutorial = getExerciseVideoInfo(exercise);
+    const tutorialPanelId = `tutorial-panel-${index}`;
     const searchText = `${displayName} ${muscle} ${movement} ${equipmentList.join(' ')}`.toLowerCase();
     const isFavorite = favoriteSet.has(slug);
     return {
@@ -1553,7 +1562,11 @@ function renderLibrary() {
       howto,
       searchText,
       slug,
-      isFavorite
+      isFavorite,
+      hasTutorial: tutorial.hasVideo,
+      videoUrl: tutorial.url,
+      tutorialPanelId,
+      reassurance
     };
   });
 
@@ -1590,6 +1603,30 @@ function renderLibrary() {
   const cards = normalizedExercises.map(exercise => {
     const equipmentDataset = exercise.equipmentKeys.join('|');
     const favoriteBadge = exercise.isFavorite ? '<span class="confidence-tag">Favorited</span>' : '';
+    const tutorialMarkup = exercise.hasTutorial
+      ? `
+        <div class="tutorial-actions">
+          <button
+            class="tutorial-button"
+            type="button"
+            data-action="toggle-tutorial"
+            data-target="${escapeHTML(exercise.tutorialPanelId)}"
+            aria-controls="${escapeHTML(exercise.tutorialPanelId)}"
+            aria-expanded="false"
+          >
+            Watch Tutorial
+          </button>
+        </div>
+        <div
+          class="tutorial-panel"
+          id="${escapeHTML(exercise.tutorialPanelId)}"
+          data-tutorial-panel="${escapeHTML(exercise.tutorialPanelId)}"
+          hidden
+        >
+          <video controls playsinline preload="metadata" src="${escapeHTML(exercise.videoUrl)}"></video>
+        </div>
+      `
+      : '';
     return `
       <article
         class="landing-card"
@@ -1607,11 +1644,13 @@ function renderLibrary() {
         ${favoriteBadge}
         ${exercise.gymxietySafe ? '<span class="confidence-tag">Gymxiety-safe</span>' : ''}
         <p>${escapeHTML(exercise.howto)}</p>
+        ${exercise.reassurance ? `<p class="supportive-text reassurance-text">${escapeHTML(exercise.reassurance)}</p>` : ''}
         <div class="landing-pill-list">
           <span class="landing-pill">${escapeHTML(exercise.movement)}</span>
           <span class="landing-pill">${escapeHTML(exercise.equipmentLabel)}</span>
           <span class="landing-pill">${escapeHTML(exercise.intimidationLabel)}</span>
         </div>
+        ${tutorialMarkup}
       </article>
     `;
   }).join('');
@@ -1750,6 +1789,37 @@ function attachLibraryEvents(root) {
     applyFilters();
   });
 
+  root.addEventListener('click', event => {
+    const button = event.target.closest('[data-action="toggle-tutorial"]');
+    if (!button) {
+      return;
+    }
+    event.preventDefault();
+    const card = button.closest('[data-exercise-card]');
+    if (!card) {
+      return;
+    }
+    const panelId = button.getAttribute('data-target') || '';
+    const panel = panelId
+      ? card.querySelector(`[data-tutorial-panel="${panelId}"]`)
+      : card.querySelector('[data-tutorial-panel]');
+    if (!panel) {
+      return;
+    }
+    const isHidden = panel.hasAttribute('hidden');
+    if (isHidden) {
+      panel.removeAttribute('hidden');
+      button.setAttribute('aria-expanded', 'true');
+    } else {
+      panel.setAttribute('hidden', '');
+      button.setAttribute('aria-expanded', 'false');
+      const video = panel.querySelector('video');
+      if (video) {
+        video.pause();
+      }
+    }
+  });
+
   applyFilters();
 }
 
@@ -1869,69 +1939,6 @@ function renderSubscribe(state) {
       </div>
     </section>
   `;
-}
-
-function renderOnboarding(state) {
-  const profile = state.profile || {};
-  const sexOptions = renderSexOptions('sex', profile.sex, true);
-  const goalValue = escapeHTML(profile.goal || '');
-  const heightValue = escapeHTML(profile.height || '');
-  const weightValue = escapeHTML(profile.weight || '');
-  const ageValue = escapeHTML(profile.age || '');
-  const locationValue = escapeHTML(profile.location || '');
-  return `
-    <section class="panel onboarding-panel">
-      <div>
-        <span class="badge">Welcome</span>
-        <h2>Let's get acquainted first</h2>
-        <p class="onboarding-lede">We ask for a few basics so every plan respects your goals, body, and available space. This stays private on your device.</p>
-        <p class="supportive-text onboarding-guide-link">Need a calm walkthrough first? <a class="supportive-link" href="${ROUTE_HASHES['gym-confidence']}">Open the Gym Confidence guide</a>.</p>
-      </div>
-      <article class="landing-card landing-card-dark onboarding-card">
-        <form class="landing-form onboarding-form" data-form="onboarding">
-          <label>
-            <span class="landing-subtext">Primary goal</span>
-            <textarea class="landing-textarea" name="goal" required placeholder="e.g., Build strength without burning out">${goalValue}</textarea>
-          </label>
-          <div class="onboarding-grid">
-            <label>
-              <span class="landing-subtext">Height (in)</span>
-              <input class="landing-input" type="number" name="height" min="36" max="96" required value="${heightValue}">
-            </label>
-            <label>
-              <span class="landing-subtext">Weight (lbs)</span>
-              <input class="landing-input" type="number" name="weight" min="70" max="600" required value="${weightValue}">
-            </label>
-            <label>
-              <span class="landing-subtext">Age</span>
-              <input class="landing-input" type="number" name="age" min="13" max="90" required value="${ageValue}">
-            </label>
-            <label>
-              <span class="landing-subtext">Location</span>
-              <input class="landing-input" type="text" name="location" required value="${locationValue}" placeholder="City, State">
-            </label>
-          </div>
-          <fieldset class="option-chip-fieldset onboarding-fieldset">
-            <legend class="landing-subtext">Sex</legend>
-            <div class="option-chip-group">
-              ${sexOptions}
-            </div>
-          </fieldset>
-          <button class="landing-button" type="submit">Save and continue</button>
-        </form>
-      </article>
-    </section>
-  `;
-}
-
-
-function renderSexOptions(fieldName, selectedValue, required = false) {
-  return SEX_OPTIONS.map((option, index) => `
-    <label class="option-chip">
-      <input type="radio" name="${fieldName}" value="${option}" ${selectedValue === option ? 'checked' : ''} ${(required && index === 0) ? 'required' : ''}>
-      <span>${option}</span>
-    </label>
-  `).join('');
 }
 
 function attachPlannerEvents(root) {

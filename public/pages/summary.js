@@ -24,6 +24,7 @@ import { collectEquipmentEtiquette, getExerciseEtiquetteLines } from '../utils/e
 import { addSavedWorkout, generateSavedWorkoutId } from '../utils/savedWorkouts.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { machineIcons } from '../data/machineIcons.js';
+import { renderCompactCard, attachCompactCardInteractions, renderStickyReassuranceBar } from '../components/compactCard.js';
 
 const GYMXIETY_SUPPORTIVE_CUES = [
   'Choose a weight that feels comfortable.',
@@ -50,6 +51,7 @@ const DEFAULT_REP_LABEL = '10 reps';
 const DEFAULT_REST_LABEL = 'Rest 90 sec';
 const DEFAULT_CONFIDENCE_LABEL = 'Moderate';
 const DEFAULT_INSTRUCTIONS = 'Move slowly, breathe through the hardest part, and stop if form slips.';
+const DEFAULT_EXERCISE_REASSURANCE = 'It is okay to pause or adjust the range whenever you need.';
 const SWAP_MODAL_MAX_OPTIONS = 8;
 const SAVE_TOAST_DURATION_MS = 2200;
 const FAVORITE_SWAP_LIMIT = 4;
@@ -66,6 +68,51 @@ const EXERCISE_LOOKUP = (() => {
   }
   return map;
 })();
+
+function formatIntimidationBadge(value) {
+  if (!value) {
+    return '';
+  }
+  const token = value.toString().trim();
+  if (!token) {
+    return '';
+  }
+  return token.charAt(0).toUpperCase() + token.slice(1);
+}
+
+function renderVideoThumbnail(source) {
+  if (!source) {
+    return '';
+  }
+  const sanitized = escapeHTML(source);
+  if (/^https?:\/\//i.test(source)) {
+    return `<div class="compact-card-thumb"><img src="${sanitized}" alt="" loading="lazy" decoding="async"></div>`;
+  }
+  return `<div class="compact-card-thumb" aria-hidden="true"><span class="supportive-text" style="display:block;padding:0.4rem;">${sanitized}</span></div>`;
+}
+
+function renderVideoSection(source) {
+  if (!source) {
+    return '';
+  }
+  if (/^https?:\/\//i.test(source)) {
+    const sanitized = escapeHTML(source);
+    return `
+      <div class="exercise-video-placeholder">
+        <p class="landing-subtext execution-subhead">Video walk-through</p>
+        <a class="video-frame-link" href="${sanitized}" target="_blank" rel="noopener">
+          <span>Open tutorial in a new tab</span>
+        </a>
+      </div>
+    `;
+  }
+  return `
+    <div class="exercise-video-placeholder">
+      <p class="landing-subtext execution-subhead">Video walk-through</p>
+      <p class="supportive-text">${escapeHTML(source)}</p>
+    </div>
+  `;
+}
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -271,7 +318,8 @@ function normalizeExerciseRow(row, index) {
       muscle: 'Full body',
       equipment: 'Bodyweight',
       description: DEFAULT_INSTRUCTIONS,
-      usesWeight: false
+      usesWeight: false,
+      reassurance: DEFAULT_EXERCISE_REASSURANCE
     };
   }
   return {
@@ -287,7 +335,8 @@ function normalizeExerciseRow(row, index) {
     equipment: row.equipment || 'Bodyweight',
     description: row.description || row.instructions || DEFAULT_INSTRUCTIONS,
     usesWeight: Boolean(row.usesWeight),
-    etiquetteTip: row.etiquetteTip || row.etiquette_tip || ''
+    etiquetteTip: row.etiquetteTip || row.etiquette_tip || '',
+    reassurance: row.reassurance || DEFAULT_EXERCISE_REASSURANCE
   };
 }
 
@@ -371,15 +420,23 @@ function renderHeader(firstName, hasPlan, goalText, gymxietyMode) {
 }
 
 function renderGymxietyIntroCard() {
+  const expandedContent = `
+    <p class="supportive-text">This workout is designed to feel calm, simple, and beginner-friendly.</p>
+    <ul class="landing-list">
+      ${GYMXIETY_SUPPORTIVE_CUES.map(cue => `<li>${escapeHTML(cue)}</li>`).join('')}
+    </ul>
+  `;
   return `
     <section class="landing-section" data-gymxiety-intro>
-      <article class="landing-card">
-        <h2>Gymxiety Mode is ON</h2>
-        <p class="supportive-text">This workout is designed to feel calm, simple, and beginner-friendly.</p>
-        <ul class="landing-list">
-          ${GYMXIETY_SUPPORTIVE_CUES.map(cue => `<li>${escapeHTML(cue)}</li>`).join('')}
-        </ul>
-      </article>
+      ${renderCompactCard({
+        id: 'gymxiety-mode',
+        title: 'Gymxiety Mode is ON',
+        subtitle: 'Gentle cues, slower pacing',
+        eyebrow: 'Gymxiety Mode',
+        badges: ['Calm mode'],
+        expandedContent,
+        className: 'fade-transition'
+      })}
     </section>
   `;
 }
@@ -438,13 +495,16 @@ function renderExerciseCard(row, index, options = {}) {
   const equipment = row?.equipment || 'Bodyweight';
   const confidenceLabel = row?.confidence || 'Moderate';
   const confidenceCopy = resolveConfidenceCopy(confidenceLabel, gymxietyMode);
-  const confidenceTag = `<span class="confidence-tag">${escapeHTML(confidenceCopy)}</span>`;
   const supportiveCues = gymxietyMode
     ? (Array.isArray(row?.supportiveCues) && row.supportiveCues.length ? row.supportiveCues : GYMXIETY_SUPPORTIVE_CUES)
     : [];
   const supportiveCopy = supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('');
   const steadyReminder = gymxietyMode
     ? '<p class="supportive-text">Take your time - focus on slow, controlled movement.</p>'
+    : '';
+  const reassurance = row?.reassurance || DEFAULT_EXERCISE_REASSURANCE;
+  const reassuranceCopy = reassurance
+    ? `<p class="supportive-text reassurance-text">${escapeHTML(reassurance)}</p>`
     : '';
   const muscleLabel = `<p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>`;
   const etiquetteLines = getExerciseEtiquetteLines(row, { gymxietyMode });
@@ -482,29 +542,75 @@ function renderExerciseCard(row, index, options = {}) {
     { exerciseName, muscle, equipment },
     machineIcons
   );
-  return `
-    <article class="landing-card fade-transition" data-exercise-card data-exercise-index="${index}">
-      <div class="exercise-card-header">
-        <div class="landing-card-image exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
-        <div class="exercise-card-header-text">
-          <h3>${escapeHTML(exerciseName)}</h3>
-          <p class="landing-subtext">${escapeHTML(sets)} x ${escapeHTML(reps)} · ${escapeHTML(restLabel)}</p>
+  const whyCopy = row?.whyThisExercise;
+  const whySection = whyCopy
+    ? `
+        <div class="execution-subsection">
+          <p class="landing-subtext execution-subhead">Why this exercise</p>
+          <p>${escapeHTML(whyCopy)}</p>
         </div>
-      </div>
-      ${confidenceTag}
-      <p>${escapeHTML(instructions)}</p>
-      ${supportiveCopy}
-      ${steadyReminder}
-      ${muscleLabel}
-      <div class="landing-pill-list">
-        <span class="landing-pill">${escapeHTML(muscle)}</span>
-        <span class="landing-pill">${escapeHTML(equipment)}</span>
-      </div>
-      ${etiquetteMarkup}
-      ${actionButtons}
-      ${easierLink}
-    </article>
+      `
+    : '';
+  const feelingCopy = row?.howItShouldFeel;
+  const feelingSection = feelingCopy
+    ? `
+        <div class="execution-subsection">
+          <p class="landing-subtext execution-subhead">How it should feel</p>
+          <p>${escapeHTML(feelingCopy)}</p>
+        </div>
+      `
+    : '';
+  const mistakeCopy = row?.commonMistakes;
+  const mistakeSection = mistakeCopy
+    ? `
+        <div class="execution-subsection">
+          <p class="landing-subtext execution-subhead">Common mistake</p>
+          <p>${escapeHTML(mistakeCopy)}</p>
+        </div>
+      `
+    : '';
+  const badgeLabel = formatIntimidationBadge(row?.intimidation || row?.intimidation_level || row?.intimidationLevel);
+  const badges = badgeLabel ? [`Intimidation: ${escapeHTML(badgeLabel)}`] : [];
+  const videoThumb = renderVideoThumbnail(row?.videoPlaceholder);
+  const videoExpanded = renderVideoSection(row?.videoPlaceholder);
+  const collapsedMeta = [
+    `${escapeHTML(sets)} · ${escapeHTML(reps)}`,
+    escapeHTML(restLabel)
+  ];
+  const expandedContent = `
+    ${confidenceCopy ? `<span class="confidence-tag">${escapeHTML(confidenceCopy)}</span>` : ''}
+    <p>${escapeHTML(instructions)}</p>
+    ${whySection}
+    ${feelingSection}
+    ${mistakeSection}
+    ${reassuranceCopy}
+    ${supportiveCopy}
+    ${steadyReminder}
+    ${videoExpanded}
+    ${muscleLabel}
+    <div class="landing-pill-list">
+      <span class="landing-pill">${escapeHTML(muscle)}</span>
+      <span class="landing-pill">${escapeHTML(equipment)}</span>
+    </div>
+    ${etiquetteMarkup}
+    ${actionButtons}
+    ${easierLink}
   `;
+  return renderCompactCard({
+    id: `summary-exercise-${index}`,
+    title: exerciseName,
+    subtitle: `${muscle} · ${equipment}`,
+    icon: iconMarkup,
+    badges,
+    media: videoThumb,
+    meta: collapsedMeta,
+    expandedContent,
+    className: 'fade-transition exercise-card',
+    attributes: {
+      'data-exercise-card': true,
+      'data-exercise-index': index
+    }
+  });
 }
 
 function renderExercisesSection(rows, options = {}) {
@@ -514,7 +620,8 @@ function renderExercisesSection(rows, options = {}) {
   return `
     <section class="landing-section${sectionClassName}">
       <p class="landing-subtext">${escapeHTML(title)}</p>
-      <div class="landing-grid">
+      ${renderStickyReassuranceBar()}
+      <div class="compact-grid">
         ${cards.join('')}
       </div>
     </section>
@@ -523,16 +630,20 @@ function renderExercisesSection(rows, options = {}) {
 
 function renderFavoriteCard(entry) {
   const intimidation = entry?.intimidation ? ` · ${escapeHTML(entry.intimidation)}` : '';
-  return `
-    <article class="landing-card favorites-card" data-favorite-card>
-      <p class="landing-subtext">${escapeHTML(entry.muscle || 'Full body')}</p>
-      <h3>${escapeHTML(entry.name)}</h3>
-      <p class="supportive-text">${escapeHTML(entry.equipment || 'Bodyweight')}${intimidation}</p>
-      <button class="subtle-link" type="button" data-action="remove-favorite" data-favorite-name="${escapeHTML(entry.storedName)}">
-        Remove from favorites
-      </button>
-    </article>
+  const expandedContent = `
+    <p class="supportive-text">${escapeHTML(entry.equipment || 'Bodyweight')}${intimidation}</p>
+    <button class="subtle-link" type="button" data-action="remove-favorite" data-favorite-name="${escapeHTML(entry.storedName)}">
+      Remove from favorites
+    </button>
   `;
+  return renderCompactCard({
+    id: `favorite-${entry.id}`,
+    title: entry.name,
+    subtitle: entry.muscle || 'Full body',
+    expandedContent,
+    className: 'fade-transition',
+    attributes: { 'data-favorite-card': true }
+  });
 }
 
 function renderFavoritesSection(entries = []) {
@@ -548,7 +659,7 @@ function renderFavoritesSection(entries = []) {
         <p class="landing-subtext">Favorite exercises</p>
         <p class="supportive-text" data-favorites-count>${escapeHTML(countLabel)}</p>
       </div>
-      <div class="landing-grid" data-favorites-list>
+      <div class="compact-grid" data-favorites-list>
         ${cards}
       </div>
     </section>
@@ -790,14 +901,17 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
   if (!row) {
     return '';
   }
-  const repDetails = row.timeBased ? `Time: ${row.repRange}` : `Reps: ${row.repRange}`;
-  const confidence = gymxietyMode
-    ? `<span class="confidence-tag">${escapeHTML(row.confidence || 'Moderate')}</span>`
+  const repDetails = row.timeBased ? `Time: ${row.repRange}` : `${row.repRange}`;
+  const confidence = gymxietyMode && row.confidence
+    ? `Calm confidence: ${escapeHTML(row.confidence)}`
     : '';
-  const favoriteBadge = option?.isFavorite
-    ? '<span class="confidence-tag">Favorite</span>'
-    : '';
-  const badges = `${confidence}${favoriteBadge}`;
+  const badges = [];
+  if (confidence) {
+    badges.push(confidence);
+  }
+  if (option?.isFavorite) {
+    badges.push('Favorite');
+  }
   const iconMarkup = buildExerciseIconMarkup(
     {
       exerciseName: row.exercise,
@@ -806,20 +920,29 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
     },
     machineIcons
   );
-  return `
-    <button class="swap-option-card" type="button" data-swap-option="${index}">
-      <div class="swap-option-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
-      <div class="swap-option-body">
-        <div class="swap-option-header">
-          <h4>${escapeHTML(row.exercise)}</h4>
-          ${badges}
-        </div>
-        <p class="swap-option-meta">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
-        <p class="swap-option-prescription">${escapeHTML(row.sets)}</p>
-        <p class="swap-option-prescription">${escapeHTML(repDetails)}</p>
-      </div>
-    </button>
+  const collapsedMeta = [
+    escapeHTML(row.sets || DEFAULT_SET_LABEL),
+    escapeHTML(repDetails || DEFAULT_REP_LABEL)
+  ];
+  const expandedContent = `
+    <p class="supportive-text">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
+    <p>${escapeHTML(row.description || 'Move slowly and breathe through the hardest part.')}</p>
+    <div class="landing-pill-list">
+      <span class="landing-pill">${escapeHTML(row.muscle)}</span>
+      <span class="landing-pill">${escapeHTML(row.equipment)}</span>
+    </div>
+    <button class="landing-button secondary" type="button" data-action="apply-swap" data-swap-option="${index}">Use this exercise</button>
   `;
+  return renderCompactCard({
+    id: `swap-option-${index}`,
+    title: row.exercise,
+    subtitle: row.muscle,
+    icon: iconMarkup,
+    meta: collapsedMeta,
+    badges,
+    expandedContent,
+    className: 'swap-option-card'
+  });
 }
 
 function renderSwapEmptyState(muscle) {
@@ -980,6 +1103,7 @@ export function renderWorkoutSummaryPage(state) {
 
 export function attachWorkoutSummaryEvents(root, state) {
   const gymxietyMode = computeGymxietyMode(state.ui?.plannerResult, state.profile);
+  attachCompactCardInteractions(root);
   const cards = root.querySelectorAll('[data-exercise-card]');
   cards.forEach(card => requestAnimationFrame(() => card.classList.add('visible')));
   const saveButton = root.querySelector('[data-action="save-workout"]');
@@ -1119,9 +1243,11 @@ export function attachWorkoutSummaryEvents(root, state) {
       ? `
           <div class="swap-option-group">
             <p class="swap-group-label" style="margin:12px 0 6px;font-weight:600;">Your favorites</p>
-            ${favoriteOptions
-              .map((option, optionIndex) => renderSwapOptionCard(option, optionIndex, { gymxietyMode }))
-              .join('')}
+            <div class="compact-grid">
+              ${favoriteOptions
+                .map((option, optionIndex) => renderSwapOptionCard(option, optionIndex, { gymxietyMode }))
+                .join('')}
+            </div>
           </div>
         `
       : '';
@@ -1129,11 +1255,13 @@ export function attachWorkoutSummaryEvents(root, state) {
       ? `
           <div class="swap-option-group">
             ${favoriteOptions.length ? '<p class="swap-group-label" style="margin:12px 0 6px;font-weight:600;">Suggested swaps</p>' : ''}
-            ${suggestions
-              .map((option, optionIndex) =>
-                renderSwapOptionCard(option, favoriteOptions.length + optionIndex, { gymxietyMode })
-              )
-              .join('')}
+            <div class="compact-grid">
+              ${suggestions
+                .map((option, optionIndex) =>
+                  renderSwapOptionCard(option, favoriteOptions.length + optionIndex, { gymxietyMode })
+                )
+                .join('')}
+            </div>
           </div>
         `
       : '';
@@ -1173,7 +1301,7 @@ export function attachWorkoutSummaryEvents(root, state) {
         closeSwapModal();
         return;
       }
-      const optionTrigger = event.target.closest('[data-swap-option]');
+      const optionTrigger = event.target.closest('[data-action="apply-swap"]');
       if (!optionTrigger) {
         return;
       }

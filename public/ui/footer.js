@@ -6,6 +6,11 @@ const EXPLORE_LINKS = [
     comingSoonMessage: 'The Workout Program Generator is still in progress. Weekly plans will unlock soon.'
   },
   {
+    label: 'Gym Basics',
+    href: '#/gym-basics',
+    description: 'Step-by-step pointers on form, machine setup, breathing, and warm-ups.'
+  },
+  {
     label: 'Exercise Library',
     href: '#/library',
     description: 'Opens the full move library with calm, plain-language cues.'

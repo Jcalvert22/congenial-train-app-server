@@ -19,6 +19,7 @@ import { confidenceAlternativeMap } from '../data/confidenceAlternativeMap.js';
 import { getExerciseEtiquetteLines } from '../utils/etiquette.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { machineIcons } from '../data/machineIcons.js';
+import { renderCompactCard, attachCompactCardInteractions, renderStickyReassuranceBar } from '../components/compactCard.js';
 
 const READY_DELAY_MS = 1000;
 const CARD_TRANSITION_MS = 220;
@@ -42,6 +43,54 @@ const DEFAULT_EXERCISE_REPS = '10 reps';
 const DEFAULT_EXERCISE_REST = 'Rest 90 sec';
 const DEFAULT_EXERCISE_CONFIDENCE = 'Moderate';
 const DEFAULT_EXERCISE_INSTRUCTIONS = 'Move slowly, breathe through the hardest part, and stop if form slips.';
+const DEFAULT_EXERCISE_FEELING = 'You should feel steady tension in the target muscle, not pinching in your joints.';
+const DEFAULT_EXERCISE_MISTAKE = 'Common mistake is moving too fast and letting posture collapse.';
+const DEFAULT_EXERCISE_REASSURANCE = 'Your workout adapts to you. Pause or lighten the weight anytime.';
+
+function formatIntimidationBadge(value) {
+  if (!value) {
+    return '';
+  }
+  const token = value.toString().trim();
+  if (!token) {
+    return '';
+  }
+  return token.charAt(0).toUpperCase() + token.slice(1);
+}
+
+function renderExecutionVideoThumb(source) {
+  if (!source) {
+    return '';
+  }
+  const sanitized = escapeHTML(source);
+  if (/^https?:\/\//i.test(source)) {
+    return `<div class="compact-card-thumb"><img src="${sanitized}" alt="" loading="lazy" decoding="async"></div>`;
+  }
+  return `<div class="compact-card-thumb" aria-hidden="true"><span class="supportive-text" style="display:block;padding:0.4rem;">${sanitized}</span></div>`;
+}
+
+function renderExecutionVideoSection(source) {
+  if (!source) {
+    return '';
+  }
+  if (/^https?:\/\//i.test(source)) {
+    const sanitized = escapeHTML(source);
+    return `
+      <div class="exercise-video-placeholder">
+        <p class="landing-subtext execution-subhead">Video walk-through</p>
+        <a class="video-frame-link" href="${sanitized}" target="_blank" rel="noopener">
+          <span>Open tutorial in a new tab</span>
+        </a>
+      </div>
+    `;
+  }
+  return `
+    <div class="exercise-video-placeholder">
+      <p class="landing-subtext execution-subhead">Video walk-through</p>
+      <p class="supportive-text">${escapeHTML(source)}</p>
+    </div>
+  `;
+}
 
 function getFirstName(state) {
   const auth = getAuth();
@@ -144,7 +193,10 @@ function normalizeExecutionExercise(row, index) {
       supportiveCues: [],
       usesWeight: false,
       baseExercise: `Movement ${index + 1}`,
-      timeBased: false
+      timeBased: false,
+      howItShouldFeel: DEFAULT_EXERCISE_FEELING,
+      commonMistakes: DEFAULT_EXERCISE_MISTAKE,
+      reassurance: DEFAULT_EXERCISE_REASSURANCE
     };
   }
   return {
@@ -164,7 +216,10 @@ function normalizeExecutionExercise(row, index) {
     usesWeight: Boolean(row.usesWeight),
     baseExercise: row.baseExercise || row.exercise || row.name || `Movement ${index + 1}`,
     timeBased: Boolean(row.timeBased),
-    etiquetteTip: row.etiquetteTip || row.etiquette_tip || ''
+    etiquetteTip: row.etiquetteTip || row.etiquette_tip || '',
+    howItShouldFeel: row.howItShouldFeel || DEFAULT_EXERCISE_FEELING,
+    commonMistakes: row.commonMistakes || DEFAULT_EXERCISE_MISTAKE,
+    reassurance: row.reassurance || DEFAULT_EXERCISE_REASSURANCE
   };
 }
 
@@ -204,6 +259,28 @@ function renderExerciseCard(exercise, index, total, options = {}) {
     : `<p>${escapeHTML(exercise.description || 'Move slowly, keep breathing steady, and stop if form slips.')}</p>`;
   const extraCues = !gymxietyMode && Array.isArray(exercise.supportiveCues)
     ? exercise.supportiveCues.map(cue => `<p class="supportive-text">${escapeHTML(cue)}</p>`).join('')
+    : '';
+  const reassurance = exercise.reassurance || DEFAULT_EXERCISE_REASSURANCE;
+  const reassuranceBlock = reassurance
+    ? `<p class="supportive-text reassurance-text">${escapeHTML(reassurance)}</p>`
+    : '';
+  const feelingCopy = exercise.howItShouldFeel || DEFAULT_EXERCISE_FEELING;
+  const mistakeCopy = exercise.commonMistakes || DEFAULT_EXERCISE_MISTAKE;
+  const feelingSection = feelingCopy
+    ? `
+        <div class="execution-subsection">
+          <p class="landing-subtext execution-subhead">How it should feel</p>
+          <p>${escapeHTML(feelingCopy)}</p>
+        </div>
+      `
+    : '';
+  const mistakeSection = mistakeCopy
+    ? `
+        <div class="execution-subsection">
+          <p class="landing-subtext execution-subhead">Common mistake</p>
+          <p>${escapeHTML(mistakeCopy)}</p>
+        </div>
+      `
     : '';
   const etiquetteLines = getExerciseEtiquetteLines(exercise, { gymxietyMode });
   const etiquetteSet = [];
@@ -282,42 +359,77 @@ function renderExerciseCard(exercise, index, total, options = {}) {
       ${feedbackControls}
     </div>
   `;
+  const videoThumb = renderExecutionVideoThumb(exercise.videoPlaceholder || exercise.video_placeholder);
+  const videoExpanded = renderExecutionVideoSection(exercise.videoPlaceholder || exercise.video_placeholder);
+  const badgeLabel = formatIntimidationBadge(exercise.intimidation || exercise.intimidation_level || exercise.intimidationLevel);
+  const badgeText = badgeLabel ? `Intimidation: ${escapeHTML(badgeLabel)}` : '';
+  const badges = [];
+  if (confidenceTag) {
+    badges.push(`Confidence: ${escapeHTML(rawConfidence)}`);
+  }
+  if (badgeText) {
+    badges.push(badgeText);
+  }
+  const collapsedMeta = [
+    escapeHTML(primaryPrescription),
+    escapeHTML(rest)
+  ];
+  const expandedContent = `
+    <div class="execution-screen">
+      <div class="execution-header">
+        <div class="execution-header-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
+        <div class="execution-header-text">
+          <p class="execution-header-label">Current move</p>
+          <h2 class="landing-card-title">${escapeHTML(exerciseName)}</h2>
+          <p class="execution-header-muscle">${escapeHTML(muscle)}</p>
+        </div>
+      </div>
+      <div class="execution-prescription-card">
+        <p class="landing-subtext">${escapeHTML(prescriptionLabel)}</p>
+        <div class="execution-prescription-values">
+          <span class="execution-prescription-main">${escapeHTML(primaryPrescription)}</span>
+          <span class="execution-prescription-sub">${escapeHTML(secondaryPrescription)}</span>
+        </div>
+      </div>
+      <div class="execution-instructions">
+        ${confidenceTag}
+        ${supportiveIntro}
+        ${instructionsMarkup}
+        ${extraCues}
+        ${reassuranceBlock}
+        ${feelingSection}
+        ${mistakeSection}
+        <p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>
+        <div class="landing-pill-list execution-pill-list">
+          <span class="landing-pill">${escapeHTML(muscle)}</span>
+          <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
+        </div>
+      </div>
+      ${videoExpanded}
+      ${etiquetteMarkup}
+      ${restMarkup}
+      ${progressIndicator}
+      ${navigationMarkup}
+    </div>
+  `;
   return `
     <section class="landing-section execution-section">
-      <article class="landing-card exercise-card execution-flow-card fade-transition" data-exercise-card data-exercise-index="${index}">
-        <div class="execution-screen">
-          <div class="execution-header">
-            <div class="execution-header-icon exercise-icon-wrapper" aria-hidden="true">${iconMarkup}</div>
-            <div class="execution-header-text">
-              <p class="execution-header-label">Current move</p>
-              <h2 class="landing-card-title">${escapeHTML(exerciseName)}</h2>
-              <p class="execution-header-muscle">${escapeHTML(muscle)}</p>
-            </div>
-          </div>
-          <div class="execution-prescription-card">
-            <p class="landing-subtext">${escapeHTML(prescriptionLabel)}</p>
-            <div class="execution-prescription-values">
-              <span class="execution-prescription-main">${escapeHTML(primaryPrescription)}</span>
-              <span class="execution-prescription-sub">${escapeHTML(secondaryPrescription)}</span>
-            </div>
-          </div>
-          <div class="execution-instructions">
-            ${confidenceTag}
-            ${supportiveIntro}
-            ${instructionsMarkup}
-            ${extraCues}
-            <p class="supportive-text exercise-muscle-label">Targets: ${escapeHTML(muscle)}</p>
-            <div class="landing-pill-list execution-pill-list">
-              <span class="landing-pill">${escapeHTML(muscle)}</span>
-              <span class="landing-pill">${escapeHTML(exercise.equipment || 'Bodyweight')}</span>
-            </div>
-          </div>
-          ${etiquetteMarkup}
-          ${restMarkup}
-          ${progressIndicator}
-          ${navigationMarkup}
-        </div>
-      </article>
+      ${renderStickyReassuranceBar()}
+      ${renderCompactCard({
+        id: `execution-${exerciseId}`,
+        title: exerciseName,
+        subtitle: muscle,
+        icon: iconMarkup,
+        meta: collapsedMeta,
+        badges,
+        media: videoThumb,
+        expandedContent,
+        className: 'exercise-card execution-flow-card fade-transition',
+        attributes: {
+          'data-exercise-card': true,
+          'data-exercise-index': index
+        }
+      })}
     </section>
   `;
 }
@@ -502,6 +614,7 @@ export function renderWorkoutExecution(state) {
 }
 
 export function attachWorkoutExecutionEvents(root) {
+  attachCompactCardInteractions(root);
   const stateSnapshot = getState();
   const fallbackPreference = typeof stateSnapshot.profile?.gymxietyMode === 'boolean'
     ? stateSnapshot.profile.gymxietyMode
