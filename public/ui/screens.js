@@ -19,17 +19,6 @@ import {
   recordWorkoutCompletion,
   resolvePlanFocus
 } from '../logic/workout.js';
-import {
-  escapeHTML,
-  cleanInput,
-  sanitizeNumberInput,
-  normalizeSelection,
-  clamp,
-  getExerciseDisplayName,
-  getExerciseVideoInfo
-} from '../utils/helpers.js';
-import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
-import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
 import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
@@ -49,6 +38,7 @@ import { renderLoginPage, attachLoginPageEvents } from '../pages/login.js';
 import { renderSignupPage, attachSignupPageEvents } from '../pages/signup.js';
 import { renderPaywall, attachPaywallEvents } from '../pages/paywall.js';
 import { renderSuccessPage, attachSuccessPageEvents } from '../pages/success.js';
+import { escapeHTML } from '../utils/helpers.js';
 import { renderCanceledPage, attachCanceledPageEvents } from '../pages/canceled.js';
 import { renderGymConfidencePage, attachGymConfidenceEvents } from '../pages/gym-confidence.js';
 import { renderGymBasicsPage, attachGymBasicsEvents } from '../pages/gym-basics.js';
@@ -131,6 +121,13 @@ const ROUTE_HASHES = {
 
 const CHECKOUT_PLAN_ID = 'monthly';
 const START_TRIAL_HASH = ROUTE_HASHES['start-trial'];
+
+const COMING_SOON_COMPONENT = `
+  <div class="coming-soon">
+    <h2>Coming Soon</h2>
+    <p>This feature is currently in development.</p>
+  </div>
+`;
 
 function checkoutAttrFromHref(href) {
   return href === START_TRIAL_HASH ? ` data-checkout-plan="${CHECKOUT_PLAN_ID}"` : '';
@@ -1062,7 +1059,7 @@ function resolveRoute(hash, state, auth) {
     case '#/timer':
       return { html: renderFeaturePlaceholder('Calm Timer', 'Gentle timers keep you breathing at a relaxed pace between sets and circuits.') };
     case '#/progress-tracking':
-      return { html: renderFeaturePlaceholder('Progress Tracking', 'Soft streaks, session notes, and encouragement nudges help you stay consistent without pressure.') };
+      return { html: COMING_SOON_COMPONENT };
     case '#/beginner-onboarding':
       return { html: renderFeaturePlaceholder('Beginner Onboarding', 'Step-by-step setup that explains gym etiquette, equipment, and pacing in calm language.') };
     case '#/relaxed-training':
@@ -1573,14 +1570,12 @@ function buildSubscriptionBenefitsSection(cta) {
           <p>Each move comes with simple cues, tempo notes, and manners tips so you always know what to do.</p>
         </article>
         <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F37D;</div>
-          <h3>Maintenance calorie calculator</h3>
-          <p>Dial in portions with a calm, plain calculator made for real life schedules.</p>
+          <p class="landing-subtext">Maintenance Calorie Calculator</p>
+          ${COMING_SOON_COMPONENT}
         </article>
         <article class="landing-card landing-card-dark">
-          <div class="landing-card-image" aria-hidden="true">&#x1F4C8;</div>
-          <h3>Progress tracking & check-ins</h3>
-          <p>Weekly nudge reminders and streak views keep you accountable without pressure.</p>
+          <p class="landing-subtext">Progress Tracking &amp; Check-Ins</p>
+          ${COMING_SOON_COMPONENT}
         </article>
         <article class="landing-card landing-card-dark">
           <div class="landing-card-image" aria-hidden="true">&#x1F680;</div>
