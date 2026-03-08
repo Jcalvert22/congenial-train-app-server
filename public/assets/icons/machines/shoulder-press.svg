@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Soft rounded background tile -->
+  <rect x="8" y="8" width="184" height="180" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Back pad -->
+  <rect x="86" y="36" width="28" height="88" rx="14" fill="#7CCF7A"/>
+  <!-- Seat -->
+  <rect x="60" y="122" width="80" height="20" rx="10" fill="#7CCF7A"/>
+  <!-- Left connector: pill grip down to top-left of back pad -->
+  <path d="M44 80 Q56 60 86 46" fill="none" stroke="#4FAF52" stroke-width="8" stroke-linecap="round"/>
+  <!-- Right connector: pill grip down to top-right of back pad -->
+  <path d="M156 80 Q144 60 114 46" fill="none" stroke="#4FAF52" stroke-width="8" stroke-linecap="round"/>
+  <!-- Left pill handle -->
+  <rect x="24" y="72" width="36" height="16" rx="8" fill="#4FAF52"/>
+  <!-- Right pill handle -->
+  <rect x="140" y="72" width="36" height="16" rx="8" fill="#4FAF52"/>
+</svg>

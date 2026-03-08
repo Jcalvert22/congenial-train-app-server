@@ -28,6 +28,7 @@ import {
   getExerciseDisplayName,
   getExerciseVideoInfo
 } from '../utils/helpers.js';
+import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
 import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
@@ -60,6 +61,7 @@ import { updateNavbar } from '../components/navbar.js';
 import { renderNotFound } from '../router/404.js';
 import { EXERCISES } from '../data/exercises.js';
 import { getFavoriteExercises } from '../utils/favoriteExercises.js';
+import { machineIcons } from '../data/machineIcons.js';
 
 const AUTH_EVENT_NAME = 'aaa-auth-changed';
 let lastRenderedHash = null;
@@ -1793,17 +1795,38 @@ function renderPlannerResult(result) {
   `).join('');
 
   const exerciseCards = planRows.length
-    ? planRows.map(row => `
-        <article class="landing-card">
-          <h3>${escapeHTML(row.exercise)}</h3>
-          <p class="landing-subtext">${escapeHTML(row.muscle)} - ${escapeHTML(row.equipment)}</p>
+    ? planRows
+        .map(row => {
+          const iconMarkup = buildExerciseIconMarkup(
+            {
+              exerciseName: row.exercise,
+              muscle: row.muscle,
+              equipment: row.equipment,
+              machine: row.machine
+            },
+            machineIcons
+          );
+          const iconBlock = iconMarkup
+            ? `<span class="machine-icon-wrap" aria-hidden="true">${iconMarkup}</span>`
+            : '';
+          return `
+        <article class="landing-card planner-exercise-card">
+          <div class="planner-exercise-card__header">
+            ${iconBlock}
+            <div>
+              <h3>${escapeHTML(row.exercise)}</h3>
+              <p class="landing-subtext">${escapeHTML(row.muscle)} - ${escapeHTML(row.equipment)}</p>
+            </div>
+          </div>
           <ul class="landing-list">
             <li>${isTimeBasedRow(row) ? 'Time' : 'Reps'}: ${escapeHTML(row.repRange)}</li>
             <li>Sets: ${escapeHTML(row.sets)}</li>
             <li>${escapeHTML(row.description)}</li>
           </ul>
         </article>
-      `).join('')
+      `;
+        })
+        .join('')
     : '<article class="landing-card"><p>No workouts available for the selected filters.</p></article>';
 
   const feedbackPanel = planRows.length ? `

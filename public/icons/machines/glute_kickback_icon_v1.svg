@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="180" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <rect x="28" y="162" width="144" height="10" rx="5" fill="#4FAF52"/>
+  <line x1="74" y1="42" x2="96" y2="162" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <rect x="44" y="36" width="54" height="26" rx="13" fill="#7CCF7A" transform="rotate(10 71 49)"/>
+  <rect x="46" y="94" width="46" height="10" rx="5" fill="#4FAF52"/>
+  <rect x="60" y="120" width="34" height="16" rx="8" fill="#7CCF7A"/>
+  <line x1="93" y1="152" x2="162" y2="106" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <rect x="118" y="122" width="20" height="14" rx="7" fill="#7CCF7A" transform="rotate(-33 128 129)"/>
+  <path d="M93 152 Q120 162 145 148" fill="none" stroke="#4FAF52" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 4" opacity="0.5"/>
+  <path d="M162 106 L153 106" fill="none" stroke="#4FAF52" stroke-width="4" stroke-linecap="round"/>
+  <path d="M162 106 L160 115" fill="none" stroke="#4FAF52" stroke-width="4" stroke-linecap="round"/>
+</svg>

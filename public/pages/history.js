@@ -125,14 +125,17 @@ function renderHistoryCard(entry) {
   const durationLabel = formatDurationLabel(entry);
   const exercisesLabel = formatExerciseCount(entry);
   const muscleLabel = formatMuscleGroup(entry);
-  const primaryExercise = Array.isArray(entry?.exercises) && entry.exercises.length
-    ? entry.exercises[0].name
-    : entry?.planRows?.[0]?.exercise || goalLabel;
+  const hasExercises = Array.isArray(entry?.exercises) && entry.exercises.length;
+  const primaryExerciseEntry = hasExercises ? entry.exercises[0] : entry?.planRows?.[0] || null;
+  const primaryPlanRow = Array.isArray(entry?.planRows) && entry.planRows.length ? entry.planRows[0] : null;
+  const primaryExercise = primaryExerciseEntry?.name || primaryExerciseEntry?.exercise || goalLabel;
+  const primaryMachine = (primaryExerciseEntry?.machine ?? primaryPlanRow?.machine) || null;
   const iconMarkup = buildExerciseIconMarkup(
     {
       exerciseName: primaryExercise,
       muscle: muscleLabel,
-      equipment: resolvePrimaryEquipment(entry)
+      equipment: resolvePrimaryEquipment(entry),
+      machine: primaryMachine
     },
     machineIcons
   );

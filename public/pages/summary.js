@@ -336,7 +336,8 @@ function normalizeExerciseRow(row, index) {
     description: row.description || row.instructions || DEFAULT_INSTRUCTIONS,
     usesWeight: Boolean(row.usesWeight),
     etiquetteTip: row.etiquetteTip || row.etiquette_tip || '',
-    reassurance: row.reassurance || DEFAULT_EXERCISE_REASSURANCE
+    reassurance: row.reassurance || DEFAULT_EXERCISE_REASSURANCE,
+    machine: row.machine || null
   };
 }
 
@@ -370,7 +371,8 @@ export function buildSavedWorkoutPayload(plan, profile = {}) {
     muscle_group: row.muscle || 'Full body',
     confidence: row.confidence || DEFAULT_CONFIDENCE_LABEL,
     etiquette_tip: row.etiquetteTip || row.etiquette_tip || '',
-    instructions: row.description || DEFAULT_INSTRUCTIONS
+    instructions: row.description || DEFAULT_INSTRUCTIONS,
+    machine: row.machine || null
   }));
   return {
     id: generateSavedWorkoutId(),
@@ -545,7 +547,7 @@ function renderExerciseCard(row, index, options = {}) {
     ? `<button class="easier-btn" type="button" data-action="confidence-alt" data-exercise-index="${index}">Need an easier version?</button>`
     : '';
   const iconMarkup = buildExerciseIconMarkup(
-    { exerciseName, muscle, equipment },
+    { exerciseName, muscle, equipment, machine: row?.machine },
     machineIcons
   );
   const whyCopy = row?.whyThisExercise;
@@ -923,7 +925,8 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
     {
       exerciseName: row.exercise,
       muscle: row.muscle,
-      equipment: row.equipment
+      equipment: row.equipment,
+      machine: row.machine
     },
     machineIcons
   );

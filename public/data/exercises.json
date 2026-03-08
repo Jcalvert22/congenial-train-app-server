@@ -75,6 +75,7 @@
       },
       {
         "name": "machine chest press",
+        "machine": "chest_press",
         "primary_muscle": "chest",
         "secondary_muscles": ["triceps"],
         "equipment": "machine",
@@ -84,6 +85,7 @@
       },
       {
         "name": "machine incline press",
+        "machine": "chest_press",
         "primary_muscle": "chest",
         "secondary_muscles": ["shoulders"],
         "equipment": "machine",
@@ -93,6 +95,7 @@
       },
       {
         "name": "machine decline press",
+        "machine": "chest_press",
         "primary_muscle": "chest",
         "secondary_muscles": ["triceps"],
         "equipment": "machine",
@@ -102,6 +105,7 @@
       },
       {
         "name": "pec deck fly",
+        "machine": "chest_fly",
         "primary_muscle": "chest",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -158,6 +162,7 @@
     "back": [
       {
         "name": "lat pulldown",
+        "machine": "lat_pulldown",
         "primary_muscle": "back",
         "secondary_muscles": ["biceps"],
         "equipment": "machine",
@@ -176,6 +181,7 @@
       },
       {
         "name": "machine row",
+        "machine": "seated_row",
         "primary_muscle": "back",
         "secondary_muscles": ["biceps"],
         "equipment": "machine",
@@ -185,6 +191,7 @@
       },
       {
         "name": "machine high row",
+        "machine": "seated_row",
         "primary_muscle": "back",
         "secondary_muscles": ["rear delts", "biceps"],
         "equipment": "machine",
@@ -194,6 +201,7 @@
       },
       {
         "name": "machine pullover",
+        "machine": "pullover",
         "primary_muscle": "back",
         "secondary_muscles": ["chest"],
         "equipment": "machine",
@@ -266,6 +274,7 @@
       },
       {
         "name": "reverse pec deck fly",
+        "machine": "chest_fly",
         "primary_muscle": "back",
         "secondary_muscles": ["rear delts"],
         "equipment": "machine",
@@ -322,6 +331,7 @@
       },
       {
         "name": "machine shoulder press",
+        "machine": "shoulder_press",
         "primary_muscle": "shoulders",
         "secondary_muscles": ["triceps"],
         "equipment": "machine",
@@ -331,6 +341,7 @@
       },
       {
         "name": "machine lateral raise",
+        "machine": "lateral_raise",
         "primary_muscle": "shoulders",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -340,6 +351,7 @@
       },
       {
         "name": "reverse pec deck fly",
+        "machine": "chest_fly",
         "primary_muscle": "shoulders",
         "secondary_muscles": ["back"],
         "equipment": "machine",
@@ -450,6 +462,7 @@
       },
       {
         "name": "ez-bar preacher curl",
+        "machine": "preacher_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -459,6 +472,7 @@
       },
       {
         "name": "machine preacher curl",
+        "machine": "preacher_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -479,6 +493,7 @@
     "triceps": [
       {
         "name": "cable tricep pushdown",
+        "machine": "tricep_pushdown",
         "primary_muscle": "triceps",
         "secondary_muscles": [],
         "equipment": "cable",
@@ -488,6 +503,7 @@
       },
       {
         "name": "cable rope extension",
+        "machine": "tricep_pushdown",
         "primary_muscle": "triceps",
         "secondary_muscles": [],
         "equipment": "cable",
@@ -506,6 +522,7 @@
       },
       {
         "name": "machine tricep extension",
+        "machine": "tricep_extension",
         "primary_muscle": "triceps",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -515,6 +532,7 @@
       },
       {
         "name": "machine dip press",
+        "machine": "dip_press",
         "primary_muscle": "triceps",
         "secondary_muscles": ["chest", "shoulders"],
         "equipment": "machine",
@@ -562,6 +580,7 @@
     "quads": [
       {
         "name": "leg press",
+        "machine": "leg_press",
         "primary_muscle": "quads",
         "secondary_muscles": ["glutes", "hamstrings"],
         "equipment": "machine",
@@ -571,6 +590,7 @@
       },
       {
         "name": "leg extension",
+        "machine": "leg_extension",
         "primary_muscle": "quads",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -580,6 +600,7 @@
       },
       {
         "name": "hack squat machine",
+        "machine": "hack_squat",
         "primary_muscle": "quads",
         "secondary_muscles": ["glutes"],
         "equipment": "machine",
@@ -589,6 +610,7 @@
       },
       {
         "name": "machine squat press",
+        "machine": "hack_squat",
         "primary_muscle": "quads",
         "secondary_muscles": ["glutes"],
         "equipment": "machine",
@@ -598,6 +620,7 @@
       },
       {
         "name": "machine step-up",
+        "machine": "step_up",
         "primary_muscle": "quads",
         "secondary_muscles": ["glutes"],
         "equipment": "machine",
@@ -681,6 +704,7 @@
     "hamstrings": [
       {
         "name": "seated leg curl",
+        "machine": "leg_curl",
         "primary_muscle": "hamstrings",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -690,6 +714,7 @@
       },
       {
         "name": "lying leg curl",
+        "machine": "leg_curl",
         "primary_muscle": "hamstrings",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -699,6 +724,7 @@
       },
       {
         "name": "standing single-leg curl",
+        "machine": "leg_curl",
         "primary_muscle": "hamstrings",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -764,6 +790,7 @@
     "glutes": [
       {
         "name": "glute bridge machine",
+        "machine": "glute_bridge",
         "primary_muscle": "glutes",
         "secondary_muscles": ["hamstrings"],
         "equipment": "machine",
@@ -773,6 +800,7 @@
       },
       {
         "name": "hip thrust machine",
+        "machine": "glute_bridge",
         "primary_muscle": "glutes",
         "secondary_muscles": ["hamstrings"],
         "equipment": "machine",
@@ -782,6 +810,7 @@
       },
       {
         "name": "seated hip abduction",
+        "machine": "hip_abduction",
         "primary_muscle": "glutes",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -791,6 +820,7 @@
       },
       {
         "name": "standing hip abduction machine",
+        "machine": "hip_abduction",
         "primary_muscle": "glutes",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -800,6 +830,7 @@
       },
       {
         "name": "cable glute kickback",
+        "machine": "glute_kickback",
         "primary_muscle": "glutes",
         "secondary_muscles": ["hamstrings"],
         "equipment": "cable",
@@ -874,6 +905,7 @@
     "legs": [
       {
         "name": "seated calf raise",
+        "machine": "calf_raise_seated",
         "primary_muscle": "calves",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -883,6 +915,7 @@
       },
       {
         "name": "standing calf raise machine",
+        "machine": "calf_raise_standing",
         "primary_muscle": "calves",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -892,6 +925,7 @@
       },
       {
         "name": "leg press calf raise",
+        "machine": "leg_press",
         "primary_muscle": "calves",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -921,6 +955,7 @@
     "core": [
       {
         "name": "machine crunch",
+        "machine": "ab_crunch",
         "primary_muscle": "core",
         "secondary_muscles": [],
         "equipment": "machine",
@@ -930,6 +965,7 @@
       },
       {
         "name": "machine ab twist",
+        "machine": "rotary_torso",
         "primary_muscle": "core",
         "secondary_muscles": ["obliques"],
         "equipment": "machine",

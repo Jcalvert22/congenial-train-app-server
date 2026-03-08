@@ -237,21 +237,6 @@ function renderGenerateShell(state) {
           </div>
         </form>
       </article>
-      <article class="landing-card landing-loading" data-generate-loading hidden>
-        <div class="landing-spinner" aria-hidden="true"></div>
-        <div>
-          <h3>Building your workout...</h3>
-          <p class="landing-subtext">We are matching only the equipment and muscles you selected.</p>
-        </div>
-      </article>
-      <article class="landing-card landing-empty-card" data-generate-fallback hidden>
-        <p class="landing-subtext">No workout found</p>
-        <h3>Those filters were too strict.</h3>
-        <p data-generate-fallback-copy>Try toggling one more piece of equipment or another muscle group.</p>
-        <div class="landing-actions landing-space-top-sm">
-          <button class="landing-button" type="button" data-action="retry-generate">Back to form</button>
-        </div>
-      </article>
     </section>
   `;
 }
@@ -305,19 +290,6 @@ function getCheckedValues(inputs = []) {
     .filter(Boolean);
 }
 
-function toggleView(view, refs) {
-  const { formCard, loadingCard, fallbackCard } = refs;
-  if (formCard) {
-    formCard.hidden = view !== 'form';
-  }
-  if (loadingCard) {
-    loadingCard.hidden = view !== 'loading';
-  }
-  if (fallbackCard) {
-    fallbackCard.hidden = view !== 'fallback';
-  }
-}
-
 export function attachGeneratePageEvents(root) {
   const form = root.querySelector('[data-form="generate-workout"]');
   if (!form) {
@@ -326,22 +298,17 @@ export function attachGeneratePageEvents(root) {
 
   const onboardingPrefs = loadOnboardingPrefs();
   const experienceLevel = onboardingPrefs.experienceLevel;
-  const formCard = root.querySelector('[data-generate-form]');
-  const loadingCard = root.querySelector('[data-generate-loading]');
-  const fallbackCard = root.querySelector('[data-generate-fallback]');
-  const fallbackCopy = root.querySelector('[data-generate-fallback-copy]');
   const errorBox = root.querySelector('[data-generate-error]');
-  const retryButtons = root.querySelectorAll('[data-action="retry-generate"]');
   const resetButton = root.querySelector('[data-action="reset-generate"]');
   const equipmentHelper = root.querySelector('[data-equipment-helper]');
   const muscleHelper = root.querySelector('[data-muscle-helper]');
   const submitButton = root.querySelector('[data-generate-submit]');
+  const defaultSubmitLabel = submitButton?.textContent?.trim() || 'Generate Workout';
   const gymxietyToggle = root.querySelector('[data-gymxiety-toggle]');
   const equipmentInputs = Array.from(form.querySelectorAll('input[name="equipment"]'));
   const muscleInputs = Array.from(form.querySelectorAll('input[name="muscles"]'));
   const goalInputs = Array.from(form.querySelectorAll('input[name="goal"]'));
   const comfortInputs = Array.from(form.querySelectorAll('input[name="comfort-level"]'));
-  const refs = { formCard, loadingCard, fallbackCard };
 
   let selectedEquipment = getCheckedValues(equipmentInputs);
   let selectedMuscles = getCheckedValues(muscleInputs);
@@ -350,6 +317,7 @@ export function attachGeneratePageEvents(root) {
   const checkedComfort = comfortInputs.find(input => input.checked)?.value || DEFAULT_COMFORT_LEVEL;
   let comfortLevel = normalizeComfortSelection(checkedComfort);
   let gymxietyMode = Boolean(gymxietyToggle?.checked);
+  let formIsBusy = false;
 
   const setError = message => {
     if (!errorBox) {
@@ -390,9 +358,19 @@ export function attachGeneratePageEvents(root) {
       }
     }
     if (submitButton) {
-      submitButton.disabled = !(selectedEquipment.length && selectedMuscles.length);
+      const ready = selectedEquipment.length && selectedMuscles.length;
+      submitButton.disabled = formIsBusy || !ready;
+      submitButton.textContent = formIsBusy ? 'Generating…' : defaultSubmitLabel;
     }
     refreshMusclePairingHints();
+  };
+
+  const setFormBusy = isBusy => {
+    formIsBusy = Boolean(isBusy);
+    if (form) {
+      form.setAttribute('aria-busy', formIsBusy ? 'true' : 'false');
+    }
+    updateHelpers();
   };
 
   const syncMuscleState = () => {
@@ -438,11 +416,6 @@ export function attachGeneratePageEvents(root) {
     });
   });
 
-  retryButtons.forEach(button => button.addEventListener('click', () => {
-    toggleView('form', refs);
-    setError('');
-  }));
-
   resetButton?.addEventListener('click', () => {
     form.reset();
     selectedEquipment = [];
@@ -457,7 +430,7 @@ export function attachGeneratePageEvents(root) {
     });
     syncMuscleState();
     setError('');
-    toggleView('form', refs);
+    setFormBusy(false);
   });
 
   gymxietyToggle?.addEventListener('change', event => {
@@ -479,7 +452,7 @@ export function attachGeneratePageEvents(root) {
       return;
     }
 
-    toggleView('loading', refs);
+    setFormBusy(true);
 
     try {
       const plan = generateWorkout({
@@ -492,17 +465,16 @@ export function attachGeneratePageEvents(root) {
         dislikedExercises: getDislikedExercises()
       });
       if (!Array.isArray(plan.exercises) || !plan.exercises.length) {
-        if (fallbackCopy) {
-          fallbackCopy.textContent = 'Nothing matched those exact picks. Try toggling one more option and generate again.';
-        }
-        toggleView('fallback', refs);
+        setFormBusy(false);
+        setError('Nothing matched those exact picks. Try toggling one more option and generate again.');
         return;
       }
+      setFormBusy(false);
       finalizeSuccess(plan);
     } catch (error) {
       console.warn('Unable to build workout', error);
       setError('Something glitched while building that plan. Please try again.');
-      toggleView('form', refs);
+      setFormBusy(false);
     }
   });
 

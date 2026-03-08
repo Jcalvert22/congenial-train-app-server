@@ -115,7 +115,7 @@ function renderExerciseCard(exercise) {
   const muscle = exercise.muscle_group || 'Full body';
   const equipment = exercise.equipment || 'Bodyweight';
   const iconMarkup = buildExerciseIconMarkup(
-    { exerciseName: name, muscle, equipment },
+    { exerciseName: name, muscle, equipment, machine: exercise.machine },
     machineIcons
   );
   const prescription = reps ? `${sets} · ${reps}` : sets;

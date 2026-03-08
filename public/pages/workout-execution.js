@@ -240,7 +240,8 @@ function renderExerciseCard(exercise, index, total, options = {}) {
     {
       exerciseName,
       muscle,
-      equipment: exercise.equipment
+      equipment: exercise.equipment,
+      machine: exercise.machine
     },
     machineIcons
   );

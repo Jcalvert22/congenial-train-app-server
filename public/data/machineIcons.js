@@ -1,12 +1,33 @@
-export const machineIcons = {
-  'Chest Press Machine': './icons/machines/chest-press.png',
-  'Pec Deck Machine': './icons/machines/pec-deck.png',
-  'Lat Pulldown Machine': './icons/machines/lat-pulldown.png',
-  'Seated Row Machine': './icons/machines/seated-row.png',
-  'Leg Press Machine': './icons/machines/leg-press.png',
-  'Hamstring Curl Machine': './icons/machines/hamstring-curl.png',
-  'Ab Curl Machine': './icons/machines/ab-crunch.png',
-  'Pull-Up Bar (Bodyweight)': './icons/machines/pullup-bar.png',
-  'Rotary Torso Machine': '🔄',
-  'Assisted Dip Machine': '🧗‍♂️'
+const MACHINE_ICON_FILENAMES = {
+  ab_crunch: 'ab-crunch.svg',
+  calf_raise_seated: 'calf-raise.svg',
+  calf_raise_standing: 'calf-raise.svg',
+  chest_fly: 'pec-deck.svg',
+  chest_press: 'chest-press.svg',
+  dip_press: 'chest-press.svg',
+  glute_bridge: 'glute-bridge.svg',
+  glute_kickback: 'glute-kickback.svg',
+  hack_squat: 'leg-press.svg',
+  hip_abduction: 'hip-abduction.svg',
+  lat_pulldown: 'lat-pulldown.svg',
+  lateral_raise: 'shoulder-press.svg',
+  leg_curl: 'leg-curl.svg',
+  leg_extension: 'leg-extension.svg',
+  leg_press: 'leg-press.svg',
+  pullover: 'pullover.svg',
+  preacher_curl: 'preacher-curl.svg',
+  rotary_torso: 'rotary-torso.svg',
+  seated_row: 'seated-row.svg',
+  shoulder_press: 'shoulder-press.svg',
+  step_up: 'leg-press.svg',
+  tricep_extension: 'tricep-pushdown.svg',
+  tricep_pushdown: 'tricep-pushdown.svg'
 };
+
+function resolveMachineIcon(filename) {
+  return new URL(`../assets/icons/machines/${filename}`, import.meta.url).href;
+}
+
+export const machineIcons = Object.fromEntries(
+  Object.entries(MACHINE_ICON_FILENAMES).map(([key, filename]) => [key, resolveMachineIcon(filename)])
+);

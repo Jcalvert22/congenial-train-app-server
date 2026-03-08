@@ -10,7 +10,7 @@ const MUSCLE_EMOJIS = {
 };
 
 const DEFAULT_FALLBACK_EMOJI = '\u{1F3CB}\uFE0F';
-const IMAGE_EXTENSION_PATTERN = /\.png$/i;
+const IMAGE_EXTENSION_PATTERN = /\.(png|svg)$/i;
 
 function normalizeEquipmentName(value) {
   if (Array.isArray(value) && value.length) {
@@ -47,6 +47,10 @@ function findIconMatch(value, iconMap) {
 }
 
 function resolveExerciseIconValue(details = {}, iconMap = {}) {
+  const machineKey = details.machine?.toString().trim();
+  if (machineKey && iconMap[machineKey]) {
+    return iconMap[machineKey];
+  }
   const nameMatch = findIconMatch(details.exerciseName, iconMap);
   if (nameMatch) {
     return nameMatch;
@@ -80,7 +84,7 @@ export function buildExerciseIconMarkup(details = {}, iconMap = {}) {
   const accessibleLabel = buildAccessibleLabel(details);
   const trimmedIcon = iconValue?.toString().trim();
   if (trimmedIcon && IMAGE_EXTENSION_PATTERN.test(trimmedIcon)) {
-    return `<img class="exercise-icon" src="${trimmedIcon}" alt="${escapeHTML(accessibleLabel)} icon" loading="lazy">`;
+    return `<img class="exercise-icon machine-icon" src="${trimmedIcon}" alt="${escapeHTML(accessibleLabel)} icon" loading="lazy">`;
   }
   const emoji = trimmedIcon || getMuscleEmoji(details.muscle);
   return `<span class="exercise-emoji" aria-hidden="true">${escapeHTML(emoji || DEFAULT_FALLBACK_EMOJI)}</span>`;
