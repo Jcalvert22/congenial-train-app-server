@@ -9,5 +9,7 @@ export const MACHINE_ICONS = {
   leg_curl: "/assets/icons/machines/leg-curl.svg",
   hip_abduction: "/assets/icons/machines/hip-abduction.svg",
   high_row: "/assets/icons/machines/high-row.svg",
-  leg_press: "/assets/icons/machines/leg-press.svg"
+  leg_press: "/assets/icons/machines/leg-press.svg",
+  hip_thrust: "/icons/machines/hip_thrust_side_icon_v2.svg",
+  smith_machine: "/icons/machines/smith_machine_icon_v2.svg"
 };

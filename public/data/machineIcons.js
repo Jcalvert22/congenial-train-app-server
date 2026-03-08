@@ -9,6 +9,7 @@ const MACHINE_ICON_FILENAMES = {
   glute_kickback: 'glute-kickback.svg',
   hack_squat: 'leg-press.svg',
   hip_abduction: 'hip-abduction.svg',
+  hip_thrust: 'hip_thrust_side_icon_v2.svg',
   lat_pulldown: 'lat-pulldown.svg',
   lateral_raise: 'shoulder-press.svg',
   leg_curl: 'leg-curl.svg',
@@ -19,6 +20,7 @@ const MACHINE_ICON_FILENAMES = {
   rotary_torso: 'rotary-torso.svg',
   seated_row: 'seated-row.svg',
   shoulder_press: 'shoulder-press.svg',
+  smith_machine: 'smith_machine_icon_v2.svg',
   step_up: 'leg-press.svg',
   tricep_extension: 'tricep-pushdown.svg',
   tricep_pushdown: 'tricep-pushdown.svg'
