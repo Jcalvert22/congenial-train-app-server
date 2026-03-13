@@ -20,6 +20,7 @@ import {
   resolvePlanFocus
 } from '../logic/workout.js';
 import { renderWorkoutSummaryPage, attachWorkoutSummaryEvents } from '../pages/summary.js';
+import { renderGeneratePage, attachGeneratePageEvents } from '../pages/generate.js';
 import { renderProgramGeneratorLanding } from './landingProgramGenerator.js';
 import { renderExerciseLibraryLanding } from './landingExerciseLibrary.js';
 import { renderAboutLanding } from './landingAbout.js';
