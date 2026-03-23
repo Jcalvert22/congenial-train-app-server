@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+
+  <!-- Floor -->
+  <rect x="10" y="170" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Bench -->
+  <rect x="12" y="108" width="50" height="12" rx="6" fill="#7CCF7A"/>
+  <!-- Bench legs -->
+  <rect x="16" y="120" width="10" height="50" rx="5" fill="#4FAF52"/>
+  <rect x="44" y="120" width="10" height="50" rx="5" fill="#4FAF52"/>
+
+  <!-- Left knee resting on bench -->
+  <rect x="28" y="102" width="18" height="16" rx="7" fill="#4FAF52"/>
+
+  <!-- Left support arm (shoulder to bench surface) -->
+  <line x1="40" y1="96" x2="36" y2="112" stroke="#4FAF52" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Torso (flat back, horizontal) -->
+  <rect x="38" y="88" width="58" height="16" rx="8" fill="#7CCF7A"/>
+
+  <!-- Head (overlaps torso end — no neck needed) -->
+  <circle cx="34" cy="84" r="11" fill="#7CCF7A"/>
+
+  <!-- Right standing leg (single piece to floor) -->
+  <rect x="82" y="104" width="14" height="66" rx="7" fill="#4FAF52"/>
+
+  <!-- Working arm: upper segment (shoulder to elbow) -->
+  <line x1="78" y1="96" stroke="#4FAF52" stroke-width="10" stroke-linecap="round">
+    <animate attributeName="x2" values="76;84;84;76" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="122;90;90;122" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Working arm: forearm (elbow to hand) -->
+  <line stroke="#4FAF52" stroke-width="10" stroke-linecap="round">
+    <animate attributeName="x1" values="76;84;84;76" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y1" values="122;90;90;122" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="x2" values="72;76;76;72" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="156;108;108;156" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Dumbbell left plate -->
+  <rect x="60" y="148" width="8" height="18" rx="4" fill="#7CCF7A">
+    <animateTransform attributeName="transform" type="translate" values="0,0;4,-48;4,-48;0,0" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1" additive="sum"/>
+  </rect>
+  <!-- Dumbbell shaft -->
+  <rect x="67" y="152" width="14" height="8" rx="3" fill="#4FAF52">
+    <animateTransform attributeName="transform" type="translate" values="0,0;4,-48;4,-48;0,0" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1" additive="sum"/>
+  </rect>
+  <!-- Dumbbell right plate -->
+  <rect x="80" y="148" width="8" height="18" rx="4" fill="#7CCF7A">
+    <animateTransform attributeName="transform" type="translate" values="0,0;4,-48;4,-48;0,0" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1" additive="sum"/>
+  </rect>
+</svg>

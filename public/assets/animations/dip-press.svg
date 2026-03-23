@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Machine side posts -->
+  <rect x="64" y="42" width="12" height="132" rx="6" fill="#4FAF52"/>
+  <rect x="124" y="42" width="12" height="132" rx="6" fill="#4FAF52"/>
+  <!-- Top cross bar -->
+  <rect x="62" y="40" width="76" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Seat -->
+  <rect x="70" y="148" width="60" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Torso -->
+  <rect x="86" y="90" width="28" height="58" rx="14" fill="#7CCF7A"/>
+  <!-- Head -->
+  <circle cx="100" cy="80" r="12" fill="#7CCF7A"/>
+
+  <!-- Left arm (shoulder to handle, pushes down) -->
+  <line x1="88" y1="98" x2="70" y2="92" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="y2" values="92;138;138;92"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Right arm (shoulder to handle, pushes down) -->
+  <line x1="112" y1="98" x2="130" y2="92" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="y2" values="92;138;138;92"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Left handle (animated down) -->
+  <rect x="60" y="86" width="14" height="10" rx="5" fill="#A4E6A3">
+    <animate attributeName="y" values="86;132;132;86"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </rect>
+  <!-- Right handle (animated down) -->
+  <rect x="126" y="86" width="14" height="10" rx="5" fill="#A4E6A3">
+    <animate attributeName="y" values="86;132;132;86"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </rect>
+</svg>

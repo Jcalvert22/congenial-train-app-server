@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="180" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Left post -->
+  <rect x="34" y="22" width="14" height="156" rx="7" fill="#7CCF7A"/>
+  <!-- Right post -->
+  <rect x="152" y="22" width="14" height="156" rx="7" fill="#7CCF7A"/>
+  <!-- Top crossbar -->
+  <rect x="34" y="22" width="132" height="14" rx="7" fill="#4FAF52"/>
+  <!-- Barbell shaft -->
+  <rect x="10" y="96" width="180" height="12" rx="6" fill="#4FAF52"/>
+  <!-- Left plate -->
+  <rect x="10" y="78" width="26" height="48" rx="9" fill="#7CCF7A"/>
+  <!-- Right plate -->
+  <rect x="164" y="78" width="26" height="48" rx="9" fill="#7CCF7A"/>
+</svg>

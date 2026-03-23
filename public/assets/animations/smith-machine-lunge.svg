@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Smith machine frame -->
+  <rect x="12" y="16" width="10" height="158" rx="5" fill="#4FAF52"/>
+  <rect x="12" y="16" width="180" height="10" rx="5" fill="#7CCF7A"/>
+  <rect x="74" y="24" width="6" height="142" rx="3" fill="#A4E6A3" opacity="0.8"/>
+
+  <!-- Back leg (stays behind, knee bends forward, knee drops) -->
+  <path d="M 96 108 L 100 154 L 82 174" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 96 108 L 100 154 L 82 174; M 104 122 L 112 158 L 82 174; M 104 122 L 112 158 L 82 174; M 96 108 L 100 154 L 82 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+
+  <!-- Person + plate (translates forward and down into lunge) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 8,14; 8,14; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Head (facing right) -->
+    <circle cx="90" cy="44" r="12" fill="#7CCF7A"/>
+    <!-- Torso -->
+    <rect x="80" y="56" width="16" height="52" rx="8" fill="#7CCF7A"/>
+    <!-- Bar plate against guide rail -->
+    <circle cx="72" cy="66" r="10" fill="#7CCF7A"/>
+  </g>
+
+  <!-- Front leg (steps forward into lunge) -->
+  <path d="M 84 108 L 86 154 L 88 174" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 84 108 L 86 154 L 88 174; M 92 122 L 142 136 L 148 174; M 92 122 L 142 136 L 148 174; M 84 108 L 86 154 L 88 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

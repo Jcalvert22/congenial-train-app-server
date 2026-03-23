@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="170" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Cable machine column (left side, low pulley) -->
+  <rect x="10" y="18" width="12" height="152" rx="6" fill="#4FAF52"/>
+  <!-- Low pulley -->
+  <circle cx="16" cy="160" r="6" fill="#7CCF7A"/>
+
+  <!-- V-shape legs spreading from hip to floor -->
+  <line x1="95" y1="116" x2="78" y2="170" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <line x1="105" y1="116" x2="122" y2="170" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Torso -->
+  <rect x="87" y="52" width="26" height="64" rx="13" fill="#7CCF7A"/>
+  <!-- Head -->
+  <circle cx="100" cy="40" r="12" fill="#7CCF7A"/>
+
+  <!-- Cable from low pulley to left hand -->
+  <line x1="16" y1="160" stroke="#7CCF7A" stroke-width="3" stroke-linecap="round">
+    <animate attributeName="x2" values="30;26;26;30" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="110;72;72;110" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Passive right arm (static, hanging at side) -->
+  <line x1="113" y1="72" x2="128" y2="108" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Working left arm (raises from side toward machine to shoulder height) -->
+  <line x1="87" y1="72" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="30;26;26;30" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="110;72;72;110" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Handle at cable end -->
+  <circle r="5" fill="#4FAF52">
+    <animate attributeName="cx" values="30;26;26;30" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="110;72;72;110" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

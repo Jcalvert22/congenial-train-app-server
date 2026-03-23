@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="170" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Seat -->
+  <rect x="34" y="152" width="42" height="12" rx="6" fill="#4FAF52"/>
+  <!-- Torso (light body) -->
+  <rect x="46" y="72" width="16" height="80" rx="8" fill="#7CCF7A"/>
+  <!-- Chest support (right at torso edge) -->
+  <rect x="62" y="90" width="6" height="24" rx="3" fill="#4FAF52"/>
+  <!-- Pad (same length, starts at top of chest support) -->
+  <line x1="68" y1="90" x2="94" y2="107" stroke="#4FAF52" stroke-width="16" stroke-linecap="round"/>
+  <!-- Head -->
+  <circle cx="54" cy="60" r="12" fill="#7CCF7A"/>
+
+  <!-- Upper arm (resting on pad, static) -->
+  <line x1="68" y1="90" x2="106" y2="114" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Forearm — straight up/down, stays right of elbow -->
+  <line x1="106" y1="114" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2"
+      values="119;119;119;119"
+      keyTimes="0;0.45;0.55;1"
+      dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2"
+      values="141;87;87;141"
+      keyTimes="0;0.45;0.55;1"
+      dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Bar at hand -->
+  <rect width="22" height="10" rx="5" fill="#4FAF52">
+    <animate attributeName="x"
+      values="108;108;108;108"
+      keyTimes="0;0.45;0.55;1"
+      dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y"
+      values="136;82;82;136"
+      keyTimes="0;0.45;0.55;1"
+      dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </rect>
+</svg>

@@ -1,19 +1,14 @@
 import { escapeHTML } from '../utils/helpers.js';
 import { getAuth, setAuth } from '../auth/state.js';
-import { getState, setState } from '../logic/state.js';
-import { getGymxietyPreference, persistGymxietyPreference } from '../utils/gymxiety.js';
+import { setState } from '../logic/state.js';
 
 const EXPERIENCE_OPTIONS = ['Beginner', 'Intermediate', 'Advanced'];
-const GOAL_OPTIONS = ['Strength', 'Hypertrophy', 'Fat Loss', 'General Fitness'];
+const GOAL_OPTIONS = ['Fat Loss', 'Muscle Gain', 'Strength', 'General Fitness'];
 
-function wrapLandingPage(sections) {
-  return `
-    <section class="landing-page">
-      <div class="landing-container">
-        ${sections}
-      </div>
-    </section>
-  `;
+function renderSelectOptions(options, selectedValue = '') {
+  return options.map(option => `
+    <option value="${escapeHTML(option)}" ${option === selectedValue ? 'selected' : ''}>${escapeHTML(option)}</option>
+  `).join('');
 }
 
 function renderHeader() {
@@ -24,38 +19,27 @@ function renderHeader() {
         <h1>Edit Profile</h1>
         <p class="landing-subtext lead">Update your personal information and training preferences.</p>
       </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Why update?</p>
-        <p>Refreshing your details keeps recommendations aligned with how you want to train.</p>
-      </div>
     </header>
   `;
 }
 
-function renderSelectOptions(options, selectedValue = '') {
-  return options.map(option => `
-    <option value="${escapeHTML(option)}" ${option === selectedValue ? 'selected' : ''}>${escapeHTML(option)}</option>
-  `).join('');
-}
-
-function renderFormSection(user = {}, profileDefaults = {}) {
+function renderFormSection(user = {}) {
   const nameValue = user.name || '';
   const emailValue = user.email || '';
   const experienceValue = user.experienceLevel || EXPERIENCE_OPTIONS[0];
   const goalValue = user.goal || GOAL_OPTIONS[0];
-  const equipmentValue = profileDefaults.equipment || user.profile?.equipment || '';
-  const gymxietyEnabled = getGymxietyPreference();
+
   return `
     <section class="landing-section">
       <article class="landing-card">
-        <form class="landing-form" data-form="profile-edit">
+        <form class="landing-form" data-form="profile-edit" novalidate>
           <label>
             <span class="landing-subtext">Name</span>
-            <input class="landing-input" type="text" name="name" value="${escapeHTML(nameValue)}" required>
+            <input class="landing-input" type="text" name="name" value="${escapeHTML(nameValue)}" autocomplete="name" required>
           </label>
           <label>
             <span class="landing-subtext">Email</span>
-            <input class="landing-input" type="email" name="email" value="${escapeHTML(emailValue)}" required>
+            <input class="landing-input" type="email" name="email" value="${escapeHTML(emailValue)}" autocomplete="email" required>
           </label>
           <label>
             <span class="landing-subtext">Experience level</span>
@@ -64,18 +48,10 @@ function renderFormSection(user = {}, profileDefaults = {}) {
             </select>
           </label>
           <label>
-            <span class="landing-subtext">Goal</span>
+            <span class="landing-subtext">Training goal</span>
             <select class="landing-select" name="goal" required>
               ${renderSelectOptions(GOAL_OPTIONS, goalValue)}
             </select>
-          </label>
-          <label>
-            <span class="landing-subtext">Equipment access</span>
-            <textarea class="landing-textarea" name="equipment" rows="3" placeholder="e.g., Adjustable dumbbells, cables, treadmill">${escapeHTML(equipmentValue)}</textarea>
-          </label>
-          <label class="profile-toggle">
-            <input type="checkbox" id="gymxietyToggle" name="gymxietyMode" ${gymxietyEnabled ? 'checked' : ''}>
-            Gymxiety Mode (Beginner-friendly, confidence-focused workouts)
           </label>
           <div class="landing-actions landing-actions-stack landing-space-top-md">
             <button class="landing-button" type="submit">Save Changes</button>
@@ -90,60 +66,61 @@ function renderFormSection(user = {}, profileDefaults = {}) {
 export function renderProfileEdit() {
   const auth = getAuth();
   const user = auth.user || {};
-  const profile = getState().profile || {};
-  const sections = `
-    ${renderHeader()}
-    ${renderFormSection(user, profile)}
+  return `
+    <section class="landing-page">
+      <div class="landing-container">
+        ${renderHeader()}
+        ${renderFormSection(user)}
+      </div>
+    </section>
   `;
-  return wrapLandingPage(sections);
 }
 
 export function attachProfileEditEvents(root) {
+  if (typeof window !== 'undefined') {
+    window.scrollTo(0, 0);
+  }
+
   const form = root.querySelector('[data-form="profile-edit"]');
   if (form) {
     form.addEventListener('submit', event => {
       event.preventDefault();
-      if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
-        if (typeof form.reportValidity === 'function') {
-          form.reportValidity();
-        }
-        return;
-      }
+
       const formData = new FormData(form);
-      const name = (formData.get('name') || '').toString().trim();
-      const email = (formData.get('email') || '').toString().trim();
-      const experience = (formData.get('experience') || '').toString().trim();
-      const goal = (formData.get('goal') || '').toString().trim();
-      const equipment = (formData.get('equipment') || '').toString().trim();
-      const gymxietyMode = Boolean(root.querySelector('#gymxietyToggle')?.checked);
-      if (!name || !email || !experience || !goal) {
-        window.alert('Please complete all required fields.');
+      const name = formData.get('name').toString().trim();
+      const email = formData.get('email').toString().trim();
+      const experience = formData.get('experience').toString().trim();
+      const goal = formData.get('goal').toString().trim();
+
+      if (!name) {
+        window.alert('Please enter your name.');
         return;
       }
+      if (!email || !email.includes('@')) {
+        window.alert('Please enter a valid email address.');
+        return;
+      }
+
       const auth = getAuth();
       auth.user = auth.user || {};
       auth.user.name = name;
       auth.user.email = email;
       auth.user.experienceLevel = experience;
       auth.user.goal = goal;
-      auth.user.profile = { ...(auth.user.profile || {}), gymxietyMode, equipment };
-      auth.user.gymxietyMode = gymxietyMode;
-      auth.user.equipment = equipment;
       setAuth(auth);
-      setState(prev => {
-        prev.profile = {
+
+      setState(prev => ({
+        ...prev,
+        profile: {
           ...prev.profile,
           name,
           email,
           experience,
-          experienceLevel: experience.toLowerCase(),
-          goal,
-          gymxietyMode,
-          equipment
-        };
-        return prev;
-      });
-      persistGymxietyPreference(gymxietyMode);
+          experienceLevel: experience,
+          goal
+        }
+      }));
+
       window.location.hash = '#/profile';
     });
   }

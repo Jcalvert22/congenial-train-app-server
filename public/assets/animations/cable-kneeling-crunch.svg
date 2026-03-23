@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Cable machine (right side) -->
+  <rect x="176" y="28" width="10" height="146" rx="5" fill="#4FAF52"/>
+  <circle cx="176" cy="44" r="7" fill="#7CCF7A"/>
+
+  <!-- Lower body: backwards L — thigh vertical, shin horizontal back -->
+  <line x1="100" y1="162" x2="68" y2="164" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <line x1="100" y1="162" x2="100" y2="122" stroke="#4FAF52" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- Upper body: rotates forward (CW) around hip (100,122) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 100 122; 45 100 122; 45 100 122; 0 100 122"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <rect x="92" y="86" width="16" height="36" rx="8" fill="#7CCF7A"/>
+    <circle cx="100" cy="74" r="12" fill="#7CCF7A"/>
+    <!-- Arm reaching toward cable (upper-right) — hand at (140,78) in local space -->
+    <line x1="100" y1="90" x2="140" y2="78" stroke="#7CCF7A" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- Cable: from pulley, tracks hand world position -->
+  <!-- Rest: hand world=(140,78); Peak after +45° around (100,122): hand world=(159,119) -->
+  <line x1="169" y1="44" stroke="#A4E6A3" stroke-width="3" stroke-linecap="round">
+    <animate attributeName="x2" values="140;159;159;140"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="78;119;119;78"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

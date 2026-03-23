@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Left cable machine (low pulley) -->
+  <rect x="10" y="100" width="22" height="74" rx="8" fill="#4FAF52"/>
+  <circle cx="30" cy="162" r="7" fill="#7CCF7A"/>
+  <!-- Right cable machine (low pulley) -->
+  <rect x="168" y="100" width="22" height="74" rx="8" fill="#4FAF52"/>
+  <circle cx="170" cy="162" r="7" fill="#7CCF7A"/>
+
+  <!-- Person standing center -->
+  <rect x="88" y="88" width="24" height="58" rx="12" fill="#7CCF7A"/>
+  <circle cx="100" cy="78" r="12" fill="#7CCF7A"/>
+  <!-- Legs -->
+  <line x1="94" y1="144" x2="86" y2="172" stroke="#4FAF52" stroke-width="11" stroke-linecap="round"/>
+  <line x1="106" y1="144" x2="114" y2="172" stroke="#4FAF52" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Left cable (from low pulley up to hand) -->
+  <line x1="30" y1="162" x2="76" y2="130" stroke="#A4E6A3" stroke-width="4" stroke-linecap="round">
+    <animate attributeName="x2" values="76;96;96;76"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="130;106;106;130"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Right cable -->
+  <line x1="170" y1="162" x2="124" y2="130" stroke="#A4E6A3" stroke-width="4" stroke-linecap="round">
+    <animate attributeName="x2" values="124;104;104;124"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="130;106;106;130"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Left arm (sweeps from low-wide up to center) -->
+  <line x1="90" y1="106" x2="76" y2="130" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="76;94;94;76"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="130;106;106;130"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Right arm -->
+  <line x1="110" y1="106" x2="124" y2="130" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="124;106;106;124"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="130;106;106;130"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

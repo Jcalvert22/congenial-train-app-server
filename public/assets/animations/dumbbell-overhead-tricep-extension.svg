@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Seat -->
+  <rect x="58" y="140" width="72" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Torso (side view) -->
+  <rect x="86" y="68" width="16" height="72" rx="8" fill="#7CCF7A"/>
+  <!-- Head (facing right) -->
+  <circle cx="100" cy="56" r="12" fill="#7CCF7A"/>
+
+  <!-- Upper arm (raised overhead, static — elbow fixed at top) -->
+  <line x1="90" y1="80" x2="86" y2="46" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Forearm (bends from behind head → extends straight overhead) -->
+  <line x1="86" y1="46" x2="62" y2="62" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="62;86;86;62"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="62;22;22;62"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Dumbbell weight at hand -->
+  <circle r="11" fill="#7CCF7A">
+    <animate attributeName="cx" values="62;86;86;62"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="62;22;22;62"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

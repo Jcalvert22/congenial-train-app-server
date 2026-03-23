@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Machine center column -->
+  <rect x="93" y="30" width="14" height="116" rx="7" fill="#4FAF52"/>
+  <!-- Seat -->
+  <rect x="62" y="144" width="76" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Torso -->
+  <rect x="86" y="88" width="28" height="58" rx="14" fill="#7CCF7A"/>
+  <!-- Head -->
+  <circle cx="100" cy="78" r="12" fill="#7CCF7A"/>
+  <!-- Shoulder pivot dots -->
+  <circle cx="72" cy="106" r="6" fill="#A4E6A3"/>
+  <circle cx="128" cy="106" r="6" fill="#A4E6A3"/>
+
+  <!-- LEFT arm: sweeps from wide-open horizontal to contracted center -->
+  <!-- Open: extends to (22,106) · Closed: sweeps to (86,96) — inward & slightly up -->
+  <line x1="72" y1="106" x2="22" y2="106" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="22;86;86;22"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="106;96;96;106"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Left pad cap -->
+  <circle cx="22" cy="106" r="7" fill="#7CCF7A">
+    <animate attributeName="cx" values="22;86;86;22"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="106;96;96;106"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+
+  <!-- RIGHT arm: sweeps from wide-open horizontal to contracted center -->
+  <!-- Open: extends to (178,106) · Closed: sweeps to (114,96) -->
+  <line x1="128" y1="106" x2="178" y2="106" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="178;114;114;178"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="106;96;96;106"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Right pad cap -->
+  <circle cx="178" cy="106" r="7" fill="#7CCF7A">
+    <animate attributeName="cx" values="178;114;114;178"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="106;96;96;106"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

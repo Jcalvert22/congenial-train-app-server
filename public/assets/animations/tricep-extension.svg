@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Seat -->
+  <rect x="54" y="140" width="80" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Back pad -->
+  <rect x="84" y="76" width="24" height="66" rx="12" fill="#7CCF7A"/>
+  <!-- Head -->
+  <circle cx="96" cy="66" r="12" fill="#7CCF7A"/>
+
+  <!-- Upper arms (pointing up, static — elbows near head) -->
+  <line x1="88" y1="90" x2="88" y2="60" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <line x1="104" y1="90" x2="104" y2="60" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Elbow caps -->
+  <circle cx="88" cy="90" r="7" fill="#A4E6A3"/>
+  <circle cx="104" cy="90" r="7" fill="#A4E6A3"/>
+
+  <!-- Forearms (animate from bent behind head to fully extended overhead) -->
+  <line x1="88" y1="90" x2="72" y2="120" stroke="#7CCF7A" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="72;88;88;72"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="120;44;44;120"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <line x1="104" y1="90" x2="120" y2="120" stroke="#7CCF7A" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="120;104;104;120"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="120;44;44;120"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Bar/handle connecting both forearms -->
+  <rect x="68" y="114" width="56" height="12" rx="6" fill="#4FAF52">
+    <animate attributeName="x" values="68;84;84;68"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y" values="114;38;38;114"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="width" values="56;20;20;56"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </rect>
+</svg>

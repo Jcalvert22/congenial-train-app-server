@@ -227,7 +227,7 @@ function normalizeExerciseEntry(exercise) {
     movement_pattern: exercise.movement_pattern || DEFAULT_MOVEMENT_PATTERN,
     intimidation_level: (exercise.intimidation_level || DEFAULT_INTIMIDATION_LEVEL).toLowerCase(),
     gymxiety_safe: typeof exercise.gymxiety_safe === 'boolean' ? exercise.gymxiety_safe : false,
-    howto: exercise.howto || DEFAULT_GYMXIETY_DESCRIPTION,
+    howto: exercise.howto || exercise.howItShouldFeel || exercise.description || DEFAULT_GYMXIETY_DESCRIPTION,
     video: exercise.video || '',
     reassurance: exercise.reassurance || ''
   };
@@ -511,8 +511,8 @@ function mapExerciseToPlanRow(exercise, index, options = {}) {
     reps: displayedRepRange,
     sets: appliedSets,
     recommendedWeight,
-    description: exercise.howto,
-    instructions: exercise.howto,
+    description: exercise.howto || exercise.howItShouldFeel || exercise.description || '',
+    instructions: exercise.howto || exercise.howItShouldFeel || exercise.description || '',
     video: exercise.video,
     usesWeight,
     timeBased,
@@ -1181,7 +1181,7 @@ function buildConfidenceAlternative(exercise, overrides = {}) {
   const fallback = {
     equipment: Array.isArray(exercise.equipment) ? exercise.equipment.join(', ') : exercise.equipment,
     muscle: exercise.muscle_group,
-    description: exercise.howto,
+    description: exercise.howto || exercise.howItShouldFeel || exercise.description || '',
     supportiveCues: DEFAULT_GYMXIETY_CUES
   };
   const details = getConfidenceAlternativeDetails(sourceName, fallback);

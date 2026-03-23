@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Smith machine frame (right side) -->
+  <rect x="178" y="16" width="10" height="158" rx="5" fill="#4FAF52"/>
+  <!-- Top crossbar -->
+  <rect x="10" y="16" width="178" height="10" rx="5" fill="#7CCF7A"/>
+  <!-- Guide rail -->
+  <rect x="121" y="26" width="6" height="140" rx="3" fill="#A4E6A3" opacity="0.8"/>
+  <!-- Upper body hinges toward machine -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 90 112; 55 90 112; 55 90 112; 0 90 112"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Head -->
+    <circle cx="90" cy="46" r="12" fill="#7CCF7A"/>
+    <!-- Torso -->
+    <rect x="82" y="58" width="16" height="52" rx="8" fill="#7CCF7A"/>
+    <!-- Arm: endpoint animates in local space to always reach the plate in world space -->
+    <path fill="none" stroke="#4FAF52" stroke-width="10" stroke-linecap="round">
+      <animate attributeName="d"
+        values="M 98 70 L 124 112; M 98 70 L 139 105; M 98 70 L 139 105; M 98 70 L 124 112"
+        keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+        calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    </path>
+  </g>
+  <!-- Bar plate (drawn after group = renders on top of arm tip) -->
+  <circle cx="124" cy="112" r="10" fill="#A4E6A3">
+    <animate attributeName="cy" values="112;148;148;112"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+  <!-- Single centered leg with knee bend (after plate = in front) -->
+  <path d="M 90 112 L 87 150 L 85 174" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 90 112 L 87 150 L 85 174; M 90 112 L 83 148 L 81 174; M 90 112 L 83 148 L 81 174; M 90 112 L 87 150 L 85 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

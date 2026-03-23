@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="180" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Bar -->
+  <rect x="10" y="94" width="180" height="12" rx="6" fill="#4FAF52"/>
+  <!-- Left large plate -->
+  <rect x="10" y="68" width="28" height="64" rx="10" fill="#4FAF52"/>
+  <!-- Left small plate -->
+  <rect x="36" y="76" width="16" height="48" rx="6" fill="#7CCF7A"/>
+  <!-- Right small plate -->
+  <rect x="148" y="76" width="16" height="48" rx="6" fill="#7CCF7A"/>
+  <!-- Right large plate -->
+  <rect x="162" y="68" width="28" height="64" rx="10" fill="#4FAF52"/>
+</svg>

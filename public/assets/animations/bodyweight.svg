@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="168" width="180" height="12" rx="6" fill="#4FAF52"/>
+  <!-- Toes/feet (fixed on floor) -->
+  <rect x="22" y="158" width="28" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Hands (fixed circles on floor — do not move) -->
+  <circle cx="44" cy="162" r="7" fill="#4FAF52"/>
+  <circle cx="152" cy="162" r="7" fill="#4FAF52"/>
+
+  <!-- Body + head (translates DOWN 22px as arms bend) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 0,22; 0,22; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Body plank -->
+    <rect x="46" y="110" width="96" height="12" rx="6" fill="#4FAF52"/>
+    <!-- Head -->
+    <circle cx="150" cy="103" r="11" fill="#7CCF7A"/>
+  </g>
+
+  <!-- Front arm: shoulder y1 moves DOWN 22px with body; hand at (152,162) stays fixed -->
+  <line x1="132" y1="116" x2="152" y2="162" stroke="#7CCF7A" stroke-width="11" stroke-linecap="round">
+    <animate attributeName="y1" values="116;138;138;116"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Back arm: shoulder y1 moves DOWN 22px; hand at (44,162) stays fixed -->
+  <line x1="58" y1="118" x2="44" y2="162" stroke="#7CCF7A" stroke-width="11" stroke-linecap="round">
+    <animate attributeName="y1" values="118;140;140;118"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

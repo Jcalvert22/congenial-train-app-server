@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background -->
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+
+  <!-- Floor anchor point for landmine -->
+  <circle cx="24" cy="162" r="8" fill="#4FAF52"/>
+
+  <!-- Person legs -->
+  <rect x="88" y="126" width="12" height="48" rx="6" fill="#4FAF52"/>
+  <rect x="104" y="126" width="12" height="48" rx="6" fill="#4FAF52"/>
+
+  <!-- Person torso -->
+  <rect x="88" y="64" width="22" height="62" rx="11" fill="#7CCF7A"/>
+
+  <!-- Person head -->
+  <circle cx="100" cy="52" r="12" fill="#7CCF7A"/>
+
+  <!-- Barbell bar (diagonal, from anchor to animated hand position) -->
+  <line x1="24" y1="162" x2="130" y2="90" stroke="#4FAF52" stroke-width="8" stroke-linecap="round">
+    <animate attributeName="x2" values="130;92;92;130" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="90;76;76;90" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Arms: from shoulder to hand (animated) -->
+  <line x1="90" y1="80" x2="130" y2="90" stroke="#4FAF52" stroke-width="11" stroke-linecap="round">
+    <animate attributeName="x2" values="130;92;92;130" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="90;76;76;90" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- T-handle at hand (animated position) -->
+  <rect x="120" y="85" width="20" height="10" rx="4" fill="#7CCF7A">
+    <animate attributeName="x" values="120;82;82;120" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y" values="85;71;71;85" keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite" calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </rect>
+
+  <!-- Plate at anchor end of bar -->
+  <circle cx="24" cy="162" r="6" fill="#7CCF7A"/>
+
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Machine back post -->
+  <rect x="66" y="48" width="14" height="92" rx="7" fill="#4FAF52"/>
+  <!-- Seat -->
+  <rect x="54" y="140" width="78" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Thighs (horizontal, going right) -->
+  <rect x="88" y="126" width="64" height="14" rx="7" fill="#4FAF52"/>
+  <!-- Lower legs -->
+  <rect x="140" y="138" width="12" height="36" rx="6" fill="#4FAF52"/>
+
+  <!-- Torso + head (animate forward crunch — rotates CW around hip) -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 92 133; 38 92 133; 38 92 133; 0 92 133"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Torso -->
+    <rect x="85" y="77" width="14" height="56" rx="7" fill="#7CCF7A"/>
+    <!-- Head -->
+    <circle cx="92" cy="67" r="12" fill="#7CCF7A"/>
+    <!-- Arms clasped behind head -->
+    <rect x="72" y="72" width="40" height="10" rx="5" fill="#4FAF52"/>
+  </g>
+</svg>

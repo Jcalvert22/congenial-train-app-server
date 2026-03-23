@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Opposite leg (behind body — drawn first, lower z-order) -->
+  <!-- Start: bent at 90° above hip (thigh up-right, shin up from knee) -->
+  <!-- End: leg extends straight to the right (outward) -->
+  <path fill="none" stroke="#4FAF52" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 120 156 L 136 126 L 116 112; M 120 156 L 164 158 L 168 158; M 120 156 L 164 158 L 168 158; M 120 156 L 136 126 L 116 112"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+
+  <!-- Body lying flat (drawn over leg to push leg behind) -->
+  <line x1="42" y1="156" x2="120" y2="156" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round"/>
+  <!-- Head -->
+  <circle cx="42" cy="146" r="12" fill="#7CCF7A"/>
+
+  <!-- Arm: starts pointing up, extends overhead left (opposite to leg) -->
+  <line x1="70" y1="152" stroke="#7CCF7A" stroke-width="10" stroke-linecap="round">
+    <animate attributeName="x2" values="68;34;34;68"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="108;150;150;108"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

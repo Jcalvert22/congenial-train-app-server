@@ -1,16 +1,45 @@
 import { escapeHTML } from './helpers.js';
 
-const MUSCLE_EMOJIS = {
-  Chest: '\u{1F9E1}',
-  Back: '\u{1F499}',
-  Legs: '\u{1F49A}',
-  Shoulders: '\u{1F49B}',
-  Arms: '\u{1F4AA}',
-  Abs: '\u{1F300}'
+const IMAGE_EXTENSION_PATTERN = /\.(png|svg)$/i;
+
+// Maps muscle group + cable to the closest machine-equivalent SVG key.
+// Cable exercises perform the same movements as their machine counterparts.
+const MUSCLE_EQUIPMENT_ICON_KEYS = {
+  'chest:cables':      'chest_fly',
+  'chest:cable':       'chest_fly',
+  'back:cables':       'seated_row',
+  'back:cable':        'seated_row',
+  'shoulders:cables':  'lateral_raise',
+  'shoulders:cable':   'lateral_raise',
+  'biceps:cables':     'preacher_curl',
+  'biceps:cable':      'preacher_curl',
+  'triceps:cables':    'tricep_pushdown',
+  'triceps:cable':     'tricep_pushdown',
+  'quads:cables':      'leg_extension',
+  'quads:cable':       'leg_extension',
+  'hamstrings:cables': 'leg_curl',
+  'hamstrings:cable':  'leg_curl',
+  'glutes:cables':     'hip_abduction',
+  'glutes:cable':      'hip_abduction',
+  'core:cables':       'ab_crunch',
+  'core:cable':        'ab_crunch',
+  'calves:cables':     'calf_raise_standing',
+  'calves:cable':      'calf_raise_standing',
+  'legs:cables':       'leg_extension',
+  'legs:cable':        'leg_extension'
 };
 
-const DEFAULT_FALLBACK_EMOJI = '\u{1F3CB}\uFE0F';
-const IMAGE_EXTENSION_PATTERN = /\.(png|svg)$/i;
+// Maps normalized equipment labels to icon keys for non-cable/non-machine exercises.
+const EQUIPMENT_LABEL_TO_KEY = {
+  'dumbbells':   'dumbbell',
+  'dumbbell':    'dumbbell',
+  'barbell':     'barbell',
+  'bodyweight':  'bodyweight',
+  'smith machine': 'smith_machine',
+  'cables':      'lat_pulldown',
+  'cable':       'lat_pulldown',
+  'machine':     'chest_press'
+};
 
 function normalizeEquipmentName(value) {
   if (Array.isArray(value) && value.length) {
@@ -30,39 +59,50 @@ function normalizeEquipmentName(value) {
   return token.trim();
 }
 
-function getMuscleEmoji(targetMuscle = '') {
-  const normalized = targetMuscle?.toString().trim();
-  if (normalized && MUSCLE_EMOJIS[normalized]) {
-    return MUSCLE_EMOJIS[normalized];
-  }
-  return DEFAULT_FALLBACK_EMOJI;
-}
-
 function findIconMatch(value, iconMap) {
   const key = value?.toString().trim();
   if (!key) {
     return '';
   }
-  return iconMap[key] || '';
+  return iconMap[key] || iconMap[key.toLowerCase()] || '';
 }
 
 function resolveExerciseIconValue(details = {}, iconMap = {}) {
+  // 1. Machine-specific icon (e.g., chest_press, lat_pulldown)
   const machineKey = details.machine?.toString().trim();
   if (machineKey && iconMap[machineKey]) {
     return iconMap[machineKey];
   }
+
+  // 2. Exact exercise name match (e.g., a name added directly to the icon map)
   const nameMatch = findIconMatch(details.exerciseName, iconMap);
   if (nameMatch) {
     return nameMatch;
   }
-  const equipmentKey = normalizeEquipmentName(details.equipment);
-  if (equipmentKey) {
-    const equipmentMatch = findIconMatch(equipmentKey, iconMap);
-    if (equipmentMatch) {
-      return equipmentMatch;
+
+  const muscle = details.muscle?.toString().trim().toLowerCase() || '';
+  const equipmentRaw = normalizeEquipmentName(details.equipment);
+  const equipmentKey = equipmentRaw.toLowerCase();
+
+  // 3. Muscle + equipment combo (maps cable exercises to their machine-equivalent icon)
+  if (muscle && equipmentKey) {
+    const comboKey = `${muscle}:${equipmentKey}`;
+    const iconKey = MUSCLE_EQUIPMENT_ICON_KEYS[comboKey];
+    if (iconKey && iconMap[iconKey]) {
+      return iconMap[iconKey];
     }
   }
-  return '';
+
+  // 4. Equipment-level icon (dumbbell, barbell, bodyweight, smith machine)
+  if (equipmentKey) {
+    const equipmentIconKey = EQUIPMENT_LABEL_TO_KEY[equipmentKey];
+    if (equipmentIconKey && iconMap[equipmentIconKey]) {
+      return iconMap[equipmentIconKey];
+    }
+  }
+
+  // 5. Final fallback — bodyweight figure covers anything remaining
+  return iconMap['bodyweight'] || iconMap['dumbbell'] || '';
 }
 
 function buildAccessibleLabel({ exerciseName = '', equipment = '', muscle = '' } = {}) {
@@ -86,6 +126,6 @@ export function buildExerciseIconMarkup(details = {}, iconMap = {}) {
   if (trimmedIcon && IMAGE_EXTENSION_PATTERN.test(trimmedIcon)) {
     return `<img class="exercise-icon machine-icon" src="${trimmedIcon}" alt="${escapeHTML(accessibleLabel)} icon" loading="lazy">`;
   }
-  const emoji = trimmedIcon || getMuscleEmoji(details.muscle);
-  return `<span class="exercise-emoji" aria-hidden="true">${escapeHTML(emoji || DEFAULT_FALLBACK_EMOJI)}</span>`;
+  // Should not be reached when machineIcons is loaded — kept as a safety net
+  return `<img class="exercise-icon machine-icon" src="${iconMap['bodyweight'] || ''}" alt="${escapeHTML(accessibleLabel)} icon" loading="lazy">`;
 }

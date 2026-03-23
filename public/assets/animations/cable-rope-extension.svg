@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Cable machine (high pulley, person faces it) -->
+  <rect x="14" y="10" width="38" height="88" rx="8" fill="#4FAF52"/>
+  <!-- Pulley wheel -->
+  <circle cx="50" cy="95" r="8" fill="#7CCF7A"/>
+
+  <!-- Cable from pulley to hands (animated) -->
+  <line x1="50" y1="95" stroke="#A4E6A3" stroke-width="4" stroke-linecap="round">
+    <animate attributeName="x2" values="72;88;88;72"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="84;148;148;84"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Person: thigh -->
+  <line x1="91" y1="142" x2="96" y2="162" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Person: lower leg -->
+  <line x1="96" y1="162" x2="96" y2="174" stroke="#4FAF52" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Person: torso -->
+  <line x1="91" y1="84" x2="91" y2="142" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round"/>
+  <!-- Person: head -->
+  <circle cx="91" cy="72" r="12" fill="#7CCF7A"/>
+
+  <!-- Upper arms (elbows tucked at sides, static) -->
+  <line x1="88" y1="94" x2="88" y2="118" stroke="#4FAF52" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Forearms (bent up toward pulley → extended straight down) -->
+  <line x1="88" y1="118" stroke="#4FAF52" stroke-width="10" stroke-linecap="round">
+    <animate attributeName="x2" values="72;88;88;72"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="84;148;148;84"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

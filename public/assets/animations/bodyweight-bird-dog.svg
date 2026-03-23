@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Torso (horizontal, on all fours — stable) -->
+  <line x1="60" y1="116" x2="136" y2="116" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round"/>
+  <!-- Head (right side — person faces right) -->
+  <circle cx="150" cy="112" r="12" fill="#7CCF7A"/>
+
+  <!-- Front (right) supporting arm — static, angled down to floor -->
+  <line x1="130" y1="120" x2="150" y2="162" stroke="#4FAF52" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Back (left) supporting leg — static, angled down to floor -->
+  <line x1="70" y1="120" x2="58" y2="162" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Extending arm (left — animates from down to extended forward) -->
+  <line x1="120" y1="118" x2="146" y2="154" stroke="#4FAF52" stroke-width="10" stroke-linecap="round">
+    <animate attributeName="x2" values="146;176;176;146"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="154;108;108;154"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Extending leg (right — animates from down to extended back) -->
+  <line x1="72" y1="118" x2="52" y2="162" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="52;22;22;52"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="162;114;114;162"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

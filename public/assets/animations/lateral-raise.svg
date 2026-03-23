@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Machine center column -->
+  <rect x="93" y="30" width="14" height="116" rx="7" fill="#4FAF52"/>
+  <!-- Seat -->
+  <rect x="62" y="144" width="76" height="14" rx="7" fill="#7CCF7A"/>
+  <!-- Torso -->
+  <rect x="86" y="88" width="28" height="58" rx="14" fill="#7CCF7A"/>
+  <!-- Head -->
+  <circle cx="100" cy="78" r="12" fill="#7CCF7A"/>
+
+  <!-- Left arm (raises from side to horizontal) -->
+  <line x1="88" y1="102" x2="76" y2="136" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="76;26;26;76"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="136;102;102;136"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Right arm (raises from side to horizontal) -->
+  <line x1="112" y1="102" x2="124" y2="136" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="124;174;174;124"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="136;102;102;136"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Left handle pad -->
+  <circle cx="76" cy="136" r="7" fill="#A4E6A3">
+    <animate attributeName="cx" values="76;26;26;76"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="136;102;102;136"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+  <!-- Right handle pad -->
+  <circle cx="124" cy="136" r="7" fill="#A4E6A3">
+    <animate attributeName="cx" values="124;174;174;124"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="136;102;102;136"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

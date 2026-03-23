@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="180" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="168" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Bench -->
+  <rect x="18" y="100" width="76" height="16" rx="8" fill="#7CCF7A"/>
+  <!-- Bench legs -->
+  <rect x="24" y="116" width="10" height="52" rx="5" fill="#4FAF52"/>
+  <rect x="76" y="116" width="10" height="52" rx="5" fill="#4FAF52"/>
+  <!-- Head -->
+  <circle cx="26" cy="91" r="14" fill="#7CCF7A"/>
+  <!-- Upper body resting on bench -->
+  <path d="M38 97 Q65 85 92 97" fill="none" stroke="#4FAF52" stroke-width="14" stroke-linecap="round"/>
+  <!-- Hips elevated -->
+  <path d="M92 97 L138 58" fill="none" stroke="#4FAF52" stroke-width="14" stroke-linecap="round"/>
+  <!-- Barbell across hips -->
+  <rect x="118" y="50" width="64" height="12" rx="6" fill="#4FAF52"/>
+  <circle cx="118" cy="56" r="9" fill="#7CCF7A"/>
+  <circle cx="118" cy="56" r="4" fill="#4FAF52"/>
+  <circle cx="182" cy="56" r="9" fill="#7CCF7A"/>
+  <circle cx="182" cy="56" r="4" fill="#4FAF52"/>
+  <!-- Lower leg to floor -->
+  <path d="M138 58 L158 112 L158 168" fill="none" stroke="#4FAF52" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

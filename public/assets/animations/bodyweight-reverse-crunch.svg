@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Head (right side) -->
+  <circle cx="160" cy="156" r="12" fill="#7CCF7A"/>
+  <!-- Upper body lying flat -->
+  <line x1="152" y1="160" x2="90" y2="160" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round"/>
+  <!-- Arms flat at side -->
+  <line x1="128" y1="162" x2="136" y2="172" stroke="#7CCF7A" stroke-width="9" stroke-linecap="round"/>
+
+  <!-- Legs: path animates — knees tilt back toward chest, stay connected -->
+  <!-- Start: legs bent (thigh angled up-left, shin hanging down-left) -->
+  <!-- End: legs tilted back (thigh steeply up, shin still hanging) — no self-intersection -->
+  <path fill="none" stroke="#4FAF52" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 90 160 L 54 148 L 44 170; M 90 160 L 64 116 L 42 138; M 90 160 L 64 116 L 42 138; M 90 160 L 54 148 L 44 170"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

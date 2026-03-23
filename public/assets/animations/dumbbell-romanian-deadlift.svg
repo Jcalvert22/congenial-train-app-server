@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Upper body hinges forward -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate"
+      values="0 90 112; 55 90 112; 55 90 112; 0 90 112"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Head -->
+    <circle cx="90" cy="46" r="12" fill="#7CCF7A"/>
+    <!-- Torso -->
+    <rect x="82" y="58" width="16" height="52" rx="8" fill="#7CCF7A"/>
+    <!-- Arm from right shoulder, angling outward -->
+    <line x1="98" y1="70" x2="116" y2="108" stroke="#4FAF52" stroke-width="10" stroke-linecap="round"/>
+    <!-- Dumbbell circle (lightest, clear of leg and torso) -->
+    <circle cx="116" cy="114" r="10" fill="#A4E6A3"/>
+  </g>
+  <!-- Single centered leg with knee bend (after group = in front) -->
+  <path d="M 90 112 L 87 150 L 85 174" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 90 112 L 87 150 L 85 174; M 90 112 L 83 148 L 81 174; M 90 112 L 83 148 L 81 174; M 90 112 L 87 150 L 85 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Back leg (far side — thigh leans back, knee and foot behind) -->
+  <path d="M 100 114 L 66 142 L 62 174" fill="none" stroke="#7CCF7A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 100 114 L 66 142 L 62 174; M 100 140 L 80 164 L 62 174; M 100 140 L 80 164 L 62 174; M 100 114 L 66 142 L 62 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+
+  <!-- Torso + head + dumbbells (translates straight down) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 0,26; 0,26; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Head (facing right) -->
+    <circle cx="96" cy="46" r="12" fill="#7CCF7A"/>
+    <!-- Torso (upright) -->
+    <rect x="84" y="58" width="16" height="56" rx="8" fill="#7CCF7A"/>
+    <!-- Near arm + dumbbell -->
+    <line x1="86" y1="80" x2="72" y2="112" stroke="#4FAF52" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="72" cy="112" r="8" fill="#7CCF7A"/>
+    <!-- Far arm + dumbbell -->
+    <line x1="98" y1="80" x2="112" y2="112" stroke="#4FAF52" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="112" cy="112" r="8" fill="#7CCF7A"/>
+  </g>
+
+  <!-- Front leg (near side — knee bends forward as squat deepens) -->
+  <path d="M 90 114 L 126 142 L 134 174" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 90 114 L 126 142 L 134 174; M 90 140 L 140 150 L 134 174; M 90 140 L 140 150 L 134 174; M 90 114 L 126 142 L 134 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

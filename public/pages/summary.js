@@ -406,40 +406,12 @@ function renderHeader(firstName, hasPlan, goalText, gymxietyMode) {
     ? '<p class="supportive-text">Gymxiety Mode is ON \u2014 we built this plan to feel calm and confidence-forward.</p>'
     : '';
   return `
-    <header class="landing-hero">
-      <div class="landing-hero-content">
-        <span class="landing-tag">Workout summary</span>
-        <h1>Your Workout Is Ready</h1>
-        <p class="landing-subtext lead">${escapeHTML(subtext)}</p>
-        ${supportiveLead}
-      </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Need a tweak?</p>
-        <p>Adjust equipment or focus from the Generate page whenever you like.</p>
-      </div>
+    <header class="summary-hero">
+      <span class="landing-tag">Workout summary</span>
+      <h1>Your Workout Is Ready</h1>
+      <p class="landing-subtext lead">${escapeHTML(subtext)}</p>
+      ${supportiveLead}
     </header>
-  `;
-}
-
-function renderGymxietyIntroCard() {
-  const expandedContent = `
-    <p class="supportive-text">This workout is designed to feel calm, simple, and beginner-friendly.</p>
-    <ul class="landing-list">
-      ${GYMXIETY_SUPPORTIVE_CUES.map(cue => `<li>${escapeHTML(cue)}</li>`).join('')}
-    </ul>
-  `;
-  return `
-    <section class="landing-section" data-gymxiety-intro>
-      ${renderCompactCard({
-        id: 'gymxiety-mode',
-        title: 'Gymxiety Mode is ON',
-        subtitle: 'Gentle cues, slower pacing',
-        eyebrow: 'Gymxiety Mode',
-        badges: ['Calm mode'],
-        expandedContent,
-        className: 'fade-transition'
-      })}
-    </section>
   `;
 }
 
@@ -687,6 +659,7 @@ function renderCtaSection(options = {}) {
         <a class="landing-button secondary" href="#/generate">Generate Another Workout</a>
       </div>
       <div class="save-toast" data-save-toast hidden>Workout saved!</div>
+      <div class="save-toast" data-favorite-toast hidden></div>
     </section>
   `;
 }
@@ -911,48 +884,28 @@ function renderSwapOptionCard(option, index, { gymxietyMode }) {
     return '';
   }
   const repDetails = row.timeBased ? `Time: ${row.repRange}` : `${row.repRange}`;
-  const confidence = gymxietyMode && row.confidence
-    ? `Calm confidence: ${escapeHTML(row.confidence)}`
+  const favoriteBadge = option?.isFavorite ? '<span class="swap-option-badge">Favorite</span>' : '';
+  const confidenceBadge = gymxietyMode && row.confidence
+    ? `<span class="swap-option-badge swap-option-badge--calm">Calm: ${escapeHTML(row.confidence)}</span>`
     : '';
-  const badges = [];
-  if (confidence) {
-    badges.push(confidence);
-  }
-  if (option?.isFavorite) {
-    badges.push('Favorite');
-  }
   const iconMarkup = buildExerciseIconMarkup(
-    {
-      exerciseName: row.exercise,
-      muscle: row.muscle,
-      equipment: row.equipment,
-      machine: row.machine
-    },
+    { exerciseName: row.exercise, muscle: row.muscle, equipment: row.equipment, machine: row.machine },
     machineIcons
   );
-  const collapsedMeta = [
-    escapeHTML(row.sets || DEFAULT_SET_LABEL),
-    escapeHTML(repDetails || DEFAULT_REP_LABEL)
-  ];
-  const expandedContent = `
-    <p class="supportive-text">${escapeHTML(row.muscle)} • ${escapeHTML(row.equipment)}</p>
-    <p>${escapeHTML(row.description || 'Move slowly and breathe through the hardest part.')}</p>
-    <div class="landing-pill-list">
-      <span class="landing-pill">${escapeHTML(row.muscle)}</span>
-      <span class="landing-pill">${escapeHTML(row.equipment)}</span>
+  return `
+    <div class="swap-flat-card" data-swap-flat-card>
+      <div class="swap-flat-header">
+        <div class="swap-flat-icon">${iconMarkup}</div>
+        <div class="swap-flat-info">
+          <p class="swap-flat-name">${escapeHTML(row.exercise)}</p>
+          <p class="swap-flat-meta">${escapeHTML(row.muscle)} · ${escapeHTML(row.equipment)}</p>
+          <p class="swap-flat-reps">${escapeHTML(row.sets || DEFAULT_SET_LABEL)} · ${escapeHTML(repDetails || DEFAULT_REP_LABEL)}</p>
+        </div>
+      </div>
+      ${favoriteBadge || confidenceBadge ? `<div class="swap-flat-badges">${favoriteBadge}${confidenceBadge}</div>` : ''}
+      <button class="landing-button" type="button" data-action="apply-swap" data-swap-option="${index}">Use this exercise</button>
     </div>
-    <button class="landing-button secondary" type="button" data-action="apply-swap" data-swap-option="${index}">Use this exercise</button>
   `;
-  return renderCompactCard({
-    id: `swap-option-${index}`,
-    title: row.exercise,
-    subtitle: row.muscle,
-    icon: iconMarkup,
-    meta: collapsedMeta,
-    badges,
-    expandedContent,
-    className: 'swap-option-card'
-  });
 }
 
 function renderSwapEmptyState(muscle) {
@@ -1088,7 +1041,6 @@ export function renderWorkoutSummaryPage(state) {
 
   const sections = `
     ${renderHeader(firstName, true, goalText, gymxietyMode)}
-    ${gymxietyMode ? renderGymxietyIntroCard() : ''}
     ${renderPlanEtiquetteCard(plan, normalizedRows, state.profile || {}, gymxietyMode, {
       sectionClass: 'summary-spacing-lg summary-etiquette-section'
     })}
@@ -1118,7 +1070,9 @@ export function attachWorkoutSummaryEvents(root, state) {
   cards.forEach(card => requestAnimationFrame(() => card.classList.add('visible')));
   const saveButton = root.querySelector('[data-action="save-workout"]');
   const saveToast = root.querySelector('[data-save-toast]');
+  const favoriteToast = root.querySelector('[data-favorite-toast]');
   let saveToastTimer = null;
+  let favoriteToastTimer = null;
 
   const showSaveToast = () => {
     if (!saveToast) {
@@ -1132,6 +1086,22 @@ export function attachWorkoutSummaryEvents(root, state) {
     saveToastTimer = window.setTimeout(() => {
       saveToast.classList.remove('visible');
       saveToast.hidden = true;
+    }, SAVE_TOAST_DURATION_MS);
+  };
+
+  const showFavoriteToast = (message) => {
+    if (!favoriteToast) {
+      return;
+    }
+    favoriteToast.textContent = message || '';
+    favoriteToast.hidden = false;
+    favoriteToast.classList.add('visible');
+    if (favoriteToastTimer) {
+      window.clearTimeout(favoriteToastTimer);
+    }
+    favoriteToastTimer = window.setTimeout(() => {
+      favoriteToast.classList.remove('visible');
+      favoriteToast.hidden = true;
     }, SAVE_TOAST_DURATION_MS);
   };
 
@@ -1384,6 +1354,8 @@ export function attachWorkoutSummaryEvents(root, state) {
 
     const favoriteTrigger = event.target.closest('[data-action="favorite-exercise"]');
     if (favoriteTrigger) {
+      event.preventDefault();
+      event.stopPropagation();
       const index = Number.parseInt(favoriteTrigger.dataset.exerciseIndex, 10);
       const latestState = getState();
       const plan = latestState.ui?.plannerResult;
@@ -1395,8 +1367,16 @@ export function attachWorkoutSummaryEvents(root, state) {
       const isFavorited = favoriteTrigger.dataset.favorited === 'true';
       if (isFavorited) {
         removeFavoriteExercise(exerciseName);
+        favoriteTrigger.textContent = 'Add to favorites';
+        favoriteTrigger.dataset.favorited = 'false';
+        favoriteTrigger.classList.remove('is-active');
+        showFavoriteToast(`Removed from favorites`);
       } else {
         addFavoriteExercise(exerciseName);
+        favoriteTrigger.textContent = 'Remove from favorites';
+        favoriteTrigger.dataset.favorited = 'true';
+        favoriteTrigger.classList.add('is-active');
+        showFavoriteToast(`${exerciseName} added to favorites`);
       }
       refreshFavoritesSection();
       syncFavoriteButtons();

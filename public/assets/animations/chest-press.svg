@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Machine: seat back pad -->
+  <line x1="17" y1="106" x2="40" y2="152" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Machine: seat pad -->
+  <rect x="35" y="150" width="62" height="12" rx="6" fill="#4FAF52"/>
+
+  <!-- Machine: lever arm — pivots at floor, pushes handle forward (V shape with floor) -->
+  <line x1="86" y1="170" stroke="#4FAF52" stroke-width="8" stroke-linecap="round">
+    <animate attributeName="x2" values="82;108;108;82"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="116;112;112;116"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Person: thigh -->
+  <line x1="54" y1="150" x2="88" y2="150" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Person: lower leg -->
+  <line x1="88" y1="150" x2="88" y2="168" stroke="#4FAF52" stroke-width="11" stroke-linecap="round"/>
+
+  <!-- Person: torso -->
+  <line x1="54" y1="148" x2="46" y2="108" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Person: head -->
+  <circle cx="46" cy="96" r="12" fill="#7CCF7A"/>
+
+  <!-- Person: arm -->
+  <path fill="none" stroke="#7CCF7A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 46 112 L 62 124 L 82 116; M 46 112 L 82 112 L 108 112; M 46 112 L 82 112 L 108 112; M 46 112 L 62 124 L 82 116"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+
+  <!-- Handle -->
+  <circle r="7" fill="#4FAF52">
+    <animate attributeName="cx" values="82;108;108;82"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="cy" values="116;112;112;116"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

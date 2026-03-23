@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Mat/floor -->
+  <rect x="10" y="162" width="180" height="12" rx="6" fill="#4FAF52"/>
+  <!-- Head (static on mat) -->
+  <circle cx="28" cy="152" r="12" fill="#7CCF7A"/>
+  <!-- Upper body (shoulder stays, hip rises) -->
+  <line x1="40" y1="152" x2="104" y2="152" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round">
+    <animate attributeName="y2" values="152;110;110;152"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Thigh -->
+  <line x1="152" y1="140" x2="104" y2="152" stroke="#4FAF52" stroke-width="14" stroke-linecap="round">
+    <animate attributeName="y2" values="152;110;110;152"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Lower leg (static) -->
+  <line x1="152" y1="140" x2="152" y2="162" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Weight plate at hip (color transition point) -->
+  <circle cx="104" cy="152" r="11" fill="#A4E6A3">
+    <animate attributeName="cy" values="152;110;110;152"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

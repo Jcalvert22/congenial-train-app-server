@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Bench (shoulders rest here) -->
+  <rect x="14" y="136" width="50" height="16" rx="8" fill="#7CCF7A"/>
+  <!-- Head (just above bench) -->
+  <circle cx="28" cy="124" r="12" fill="#7CCF7A"/>
+  <!-- Upper body line (shoulder on bench, hip rises) -->
+  <line x1="52" y1="144" x2="100" y2="162" stroke="#7CCF7A" stroke-width="14" stroke-linecap="round">
+    <animate attributeName="y2" values="162;110;110;162"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Thigh -->
+  <line x1="148" y1="154" x2="100" y2="162" stroke="#4FAF52" stroke-width="14" stroke-linecap="round">
+    <animate attributeName="y2" values="162;110;110;162"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+  <!-- Lower leg (static) -->
+  <line x1="148" y1="154" x2="152" y2="174" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Dumbbell circle on hips (lightest, rises with hips) -->
+  <circle cx="100" cy="158" r="12" fill="#A4E6A3">
+    <animate attributeName="cy" values="158;106;106;158"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </circle>
+</svg>

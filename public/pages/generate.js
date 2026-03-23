@@ -173,7 +173,7 @@ function renderComfortSelector(selectedComfort = DEFAULT_COMFORT_LEVEL) {
     <fieldset class="generate-step" data-comfort-step>
       <legend class="landing-subtext">How confident do you feel today?</legend>
       <p class="landing-subtext">Pick the tone that feels safest right now.</p>
-      <div class="goal-selector" role="radiogroup">
+      <div class="goal-selector comfort-selector" role="radiogroup">
         ${COMFORT_OPTIONS.map(option => {
           const checked = option.value === normalized ? 'checked' : '';
           return `

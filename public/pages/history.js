@@ -41,7 +41,10 @@ function summarizeEquipment(entry) {
   if (!list.length) {
     return 'Bodyweight only';
   }
-  return list.join(', ');
+  if (list.length <= 2) {
+    return list.join(', ');
+  }
+  return `${list.slice(0, 2).join(', ')} +${list.length - 2} more`;
 }
 
 function formatMuscleGroup(entry) {
@@ -96,13 +99,13 @@ function renderHeader(savedCount) {
     : 'When you save a workout, it appears here for future sessions.';
   return `
     <section class="landing-section history-header">
-      <div class="history-header-top" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;">
-        <div class="history-header-copy" style="flex:1 1 260px;min-width:240px;">
+      <div class="history-header-top">
+        <div class="history-header-copy">
           <span class="landing-tag">Workout history</span>
           <h1>Workout Library</h1>
           <p class="landing-subtext lead">${escapeHTML(description)}</p>
         </div>
-        <a class="landing-button secondary" style="flex:0 0 auto;min-width:220px;text-align:center;" href="#/library">Open Exercise Library</a>
+        <a class="landing-button secondary history-library-btn" href="#/library">Open Exercise Library</a>
       </div>
     </section>
   `;

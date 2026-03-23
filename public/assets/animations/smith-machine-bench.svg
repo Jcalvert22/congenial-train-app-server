@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+
+  <!--
+    VIEW: Head-end of Smith machine bench looking toward feet.
+    Vertical rails are visible on both sides — bar slides straight up/down the tracks.
+    Head centered; person NOT appearing horizontal.
+  -->
+
+  <!-- Smith machine vertical rails (left and right) -->
+  <rect x="20" y="14" width="8" height="172" rx="4" fill="#7CCF7A" opacity="0.65"/>
+  <rect x="172" y="14" width="8" height="172" rx="4" fill="#7CCF7A" opacity="0.65"/>
+
+  <!-- Bench pad -->
+  <rect x="86" y="116" width="28" height="76" rx="8" fill="#7CCF7A"/>
+
+  <!-- Head (centered) -->
+  <circle cx="100" cy="142" r="13" fill="#7CCF7A"/>
+
+  <!-- Chest / upper-body block -->
+  <rect x="68" y="98" width="64" height="40" rx="14" fill="#4FAF52"/>
+
+  <!-- Left arm -->
+  <line x1="68" y1="112" x2="42" y2="90" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="y2" values="90;58;58;90"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Right arm -->
+  <line x1="132" y1="112" x2="158" y2="90" stroke="#4FAF52" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="y2" values="90;58;58;90"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+
+  <!-- Barbell + rail brackets (slides straight up the rails) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 0,-32; 0,-32; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <!-- Left plate -->
+    <rect x="14" y="78" width="30" height="24" rx="7" fill="#7CCF7A"/>
+    <rect x="19" y="83" width="20" height="14" rx="4" fill="#4FAF52"/>
+    <!-- Rail bracket clips -->
+    <rect x="25" y="80" width="8" height="8" rx="2" fill="#4FAF52"/>
+    <!-- Shaft -->
+    <rect x="44" y="84" width="112" height="12" rx="6" fill="#4FAF52"/>
+    <!-- Rail bracket clips right -->
+    <rect x="167" y="80" width="8" height="8" rx="2" fill="#4FAF52"/>
+    <!-- Right plate -->
+    <rect x="156" y="78" width="30" height="24" rx="7" fill="#7CCF7A"/>
+    <rect x="161" y="83" width="20" height="14" rx="4" fill="#4FAF52"/>
+  </g>
+</svg>

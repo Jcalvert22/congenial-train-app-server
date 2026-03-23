@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+
+  <!-- Torso (bent forward, near horizontal, person faces right) -->
+  <rect x="80" y="90" width="76" height="14" rx="7" fill="#7CCF7A" transform="rotate(-10 80 97)"/>
+  <!-- Head -->
+  <circle cx="164" cy="84" r="12" fill="#7CCF7A"/>
+  <!-- Support arm (hand forward on machine/bench) -->
+  <line x1="148" y1="92" x2="170" y2="110" stroke="#4FAF52" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Support leg (straight down, static) -->
+  <line x1="84" y1="108" x2="84" y2="172" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  <!-- Support foot -->
+  <rect x="70" y="165" width="28" height="9" rx="4" fill="#4FAF52"/>
+
+  <!-- Working leg (animates from straight down to kicked back and up) -->
+  <line x1="88" y1="108" x2="88" y2="172" stroke="#7CCF7A" stroke-width="12" stroke-linecap="round">
+    <animate attributeName="x2" values="88;18;18;88"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <animate attributeName="y2" values="172;74;74;172"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </line>
+</svg>

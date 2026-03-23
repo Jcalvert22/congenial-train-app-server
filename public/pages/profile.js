@@ -52,7 +52,6 @@ function renderHeader(displayName) {
   return `
     <header class="landing-hero">
       <div class="landing-hero-content">
-        <div class="profile-avatar" aria-hidden="true"></div>
         <span class="landing-tag">Profile</span>
         <h1>Your Profile</h1>
         <p class="landing-subtext lead">Manage your personal information and training preferences.</p>
@@ -162,7 +161,13 @@ async function refreshBillingMetadata(user, cancelBtn, stripeCustomerId) {
   }
 }
 
-function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
+function renderProfileCard({ name, email, experience, goal, gymxietyMode, daysUsing }) {
+  const memberRow = daysUsing
+    ? `<div>
+            <p class="landing-subtext">Using the app for</p>
+            <strong>${escapeHTML(daysUsing)}</strong>
+          </div>`
+    : '';
   return `
     <section class="landing-section">
       <article class="landing-card profile-card card-pop-in" data-profile-card>
@@ -181,6 +186,7 @@ function renderProfileCard({ name, email, experience, goal, gymxietyMode }) {
             <p class="landing-subtext">Gymxiety Mode</p>
             <strong>${gymxietyMode ? 'On' : 'Off'}</strong>
           </div>
+          ${memberRow}
         </div>
       </article>
     </section>
@@ -223,6 +229,15 @@ function renderActionsSection() {
   `;
 }
 
+function calcDaysUsing(createdAt) {
+  if (!createdAt) return null;
+  const ms = typeof createdAt === 'number' ? createdAt : Date.parse(createdAt);
+  if (isNaN(ms)) return null;
+  const days = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+  if (days === 0) return 'today';
+  return days === 1 ? '1 day' : `${days} days`;
+}
+
 export function renderProfilePage(state = getState()) {
   let isLoading = true;
   const profile = state.profile || {};
@@ -247,6 +262,8 @@ export function renderProfilePage(state = getState()) {
   const gymxietyMode = typeof profile.gymxietyMode === 'boolean'
     ? profile.gymxietyMode
     : Boolean(auth.user?.profile?.gymxietyMode);
+  const createdAt = auth.user?.created_at || auth.user?.createdAt || null;
+  const daysUsing = calcDaysUsing(createdAt);
 
   if (!profile.goal && !profile.experience) {
     const sections = `
@@ -262,7 +279,6 @@ export function renderProfilePage(state = getState()) {
   }
 
   const profileContent = `
-    ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode })}
     ${renderPreferenceCard({
       equipment: profile.equipment,
       location: profile.location
@@ -271,6 +287,7 @@ export function renderProfilePage(state = getState()) {
   `;
 
   const sections = `
+    ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode, daysUsing })}
     ${renderHeader(displayName)}
     ${wrapProfileContent(profileContent)}
   `;

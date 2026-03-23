@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+
+  <!-- Machine back/seat (reclined) -->
+  <rect x="10" y="120" width="90" height="52" rx="12" fill="#4FAF52"/>
+  <!-- Back pad (angled) -->
+  <rect x="14" y="62" width="16" height="64" rx="8" fill="#7CCF7A" transform="rotate(-20 22 94)"/>
+
+  <!-- Person head (reclined, on left) -->
+  <circle cx="36" cy="108" r="12" fill="#7CCF7A"/>
+  <!-- Person torso (reclined horizontal) -->
+  <rect x="48" y="106" width="56" height="14" rx="7" fill="#7CCF7A"/>
+
+  <!-- Weight sled plate (animated — legs push it away) -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 48,-36; 48,-36; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <rect x="132" y="60" width="24" height="76" rx="8" fill="#7CCF7A"/>
+    <rect x="136" y="70" width="16" height="56" rx="6" fill="#4FAF52"/>
+  </g>
+
+  <!-- Left leg (animates from bent to extended) -->
+  <path d="M 94 112 L 118 82 L 136 66" fill="none" stroke="#4FAF52" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 94 112 L 118 82 L 136 66; M 94 112 L 136 88 L 180 70; M 94 112 L 136 88 L 180 70; M 94 112 L 118 82 L 136 66"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+
+  <!-- Right leg (slightly offset for depth, animates with left) -->
+  <path d="M 94 118 L 120 90 L 136 72" fill="none" stroke="#7CCF7A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 94 118 L 120 90 L 136 72; M 94 118 L 138 94 L 180 76; M 94 118 L 138 94 L 180 76; M 94 118 L 120 90 L 136 72"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

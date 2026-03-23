@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect x="8" y="8" width="184" height="184" rx="40" fill="#A4E6A3" opacity="0.24"/>
+  <!-- Floor -->
+  <rect x="10" y="174" width="180" height="10" rx="5" fill="#4FAF52"/>
+  <!-- Smith machine frame -->
+  <rect x="14" y="28" width="10" height="146" rx="5" fill="#4FAF52"/>
+  <rect x="176" y="28" width="10" height="146" rx="5" fill="#4FAF52"/>
+  <rect x="10" y="28" width="180" height="10" rx="5" fill="#7CCF7A"/>
+  <!-- Guide rails -->
+  <rect x="88" y="38" width="6" height="130" rx="3" fill="#A4E6A3" opacity="0.8"/>
+  <rect x="116" y="38" width="6" height="130" rx="3" fill="#A4E6A3" opacity="0.8"/>
+
+  <!-- Body + weight circle group -->
+  <g>
+    <animateTransform attributeName="transform" type="translate"
+      values="0,0; 0,-6; 0,-6; 0,0"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+    <circle cx="100" cy="46" r="12" fill="#7CCF7A"/>
+    <rect x="92" y="58" width="16" height="52" rx="8" fill="#7CCF7A"/>
+    <!-- Weight plate circle on upper back — LEFT side (back for right-facing person) -->
+    <circle cx="86" cy="64" r="12" fill="#A4E6A3"/>
+    <!-- Thigh -->
+    <line x1="100" y1="108" x2="104" y2="148" stroke="#4FAF52" stroke-width="13" stroke-linecap="round"/>
+    <!-- Lower leg -->
+    <line x1="104" y1="148" x2="108" y2="164" stroke="#4FAF52" stroke-width="12" stroke-linecap="round"/>
+  </g>
+
+  <!-- Foot: heel(left) rises, toe(right) stays -->
+  <path d="M 90 174 L 108 164 L 128 174" fill="none" stroke="#4FAF52" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="d"
+      values="M 90 174 L 108 164 L 128 174; M 90 158 L 108 158 L 128 174; M 90 158 L 108 158 L 128 174; M 90 174 L 108 164 L 128 174"
+      keyTimes="0;0.45;0.55;1" dur="2.8s" repeatCount="indefinite"
+      calcMode="spline" keySplines="0.25 0 0.75 1;0 0 1 1;0.25 0 0.75 1"/>
+  </path>
+</svg>

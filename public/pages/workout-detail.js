@@ -1,9 +1,10 @@
 import { escapeHTML, getExerciseDisplayName } from '../utils/helpers.js';
 import { findSavedWorkout, removeSavedWorkout } from '../utils/savedWorkouts.js';
+import { setState } from '../logic/state.js';
 import { renderErrorStateCard, renderPageShell } from '../components/stateCards.js';
 import { buildExerciseIconMarkup } from '../utils/iconHelpers.js';
 import { machineIcons } from '../data/machineIcons.js';
-import { renderCompactCard, attachCompactCardInteractions, renderStickyReassuranceBar } from '../components/compactCard.js';
+import { attachCompactCardInteractions } from '../components/compactCard.js';
 
 const GOAL_LABELS = {
   strength: 'Strength',
@@ -12,9 +13,6 @@ const GOAL_LABELS = {
   weight_loss: 'Weight Loss',
   general: 'General Fitness'
 };
-
-const DEFAULT_SET_LABEL = '3 sets';
-const DEFAULT_REST_LABEL = 'Rest 60 sec';
 
 function formatGoal(goal) {
   if (!goal) {
@@ -103,80 +101,44 @@ function renderSummary(entry) {
   `;
 }
 
-function renderExerciseCard(exercise) {
-  if (!exercise) {
-    return '';
-  }
-  const name = getExerciseDisplayName(exercise) || 'Exercise';
-  const sets = exercise.sets || DEFAULT_SET_LABEL;
-  const reps = exercise.reps || '';
-  const rest = exercise.rest || DEFAULT_REST_LABEL;
-  const confidence = exercise.confidence || '';
-  const muscle = exercise.muscle_group || 'Full body';
-  const equipment = exercise.equipment || 'Bodyweight';
-  const iconMarkup = buildExerciseIconMarkup(
-    { exerciseName: name, muscle, equipment, machine: exercise.machine },
-    machineIcons
-  );
-  const prescription = reps ? `${sets} · ${reps}` : sets;
-  const collapsedMeta = [
-    escapeHTML(prescription),
-    escapeHTML(rest)
-  ];
-  const badges = confidence ? [`Confidence: ${escapeHTML(confidence)}`] : [];
-  const expandedContent = `
-    <div class="history-exercise-text">
-      <div class="history-exercise-meta">
-        <span>${escapeHTML(muscle)}</span>
-        <span>${escapeHTML(equipment)}</span>
-      </div>
-      ${exercise.instructions ? `<p>${escapeHTML(exercise.instructions)}</p>` : ''}
-      ${exercise.etiquette_tip ? `<p class="supportive-text history-exercise-etiquette">${escapeHTML(exercise.etiquette_tip)}</p>` : ''}
-    </div>
-  `;
-  return renderCompactCard({
-    id: exercise.id || name,
-    title: name,
-    subtitle: muscle,
-    icon: iconMarkup,
-    meta: collapsedMeta,
-    badges,
-    expandedContent,
-    className: 'history-exercise-card fade-transition'
-  });
-}
 
-function renderExercisesSection(entry) {
+function renderAnimationsGrid(entry) {
   const list = Array.isArray(entry?.exercises) ? entry.exercises : [];
   if (!list.length) {
-    return `
-      <section class="landing-section history-exercises">
-        ${renderStickyReassuranceBar()}
-        ${renderCompactCard({
-          id: 'history-empty-exercises',
-          title: 'No exercises saved',
-          subtitle: 'Saved workout',
-          expandedContent: '<p class="supportive-text">No exercises were saved with this workout.</p>',
-          className: 'history-exercise-card empty'
-        })}
-      </section>
-    `;
+    return '';
   }
+  const tiles = list.map(exercise => {
+    const name = getExerciseDisplayName(exercise) || 'Exercise';
+    const muscle = exercise.muscle_group || 'Full body';
+    const equipment = exercise.equipment || 'Bodyweight';
+    const iconMarkup = buildExerciseIconMarkup(
+      { exerciseName: name, muscle, equipment, machine: exercise.machine },
+      machineIcons
+    );
+    return `
+      <div class="workout-detail-anim-tile">
+        <div class="workout-detail-anim-icon" aria-hidden="true">${iconMarkup}</div>
+        <p class="workout-detail-anim-label">${escapeHTML(name)}</p>
+      </div>
+    `;
+  }).join('');
   return `
-    <section class="landing-section history-exercises">
-      <p class="landing-subtext">Exercises</p>
-      ${renderStickyReassuranceBar()}
-      <div class="history-exercise-list compact-grid">
-        ${list.map(renderExerciseCard).join('')}
+    <section class="landing-section workout-detail-animations">
+      <p class="landing-subtext">What you'll do</p>
+      <div class="workout-detail-anim-grid">
+        ${tiles}
       </div>
     </section>
   `;
 }
 
+
 function renderActions(entry) {
+  const hasRows = Array.isArray(entry?.planRows) && entry.planRows.length > 0;
   return `
     <section class="landing-section history-detail-actions" data-workout-detail-root data-workout-id="${escapeHTML(entry.id)}">
-      <a class="landing-button history-back-button" href="#/history">Back to History</a>
+      ${hasRows ? `<button class="landing-button" type="button" data-action="start-saved-workout">Start Workout</button>` : ''}
+      <a class="landing-button secondary history-back-button" href="#/history">Back to History</a>
       <div class="history-detail-links">
         <a class="supportive-link" href="#/generate">Generate a Fresh Workout</a>
         <button class="supportive-link danger" type="button" data-action="delete-saved-workout">Delete Saved Workout</button>
@@ -205,7 +167,7 @@ export function renderWorkoutDetailPage(id) {
   const sections = `
     ${renderHeader(dateLabel, goalLabel)}
     ${renderSummary(entry)}
-    ${renderExercisesSection(entry)}
+    ${renderAnimationsGrid(entry)}
     ${renderActions(entry)}
   `;
   return renderPageShell(sections, { isLoading });
@@ -216,6 +178,34 @@ export function attachWorkoutDetailEvents(root) {
     window.scrollTo(0, 0);
   }
   attachCompactCardInteractions(root);
+
+  const startButton = root.querySelector('[data-action="start-saved-workout"]');
+  if (startButton) {
+    startButton.addEventListener('click', () => {
+      const container = root.querySelector('[data-workout-detail-root]');
+      const workoutId = container?.getAttribute('data-workout-id');
+      const entry = workoutId ? findSavedWorkout(workoutId) : null;
+      const planRows = Array.isArray(entry?.planRows) ? entry.planRows : [];
+      if (!planRows.length) {
+        window.location.hash = '#/generate';
+        return;
+      }
+      setState(prev => {
+        prev.ui = prev.ui || {};
+        prev.ui.activeWorkout = entry;
+        prev.ui.activeWorkoutIndex = 0;
+        prev.ui.activeWorkoutCompleted = false;
+        prev.ui.activeWorkoutStartedAt = Date.now();
+        prev.ui.pendingWorkoutSave = null;
+        prev.ui.activeWorkoutIntroComplete = false;
+        prev.ui.activeWorkoutSavedEntry = null;
+        prev.ui.activeWorkoutFeedback = {};
+        return prev;
+      });
+      window.location.hash = '#/workout';
+    });
+  }
+
   const deleteButton = root.querySelector('[data-action="delete-saved-workout"]');
   if (!deleteButton) {
     return;
