@@ -2,11 +2,11 @@ import { EXERCISES, DEFAULT_BEGINNER_WORKOUT, FALLBACK_EQUIPMENT } from '../data
 import { normalizeExperienceLevel, deriveComfortFromExperience } from './onboarding.js';
 
 const GOAL_REP_SCHEMES = {
-  strength: { reps: [4, 6], sets: 3, rest: 120 },
+  strength: { reps: [4, 6], sets: 4, rest: 120 },
   hypertrophy: { reps: [8, 12], sets: 3, rest: 90 },
-  endurance: { reps: [12, 20], sets: 2, rest: 45 },
-  weight_loss: { reps: [10, 15], sets: 2, rest: 45 },
-  general: { reps: [8, 12], sets: 2, rest: 60 }
+  endurance: { reps: [12, 20], sets: 3, rest: 45 },
+  weight_loss: { reps: [10, 15], sets: 3, rest: 45 },
+  general: { reps: [8, 12], sets: 3, rest: 60 }
 };
 
 const GOAL_TIME_SCHEMES = {
@@ -197,7 +197,7 @@ export function applyGoalPrescription(exercise, goalKey, gymxietyMode) {
 
   if (gymxietyMode) {
     reps = Math.max(1, Math.floor(reps * 0.8));
-    sets = Math.max(1, sets - 1);
+    sets = Math.max(2, sets - 1);
   }
 
   if (usesTime) {

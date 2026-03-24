@@ -39,7 +39,7 @@ import { renderLoginPage, attachLoginPageEvents } from '../pages/login.js';
 import { renderSignupPage, attachSignupPageEvents } from '../pages/signup.js';
 import { renderPaywall, attachPaywallEvents } from '../pages/paywall.js';
 import { renderSuccessPage, attachSuccessPageEvents } from '../pages/success.js';
-import { escapeHTML } from '../utils/helpers.js';
+import { escapeHTML, getExerciseDisplayName, getExerciseVideoInfo } from '../utils/helpers.js';
 import { renderCanceledPage, attachCanceledPageEvents } from '../pages/canceled.js';
 import { renderGymConfidencePage, attachGymConfidenceEvents } from '../pages/gym-confidence.js';
 import { renderGymBasicsPage, attachGymBasicsEvents } from '../pages/gym-basics.js';
@@ -1027,10 +1027,7 @@ function resolveRoute(hash, state, auth) {
         { onLocked: renderPaywallGate }
       );
     case '#/library':
-      return protectRoute(
-        () => ({ html: renderLibrary(state), afterRender: attachLibraryEvents }),
-        { onLocked: renderPaywallGate }
-      );
+      return { html: renderLibrary(state), afterRender: attachLibraryEvents };
     case '#/plan-generator':
       return protectRoute(
         () => ({ html: renderPlanGenerator(state), afterRender: attachPlanGeneratorEvents }),
