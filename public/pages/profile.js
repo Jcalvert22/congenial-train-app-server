@@ -4,32 +4,29 @@ import { getAuth, logout } from '../auth/state.js';
 import { updateProfileMessage } from '../js/profileStatus.js';
 import { getSupabaseClient } from '../js/supabaseClient.js';
 import { fetchSubscriptionStatus } from '../js/subscription.js';
+import {
+  renderEmptyStateCard,
+  renderErrorStateCard,
+  renderPageShell
+} from '../components/stateCards.js';
+
+// ─── Billing portal ──────────────────────────────────────────────────────────
 
 export async function openBillingPortal() {
   try {
     const supabase = getSupabaseClient();
     const { data } = await supabase.auth.getSession();
     const accessToken = data?.session?.access_token;
-
-    if (!accessToken) {
-      throw new Error('Missing Supabase session');
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`
-    };
-
+    if (!accessToken) throw new Error('Missing Supabase session');
     const res = await fetch('/create-portal-session', {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
       body: JSON.stringify({})
     });
-
-    if (!res.ok) {
-      throw new Error(`Portal request failed: ${res.status}`);
-    }
-
+    if (!res.ok) throw new Error(`Portal request failed: ${res.status}`);
     const payload = await res.json();
     if (payload?.url) {
       window.location.href = payload.url;
@@ -41,48 +38,8 @@ export async function openBillingPortal() {
     window.alert('Unable to open billing portal.');
   }
 }
-import {
-  renderEmptyStateCard,
-  renderErrorStateCard,
-  renderPageShell,
-  revealPageContent
-} from '../components/stateCards.js';
 
-function renderHeader(displayName) {
-  return `
-    <header class="landing-hero">
-      <div class="landing-hero-content">
-        <span class="landing-tag">Profile</span>
-        <h1>Your Profile</h1>
-        <p class="landing-subtext lead">Manage your personal information and training preferences.</p>
-        <p class="landing-subtext">Signed in as ${escapeHTML(displayName)}</p>
-      </div>
-      <div class="landing-card" aria-hidden="true">
-        <p class="landing-subtext">Reminder</p>
-        <p>Keeping your details current helps every calm plan stay personal and pressure-free.</p>
-      </div>
-    </header>
-  `;
-}
-
-function wrapProfileContent(content) {
-  return `
-    <div class="profile-container">
-      <div id="profile-message" class="profile-message" style="display:none;"></div>
-
-      <div id="trial-progress-container" class="trial-progress-container" style="display:none;">
-        <div id="trial-progress-bar" class="trial-progress-bar"></div>
-      </div>
-
-      <!-- rest of your profile UI -->
-      ${content}
-
-      <button id="cancel-subscription-btn" class="cancel-sub-btn" style="display:none;">
-        Manage Subscription
-      </button>
-    </div>
-  `;
-}
+// ─── Subscription helpers ────────────────────────────────────────────────────
 
 const PORTAL_ELIGIBLE_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']);
 
@@ -95,53 +52,36 @@ function hasPortalAccess(status) {
 }
 
 function canAttemptPortal(profile, stripeCustomerId) {
-  if (hasPortalAccess(profile?.subscription_status)) {
-    return true;
-  }
-  return Boolean(stripeCustomerId);
+  return hasPortalAccess(profile?.subscription_status) || Boolean(stripeCustomerId);
 }
 
 function extractPeriodEndSeconds(value) {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
     const parsed = Date.parse(value);
-    if (!Number.isNaN(parsed)) {
-      return Math.floor(parsed / 1000);
-    }
+    if (!Number.isNaN(parsed)) return Math.floor(parsed / 1000);
     const numeric = Number(value);
-    if (Number.isFinite(numeric)) {
-      return Math.floor(numeric);
-    }
+    if (Number.isFinite(numeric)) return Math.floor(numeric);
   }
   return null;
 }
 
 function hasValidPeriodEnd(value) {
-  const seconds = extractPeriodEndSeconds(value);
-  return typeof seconds === 'number' && seconds > 0;
+  const s = extractPeriodEndSeconds(value);
+  return typeof s === 'number' && s > 0;
 }
 
 function needsBillingRefresh(profile) {
-  if (!profile) {
-    return false;
-  }
+  if (!profile) return false;
   return hasPortalAccess(profile.subscription_status) && !hasValidPeriodEnd(profile.current_period_end);
 }
 
 async function refreshBillingMetadata(user, cancelBtn, stripeCustomerId) {
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
   try {
     const latest = await fetchSubscriptionStatus();
-    if (!latest) {
-      return null;
-    }
+    if (!latest) return null;
     const normalized = {
       subscription_status: normalizeStatus(latest.subscription_status) || 'inactive',
       current_period_end: latest.current_period_end ?? null
@@ -150,9 +90,7 @@ async function refreshBillingMetadata(user, cancelBtn, stripeCustomerId) {
     if (cancelBtn) {
       const shouldShow = canAttemptPortal(normalized, stripeCustomerId);
       cancelBtn.style.display = shouldShow ? 'block' : 'none';
-      if (cancelBtn.style.display === 'block') {
-        cancelBtn.onclick = () => openBillingPortal();
-      }
+      if (shouldShow) cancelBtn.onclick = () => openBillingPortal();
     }
     return normalized;
   } catch (error) {
@@ -161,72 +99,17 @@ async function refreshBillingMetadata(user, cancelBtn, stripeCustomerId) {
   }
 }
 
-function renderProfileCard({ name, email, experience, goal, gymxietyMode, daysUsing }) {
-  const memberRow = daysUsing
-    ? `<div>
-            <p class="landing-subtext">Using the app for</p>
-            <strong>${escapeHTML(daysUsing)}</strong>
-          </div>`
-    : '';
-  return `
-    <section class="landing-section">
-      <article class="landing-card profile-card card-pop-in" data-profile-card>
-        <h2 class="landing-card-title">${escapeHTML(name)}</h2>
-        <p class="landing-subtext">${escapeHTML(email)}</p>
-        <div class="landing-card-body profile-details">
-          <div>
-            <p class="landing-subtext">Experience level</p>
-            <strong>${escapeHTML(experience)}</strong>
-          </div>
-          <div>
-            <p class="landing-subtext">Primary goal</p>
-            <strong>${escapeHTML(goal)}</strong>
-          </div>
-          <div>
-            <p class="landing-subtext">Gymxiety Mode</p>
-            <strong>${gymxietyMode ? 'On' : 'Off'}</strong>
-          </div>
-          ${memberRow}
-        </div>
-      </article>
-    </section>
-  `;
-}
+// ─── Data helpers ─────────────────────────────────────────────────────────────
 
-function renderPreferenceCard(profile) {
-  const equipment = profile.equipment || 'Bodyweight focus';
-  const location = profile.location || 'Location not set';
-  return `
-    <section class="landing-section">
-      <article class="landing-card card-pop-in" data-profile-card>
-        <p class="landing-subtext">Preferences</p>
-        <div class="profile-details">
-          <div>
-            <p class="landing-subtext">Equipment</p>
-            <strong>${escapeHTML(equipment)}</strong>
-          </div>
-          <div>
-            <p class="landing-subtext">Location</p>
-            <strong>${escapeHTML(location)}</strong>
-          </div>
-        </div>
-      </article>
-    </section>
-  `;
-}
+const EXPERIENCE_LABELS = {
+  brand_new: 'Brand new',
+  returning_lifter: 'Returning lifter',
+  inconsistent: 'Comfortable but inconsistent'
+};
 
-function renderActionsSection() {
-  return `
-    <section class="landing-section">
-      <article class="landing-card">
-        <p class="landing-subtext">Actions</p>
-        <div class="landing-actions landing-actions-stack">
-          <a class="landing-button" href="#/profile-edit">Edit Profile</a>
-          <button class="landing-button secondary" type="button" data-action="profile-logout">Log Out</button>
-        </div>
-      </article>
-    </section>
-  `;
+function formatExperience(value = '') {
+  const key = value.toString().trim().toLowerCase();
+  return EXPERIENCE_LABELS[key] || (value.trim() || null);
 }
 
 function calcDaysUsing(createdAt) {
@@ -238,74 +121,133 @@ function calcDaysUsing(createdAt) {
   return days === 1 ? '1 day' : `${days} days`;
 }
 
+function readUserData(auth, profile) {
+  return {
+    name:        auth.user?.name?.trim()          || profile.name          || '',
+    email:       auth.user?.email?.trim()          || profile.email         || '',
+    experience:  auth.user?.experienceLevel        || profile.experienceLevel || profile.experience || '',
+    goal:        auth.user?.goal                   || profile.goal          || '',
+    createdAt:   auth.user?.created_at             || auth.user?.createdAt  || null
+  };
+}
+
+// ─── Render helpers ───────────────────────────────────────────────────────────
+
+function renderDetailRow(label, value) {
+  return `
+    <div>
+      <p class="landing-subtext">${escapeHTML(label)}</p>
+      <strong>${escapeHTML(value)}</strong>
+    </div>
+  `;
+}
+
+function renderProfileCard({ name, email, experience, goal, daysUsing }) {
+  const experienceLabel = formatExperience(experience);
+  return `
+    <section class="landing-section">
+      <article class="landing-card card-pop-in" data-profile-card>
+        <h2 class="landing-card-title">${escapeHTML(name)}</h2>
+        <p class="landing-subtext">${escapeHTML(email)}</p>
+        <div class="landing-card-body profile-details">
+          ${experienceLabel  ? renderDetailRow('Experience level', experienceLabel) : ''}
+          ${goal             ? renderDetailRow('Primary goal', goal)               : ''}
+          ${daysUsing        ? renderDetailRow('Using the app for', daysUsing)     : ''}
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderActionsCard() {
+  return `
+    <section class="landing-section">
+      <article class="landing-card card-pop-in" data-profile-card>
+        <div class="landing-actions landing-actions-stack">
+          <a class="landing-button" href="#/profile-edit">Edit Profile</a>
+          <button class="landing-button secondary" type="button" data-action="profile-logout">Log Out</button>
+        </div>
+      </article>
+    </section>
+  `;
+}
+
+function renderSubscriptionWidgets() {
+  return `
+    <section class="landing-section">
+      <div class="profile-container">
+        <div id="profile-message" class="profile-message" style="display:none;"></div>
+        <div id="trial-progress-container" class="trial-progress-container" style="display:none;">
+          <div id="trial-progress-bar" class="trial-progress-bar"></div>
+        </div>
+        <button id="cancel-subscription-btn" class="cancel-sub-btn" style="display:none;">
+          Manage Subscription
+        </button>
+      </div>
+    </section>
+  `;
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 export function renderProfilePage(state = getState()) {
-  let isLoading = true;
   const profile = state.profile || {};
   const auth = getAuth();
-  isLoading = false;
+
   if (!auth?.user && !profile.name) {
-    const sections = `
-      ${renderHeader('Friend')}
-      ${renderErrorStateCard({
+    return renderPageShell(
+      renderErrorStateCard({
         title: 'No account detected',
-        message: 'We could not find your signed-in details. Please log in again to manage your profile.',
-        actionLabel: 'Back Home',
-        actionHref: '#/'
-      })}
-    `;
-    return renderPageShell(sections, { isLoading });
+        message: 'We could not find your account details. Please log in again.',
+        actionLabel: 'Log In',
+        actionHref: '#/login'
+      })
+    );
   }
-  const displayName = auth.user?.name?.trim() || profile.name || 'Friend';
-  const email = auth.user?.email?.trim() || profile.email || 'Email not set';
-  const experience = profile.experience || 'Beginner';
-  const goal = profile.goal || 'Build steady confidence';
-  const gymxietyMode = typeof profile.gymxietyMode === 'boolean'
-    ? profile.gymxietyMode
-    : Boolean(auth.user?.profile?.gymxietyMode);
-  const createdAt = auth.user?.created_at || auth.user?.createdAt || null;
+
+  const { name, email, experience, goal, createdAt } = readUserData(auth, profile);
   const daysUsing = calcDaysUsing(createdAt);
 
-  if (!profile.goal && !profile.experience) {
-    const sections = `
-      ${renderHeader(displayName)}
-      ${wrapProfileContent(renderEmptyStateCard({
-        title: 'Profile not set up',
-        message: 'Add your basics so we can personalize every calm plan.',
-        actionLabel: 'Edit Profile',
+  if (!experience && !goal) {
+    return renderPageShell(
+      renderEmptyStateCard({
+        title: 'Profile not set up yet',
+        message: 'Add your basics so every plan stays personal.',
+        actionLabel: 'Set Up Profile',
         actionHref: '#/profile-edit'
-      }))}
-    `;
-    return renderPageShell(sections, { isLoading });
+      })
+    );
   }
 
-  const profileContent = `
-    ${renderPreferenceCard({
-      equipment: profile.equipment,
-      location: profile.location
-    })}
-    ${renderActionsSection()}
-  `;
-
   const sections = `
-    ${renderProfileCard({ name: displayName, email, experience, goal, gymxietyMode, daysUsing })}
-    ${renderHeader(displayName)}
-    ${wrapProfileContent(profileContent)}
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Account</span>
+        <h1>Your Profile</h1>
+      </div>
+    </header>
+    ${renderProfileCard({ name, email, experience, goal, daysUsing })}
+    ${renderActionsCard()}
+    ${renderSubscriptionWidgets()}
   `;
 
-  return renderPageShell(sections, { isLoading });
+  return renderPageShell(sections);
 }
 
 export function attachProfilePageEvents(root) {
-  revealPageContent(root);
   if (typeof window !== 'undefined') {
     window.scrollTo(0, 0);
   }
+
+  // Staggered fade-in for each card
   const cards = root.querySelectorAll('[data-profile-card]');
   cards.forEach((card, index) => {
     requestAnimationFrame(() => {
-      setTimeout(() => card.classList.add('visible'), 60 * index);
+      setTimeout(() => card.classList.add('visible'), 80 * index);
     });
   });
+
+  // Log out
   const logoutButton = root.querySelector('[data-action="profile-logout"]');
   if (logoutButton) {
     logoutButton.addEventListener('click', () => {
@@ -314,6 +256,7 @@ export function attachProfilePageEvents(root) {
     });
   }
 
+  // Subscription status
   const auth = getAuth();
   const state = getState();
   const profile = state.profile || {};
@@ -336,9 +279,7 @@ export function attachProfilePageEvents(root) {
     }
     if (!hasPortalAccess(normalizedProfile.subscription_status) || needsBillingRefresh(normalizedProfile)) {
       refreshBillingMetadata(auth.user, cancelBtn, auth.stripeCustomerId).then(updated => {
-        if (updated) {
-          normalizedProfile = updated;
-        }
+        if (updated) normalizedProfile = updated;
       });
     }
   }

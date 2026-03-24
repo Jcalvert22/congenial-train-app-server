@@ -102,7 +102,7 @@
 
 .swap-modal-list {
   overflow-y: auto;
-  max-height: 60vh;
+  max-height: 50vh;
   flex: 1 1 auto;
 }
 
@@ -283,7 +283,7 @@
 .summary-exercises-section .compact-grid {
   gap: calc(var(--spacing-lg, 2rem) * 1.1);
   grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
-  max-width: min(56rem, 100%);
+  max-width: min(60rem, 100%);
   margin: 0 auto;
 }
 

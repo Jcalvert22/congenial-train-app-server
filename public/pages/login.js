@@ -124,7 +124,6 @@ export function attachLoginPageEvents(root) {
       await refreshAuthState();
       await runSubscriptionCheck();
     } catch (error) {
-      console.error('Login error:', error);
       if (errorEl) {
         errorEl.textContent = error?.message || 'Unable to log in right now.';
       }

@@ -123,6 +123,7 @@
       },
       {
         "name": "cable chest fly",
+        "machine": "chest_fly",
         "primary_muscle": "chest",
         "secondary_muscles": [],
         "equipment": "cable",
@@ -182,6 +183,7 @@
       },
       {
         "name": "seated cable row",
+        "machine": "seated_row",
         "primary_muscle": "back",
         "secondary_muscles": ["biceps", "rear delts"],
         "equipment": "cable",
@@ -425,6 +427,7 @@
     "biceps": [
       {
         "name": "dumbbell bicep curl",
+        "machine": "dumbbell_bicep_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "dumbbell",
@@ -434,6 +437,7 @@
       },
       {
         "name": "dumbbell hammer curl",
+        "machine": "dumbbell_hammer_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": ["forearms"],
         "equipment": "dumbbell",
@@ -443,6 +447,7 @@
       },
       {
         "name": "dumbbell incline curl",
+        "machine": "dumbbell_incline_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "dumbbell",
@@ -452,6 +457,7 @@
       },
       {
         "name": "cable bicep curl",
+        "machine": "cable_bicep_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "cable",
@@ -461,6 +467,7 @@
       },
       {
         "name": "cable hammer curl",
+        "machine": "cable_hammer_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": ["forearms"],
         "equipment": "cable",
@@ -470,6 +477,7 @@
       },
       {
         "name": "cable high curl",
+        "machine": "cable_high_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": ["shoulders"],
         "equipment": "cable",
@@ -479,6 +487,7 @@
       },
       {
         "name": "ez-bar curl",
+        "machine": "ez_bar_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "barbell",
@@ -508,6 +517,7 @@
       },
       {
         "name": "barbell curl",
+        "machine": "barbell_curl",
         "primary_muscle": "biceps",
         "secondary_muscles": [],
         "equipment": "barbell",

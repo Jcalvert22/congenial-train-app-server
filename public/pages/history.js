@@ -113,10 +113,14 @@ function renderHeader(savedCount) {
 
 function renderEmptyState() {
   return `
-    <section class="landing-section history-empty">
-      <h2>No workouts saved yet</h2>
-      <p class="supportive-text">Tap “Save Workout” on your summary screen to keep a calm plan for later.</p>
-      <a class="landing-button" href="#/generate">Generate a Workout</a>
+    <section class=”landing-section history-empty”>
+      <article class=”landing-card”>
+        <h2>No workouts saved yet</h2>
+        <p class=”landing-subtext”>Tap “Save Workout” on your summary screen to keep a calm plan for later.</p>
+        <div class=”landing-actions landing-space-top-sm”>
+          <a class=”landing-button” href=”#/generate”>Generate a Workout</a>
+        </div>
+      </article>
     </section>
   `;
 }

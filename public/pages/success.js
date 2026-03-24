@@ -1,20 +1,28 @@
 import { routeBySubscription } from '../js/subscription.js';
 import { getCurrentUser } from '../auth/state.js';
 import { redirectToLogin } from '../auth/guard.js';
+import { renderPageShell } from '../components/stateCards.js';
 
 export function renderSuccessPage() {
-  return `
-    <section class="panel" style="margin-top:32px;">
-      <span class="badge">Payment complete</span>
-      <h1 style="margin:12px 0 6px;">Thanks for joining AllAroundAthlete.</h1>
-      <p style="color:var(--muted);max-width:540px;">We are refreshing your subscription to unlock the full app. This usually takes a few seconds.</p>
-      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-        <button class="landing-button" data-success-refresh>Refresh access</button>
-        <a class="landing-button secondary" href="#/dashboard">Go to dashboard</a>
+  const sections = `
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Payment complete</span>
+        <h1>Thanks for joining AllAroundAthlete.</h1>
+        <p class="landing-subtext lead">We are refreshing your subscription to unlock the full app. This usually takes a few seconds.</p>
       </div>
-      <p class="auth-subtext" data-success-status style="margin-top:18px;">Waiting for Stripe confirmation...</p>
+    </header>
+    <section class="landing-section">
+      <article class="landing-card">
+        <div class="landing-actions landing-actions-stack">
+          <button class="landing-button" type="button" data-success-refresh>Refresh access</button>
+          <a class="landing-button secondary" href="#/dashboard">Go to dashboard</a>
+        </div>
+        <p class="landing-subtext" data-success-status aria-live="polite">Waiting for Stripe confirmation...</p>
+      </article>
     </section>
   `;
+  return renderPageShell(sections);
 }
 
 export function attachSuccessPageEvents(root) {
@@ -48,7 +56,6 @@ export function attachSuccessPageEvents(root) {
         }
       });
     } catch (error) {
-      console.error('Subscription refresh failed', error);
       statusEl.textContent = 'Unable to refresh access right now. Please try again.';
     } finally {
       refreshBtn.disabled = false;

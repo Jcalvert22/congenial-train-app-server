@@ -130,7 +130,7 @@ function renderMuscleChecklist(list, selectedValues = [], disabled = false) {
           const pairingLabel = hasPairings ? formatPairingText(pairings) : '';
           const shouldShowPairing = isChecked && !disabled;
           const pairingMarkup = hasPairings
-            ? `<p class="muscle-pairing-hint text-xs text-gray-500 mt-1" data-muscle-pairing="${escapeHTML(normalized)}"${shouldShowPairing ? '' : ' hidden'}>
+            ? `<p class="muscle-pairing-hint" data-muscle-pairing="${escapeHTML(normalized)}"${shouldShowPairing ? '' : ' hidden'}>
                 Recommended pairing: ${escapeHTML(pairingLabel)}
               </p>`
             : '';
@@ -472,7 +472,6 @@ export function attachGeneratePageEvents(root) {
       setFormBusy(false);
       finalizeSuccess(plan);
     } catch (error) {
-      console.warn('Unable to build workout', error);
       setError('Something glitched while building that plan. Please try again.');
       setFormBusy(false);
     }

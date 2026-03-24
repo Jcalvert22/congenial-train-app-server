@@ -65,11 +65,13 @@ function formatMuscleGroups(entry) {
 
 function renderHeader(dateLabel, goalLabel) {
   return `
-    <section class="landing-section history-detail-header">
-      <span class="landing-tag">Saved workout</span>
-      <h1>Workout Details</h1>
-      <p class="landing-subtext lead">Saved on ${escapeHTML(dateLabel)} · Goal: ${escapeHTML(goalLabel)}</p>
-    </section>
+    <header class="landing-hero">
+      <div class="landing-hero-content">
+        <span class="landing-tag">Saved workout</span>
+        <h1>Workout Details</h1>
+        <p class="landing-subtext lead">Saved on ${escapeHTML(dateLabel)} · Goal: ${escapeHTML(goalLabel)}</p>
+      </div>
+    </header>
   `;
 }
 
@@ -137,12 +139,16 @@ function renderActions(entry) {
   const hasRows = Array.isArray(entry?.planRows) && entry.planRows.length > 0;
   return `
     <section class="landing-section history-detail-actions" data-workout-detail-root data-workout-id="${escapeHTML(entry.id)}">
-      ${hasRows ? `<button class="landing-button" type="button" data-action="start-saved-workout">Start Workout</button>` : ''}
-      <a class="landing-button secondary history-back-button" href="#/history">Back to History</a>
-      <div class="history-detail-links">
-        <a class="supportive-link" href="#/generate">Generate a Fresh Workout</a>
-        <button class="supportive-link danger" type="button" data-action="delete-saved-workout">Delete Saved Workout</button>
-      </div>
+      <article class="landing-card">
+        <div class="landing-actions landing-actions-stack">
+          ${hasRows ? `<button class="landing-button" type="button" data-action="start-saved-workout">Start Workout</button>` : ''}
+          <a class="landing-button secondary" href="#/history">Back to History</a>
+        </div>
+        <div class="history-detail-links">
+          <a class="supportive-link" href="#/generate">Generate a Fresh Workout</a>
+          <button class="supportive-link danger" type="button" data-action="delete-saved-workout">Delete Saved Workout</button>
+        </div>
+      </article>
     </section>
   `;
 }
