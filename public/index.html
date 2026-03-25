@@ -8,7 +8,7 @@
   <meta name="description" content="All Around Athlete delivers personalized workouts, gym confidence coaching, and ready-to-use training plans so you always know what to do when you walk into the gym." />
   <meta name="keywords" content="workout generator,gym confidence,fitness app,training plans,all around athlete" />
   <meta name="theme-color" content="#080810" />
-  <meta name="next-public-subscriptions-enabled" content="false" />
+  <meta name="next-public-subscriptions-enabled" content="true" />
   <link rel="canonical" href="https://allaroundathlete.com/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="All Around Athlete" />
@@ -57,7 +57,9 @@
 
   <script type="module" src="./app.mjs"></script>
   <script type="module">
-    import { showSubscriptionAlert, setTrialPlan, getSelectedPlan } from './js/checkout.js';
+    import { startCheckout, setTrialPlan, getSelectedPlan } from './js/checkout.js';
+    import { getCurrentUser } from './auth/state.js';
+    import { redirectToLogin } from './auth/guard.js';
 
     const PLAN_OPTIONS = [
       { id: 'monthly', title: 'Monthly', detail: '$7.99 billed each month' },
@@ -106,7 +108,7 @@
         </button>
       `).join('');
 
-      optionsContainer.addEventListener('click', event => {
+      optionsContainer.addEventListener('click', async event => {
         const option = event.target.closest('[data-plan-option]');
         if (!option) {
           return;
@@ -116,7 +118,12 @@
         highlightPlanOption(plan);
         option.disabled = true;
         try {
-          showSubscriptionAlert();
+          const user = await getCurrentUser();
+          if (!user) {
+            redirectToLogin();
+            return;
+          }
+          await startCheckout(plan);
         } finally {
           option.disabled = false;
           closePlanModal();
@@ -166,7 +173,7 @@
       isModalOpen = false;
     }
 
-    document.addEventListener('click', event => {
+    document.addEventListener('click', async event => {
       const trialButton = event.target.closest('[data-start-trial]');
       if (trialButton) {
         event.preventDefault();
@@ -181,7 +188,12 @@
       event.preventDefault();
       const plan = (checkoutTarget.getAttribute('data-checkout-plan') || 'monthly').trim() || 'monthly';
       setTrialPlan(plan);
-      showSubscriptionAlert();
+      const user = await getCurrentUser();
+      if (!user) {
+        redirectToLogin();
+        return;
+      }
+      await startCheckout(plan);
     });
   </script>
 </body>

@@ -86,7 +86,7 @@ export function renderLoginPage() {
       <button type="submit">Log in</button>
       <p class="auth-error" data-login-error aria-live="polite"></p>
     </form>
-    <p class="auth-meta">Need an account? We're launching soon—check back when invites reopen.</p>
+    <p class="auth-meta">Need an account? <a href="#/create-account">Sign up</a></p>
   `);
 }
 

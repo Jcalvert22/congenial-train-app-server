@@ -70,7 +70,7 @@ async function ensureProfile(user) {
     return null;
   }
   try {
-    const response = await fetch('/sync-profile', {
+    const response = await fetch('/functions/sync-profile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id, email: user.email })

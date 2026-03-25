@@ -20,6 +20,7 @@ export function renderPaywall(auth) {
           <button class="landing-button" type="button" data-paywall-plan="monthly">Start monthly ($7.99)</button>
           <button class="landing-button secondary" type="button" data-paywall-plan="yearly">Start yearly ($49.99)</button>
         </div>
+        <p class="auth-error" data-paywall-error aria-live="polite" hidden></p>
         <p class="landing-subtext">Already subscribed? Head to <a href="#/success">the success page</a> to refresh your access.</p>
         <p class="landing-subtext">Current status: <strong>${status}</strong>.</p>
       </article>
@@ -30,9 +31,26 @@ export function renderPaywall(auth) {
 
 export function attachPaywallEvents(root) {
   const buttons = root.querySelectorAll('[data-paywall-plan]');
+  const errorEl = root.querySelector('[data-paywall-error]');
+
+  function showError(message) {
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.removeAttribute('hidden');
+    }
+  }
+
+  function clearError() {
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.setAttribute('hidden', '');
+    }
+  }
+
   buttons.forEach(button => {
     button.addEventListener('click', async event => {
       event.preventDefault();
+      clearError();
       const plan = button.dataset.paywallPlan || 'monthly';
       const user = await getCurrentUser();
       if (!user) {
@@ -43,6 +61,8 @@ export function attachPaywallEvents(root) {
       button.disabled = true;
       try {
         await startCheckout(plan);
+      } catch (error) {
+        showError(error?.message || 'Unable to start checkout. Please try again.');
       } finally {
         button.disabled = false;
       }

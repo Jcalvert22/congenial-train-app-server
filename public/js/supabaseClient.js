@@ -25,8 +25,7 @@ if (!supabase) {
   console.warn(CONFIG_WARNING);
 }
 
-// Set to true once the public launch is live so new accounts can be created again.
-const SIGNUPS_ENABLED = false;
+const SIGNUPS_ENABLED = true;
 const SIGNUPS_BLOCKED_MESSAGE = 'New account creation is closed until launch.';
 
 async function handleEmailConfirmation() {

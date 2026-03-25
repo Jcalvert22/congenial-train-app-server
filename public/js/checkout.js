@@ -3,11 +3,6 @@ import { redirectToLogin } from '../auth/guard.js';
 
 const STORAGE_KEY = 'aaa-selected-plan';
 let currentPlan = 'monthly';
-const SUBSCRIPTION_ALERT_MESSAGE = 'Subscriptions coming soon. Check Instagram for the official launch date.';
-
-export function showSubscriptionAlert() {
-  alert(SUBSCRIPTION_ALERT_MESSAGE);
-}
 
 function normalizePlan(plan) {
   const value = (plan || '').toLowerCase();
@@ -58,8 +53,24 @@ export function getSelectedPlan() {
 
 export async function startCheckout(priceId = currentPlan) {
   const normalizedPlan = normalizePlan(priceId);
-  showSubscriptionAlert();
-  console.warn('Checkout blocked. Subscriptions are not available yet.', { plan: normalizedPlan });
+  const user = await getCurrentUser();
+  if (!user) {
+    redirectToLogin();
+    return;
+  }
+
+  const response = await fetch('/functions/create-checkout-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })
+  });
+
+  const payload = await response.json();
+  if (!response.ok || !payload?.url) {
+    throw new Error(payload?.error || 'Unable to create checkout session.');
+  }
+
+  window.location.assign(payload.url);
 }
 
 export function setTrialPlan(plan = currentPlan) {
