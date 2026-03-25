@@ -145,8 +145,8 @@ async function retrieveSubscription(env, subscriptionId) {
 function buildSubscriptionPayload(customerId, subscription, fallbackStatus = 'inactive') {
   const normalizedStatus = subscription?.status || fallbackStatus;
   const periodEnd = typeof subscription?.current_period_end === 'number'
-    ? subscription.current_period_end
-    : null;
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : new Date(0).toISOString();
   return {
     stripe_customer_id: customerId,
     subscription_status: normalizedStatus,
