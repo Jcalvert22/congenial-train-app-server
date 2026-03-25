@@ -65,7 +65,12 @@ export async function startCheckout(priceId = currentPlan) {
     body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })
   });
 
-  const payload = await response.json();
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(`Checkout unavailable (${response.status}). Please try again or contact support.`);
+  }
   if (!response.ok || !payload?.url) {
     throw new Error(payload?.error || 'Unable to create checkout session.');
   }
