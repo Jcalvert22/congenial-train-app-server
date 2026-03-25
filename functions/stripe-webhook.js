@@ -144,8 +144,13 @@ async function retrieveSubscription(env, subscriptionId) {
 
 function buildSubscriptionPayload(customerId, subscription, fallbackStatus = 'inactive') {
   const normalizedStatus = subscription?.status || fallbackStatus;
-  const periodEnd = typeof subscription?.current_period_end === 'number'
-    ? new Date(subscription.current_period_end * 1000).toISOString()
+  const trialEnd = typeof subscription?.trial_end === 'number' ? subscription.trial_end : null;
+  const rawPeriodEnd = typeof subscription?.current_period_end === 'number'
+    ? subscription.current_period_end
+    : null;
+  const endTimestamp = (normalizedStatus === 'trialing' && trialEnd) ? trialEnd : rawPeriodEnd;
+  const periodEnd = typeof endTimestamp === 'number'
+    ? new Date(endTimestamp * 1000).toISOString()
     : new Date(0).toISOString();
   return {
     stripe_customer_id: customerId,
@@ -196,7 +201,11 @@ async function handleCustomerSubscriptionUpdated(subscription, env) {
 }
 
 async function handleCustomerSubscriptionDeleted(subscription, env) {
-  await syncSubscription(env, subscription?.customer, subscription, 'canceled');
+  await syncSubscription(env, subscription?.customer, subscription, 'inactive');
+}
+
+async function handleInvoicePaymentFailed(invoice, env) {
+  await syncSubscription(env, invoice?.customer, null, 'inactive');
 }
 
 async function handleInvoicePaid(invoice, env) {
@@ -228,6 +237,9 @@ async function routeEvent(event, env) {
       break;
     case 'invoice.paid':
       await handleInvoicePaid(event.data.object, env);
+      break;
+    case 'invoice.payment_failed':
+      await handleInvoicePaymentFailed(event.data.object, env);
       break;
     default:
       break;
