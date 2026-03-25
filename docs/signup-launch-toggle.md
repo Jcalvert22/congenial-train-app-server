@@ -1,14 +1,16 @@
-# Prelaunch Signup Toggle
+# Signup Toggle
 
-We temporarily disabled new account creation so nobody can sign up before the public launch. Two things were changed:
+## Current state: OPEN
+Signups are enabled for public launch.
 
-- `SIGNUPS_ENABLED` flag in `public/js/supabaseClient.js` now blocks all calls to `signup()` and surfaces a friendly error.
-- The signup page renders a "launching soon" message and the login page no longer links to `#/signup` while signups are closed.
+- `SIGNUPS_ENABLED = true` in `public/js/supabaseClient.js`
+- Login page links to `#/create-account`
+- All signup forms are fully active
 
-## Re-enabling signups at launch
+## To freeze signups again
+1. Set `SIGNUPS_ENABLED` to `false` in `public/js/supabaseClient.js`.
+2. The signup form and Supabase `signup()` call are blocked automatically.
+3. Update the login page message if desired.
 
-1. Open `public/js/supabaseClient.js` and set `SIGNUPS_ENABLED` to `true`. That automatically re-enables the form, the Supabase `signup()` call, and the UI events.
-2. Update any marketing copy if desired (e.g., tweak the message in `public/pages/login.js` back to "Create one" and adjust `public/pages/signup.js` hero text).
-3. Smoke-test the signup flow (fill out the form, confirm the email, ensure the post-signup redirect works) before announcing the launch.
-
-Reverse those steps whenever you need to freeze signups again.
+## To re-open signups
+1. Set `SIGNUPS_ENABLED` back to `true` in `public/js/supabaseClient.js`.
