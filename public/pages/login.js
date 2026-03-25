@@ -4,6 +4,7 @@ import { login, getSupabaseClient, getCurrentUser } from '../js/supabaseClient.j
 import { getTrialDaysLeft, updateProfileMessage, resolveBillingPeriodEnd } from '../js/profileStatus.js';
 import { showTrialCountdown } from '../js/subscription.js';
 import { openBillingPortal } from './profile.js';
+import { loadOnboardingPrefs } from '../utils/onboarding.js';
 
 function renderAuthShell(content) {
   return `
@@ -13,10 +14,6 @@ function renderAuthShell(content) {
       </div>
     </section>
   `;
-}
-
-function unlockFullApp() {
-  window.location.hash = '#/dashboard';
 }
 
 function showPaywall() {
@@ -54,13 +51,18 @@ async function runSubscriptionCheck() {
     }
   }
 
+  const routeAfterAccess = () => {
+    const prefs = loadOnboardingPrefs();
+    window.location.hash = prefs.completed ? '#/dashboard' : '#/onboarding';
+  };
+
   if (normalizedStatus === 'trialing') {
     const resolvedPeriodEnd = resolveBillingPeriodEnd(user, safeProfile);
     const daysLeft = getTrialDaysLeft(resolvedPeriodEnd);
     showTrialCountdown(daysLeft);
-    unlockFullApp();
+    routeAfterAccess();
   } else if (normalizedStatus === 'active') {
-    unlockFullApp();
+    routeAfterAccess();
   } else {
     showPaywall();
   }

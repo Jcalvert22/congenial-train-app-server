@@ -806,7 +806,6 @@ const FEATURE_OVERVIEW = [
 ];
 
 export async function startApp() {
-  initializeState();
   injectBaseStyles();
   const renderer = initRenderer('#app');
 
@@ -838,6 +837,7 @@ export async function startApp() {
   };
 
   await ensureAuthInitialized();
+  initializeState();
   window.addEventListener('hashchange', renderCurrentRoute);
   window.addEventListener(AUTH_EVENT_NAME, renderCurrentRoute);
   subscribe(renderCurrentRoute);

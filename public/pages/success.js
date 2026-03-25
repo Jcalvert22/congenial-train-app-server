@@ -2,6 +2,7 @@ import { routeBySubscription } from '../js/subscription.js';
 import { getCurrentUser } from '../auth/state.js';
 import { redirectToLogin } from '../auth/guard.js';
 import { renderPageShell } from '../components/stateCards.js';
+import { loadOnboardingPrefs } from '../utils/onboarding.js';
 
 export function renderSuccessPage() {
   const sections = `
@@ -43,9 +44,10 @@ export function attachSuccessPageEvents(root) {
       }
       await routeBySubscription({
         onActive: () => {
-          statusEl.textContent = 'Subscription active! Redirecting to your dashboard...';
+          statusEl.textContent = 'Subscription active! Redirecting...';
           setTimeout(() => {
-            window.location.hash = '#/dashboard';
+            const prefs = loadOnboardingPrefs();
+            window.location.hash = prefs.completed ? '#/dashboard' : '#/onboarding';
           }, 800);
         },
         onInactive: () => {

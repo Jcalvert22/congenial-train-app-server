@@ -1,27 +1,31 @@
 import { loadState, saveState } from '../utils/storage.js';
-import { cloneDeep, MS_PER_DAY } from '../utils/helpers.js';
+import { getAuth } from '../auth/state.js';
+import { cloneDeep } from '../utils/helpers.js';
 
 export const SEX_OPTIONS = ['Female', 'Male', 'Prefer not to say'];
 
-function seedWorkouts() {
-  const completions = [];
-  const now = new Date();
-  for (let i = 0; i < 5; i++) {
-    completions.push(new Date(now.getTime() - i * MS_PER_DAY).toISOString());
+let appState = null;
+let lastUserId = null;
+
+function getCurrentUserId() {
+  return getAuth()?.user?.id || null;
+}
+
+function checkUserChanged() {
+  const currentUserId = getCurrentUserId();
+  if (currentUserId !== lastUserId) {
+    appState = null;
+    lastUserId = currentUserId;
   }
-  for (let i = 5; i < 18; i++) {
-    completions.push(new Date(now.getTime() - (i + 1) * MS_PER_DAY).toISOString());
-  }
-  return completions;
 }
 
 function createDefaultProfile() {
   return {
-    name: 'Jace Calvert',
-    subtitle: 'Short, calm sessions focused on solid form and breathing.',
-    goal: 'Build steady strength and confidence',
-    experience: 'Beginner - Week 3',
-    equipment: 'Adjustable dumbbells + flat bench',
+    name: '',
+    subtitle: '',
+    goal: '',
+    experience: '',
+    equipment: '',
     goalType: 'build_muscle',
     experienceLevel: 'beginner',
     equipmentAccess: 'dumbbells_only',
@@ -39,9 +43,9 @@ function createDefaultProfile() {
 
 function createDefaultProgram() {
   return {
-    currentWeek: 3,
+    currentWeek: 1,
     totalWeeks: 8,
-    nextWorkout: 'Upper Body Reset'
+    nextWorkout: ''
   };
 }
 
@@ -50,7 +54,7 @@ function createDefaultState() {
     isSubscribed: false,
     profile: createDefaultProfile(),
     program: createDefaultProgram(),
-    workouts: seedWorkouts(),
+    workouts: [],
     planAdjustments: {},
     repAdjustments: {},
     currentPlan: [],
@@ -73,10 +77,10 @@ function mergeState(base, incoming) {
   };
 }
 
-let appState = null;
 const subscribers = new Set();
 
 export function initializeState() {
+  checkUserChanged();
   if (appState) {
     return appState;
   }
@@ -88,6 +92,7 @@ export function initializeState() {
 }
 
 export function getState() {
+  checkUserChanged();
   if (!appState) {
     return initializeState();
   }
