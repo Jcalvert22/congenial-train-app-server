@@ -104,6 +104,6 @@ export async function onRequestPost(context) {
     return jsonResponse({ profile });
   } catch (error) {
     console.error('sync-profile failed', error);
-    return jsonResponse({ error: 'Unable to sync profile.' }, { status: 500 });
+    return jsonResponse({ error: error?.message || 'Unable to sync profile.' }, { status: 500 });
   }
 }

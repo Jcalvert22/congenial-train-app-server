@@ -188,6 +188,6 @@ export async function onRequestPost(context) {
     return jsonResponse({ url: session.url });
   } catch (error) {
     console.error('Unable to start checkout', error);
-    return jsonResponse({ error: 'Unable to create checkout session.' }, { status: 500 });
+    return jsonResponse({ error: error?.message || 'Unable to create checkout session.' }, { status: 500 });
   }
 }
