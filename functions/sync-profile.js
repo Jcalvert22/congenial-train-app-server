@@ -16,6 +16,27 @@ function assertEnv(env) {
   }
 }
 
+async function getSupabaseUser(request, env) {
+  const authHeader = request.headers.get('Authorization') || '';
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!token) {
+    return null;
+  }
+  const response = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
 function buildSupabaseHeaders(serviceRoleKey) {
   return {
     'Content-Type': 'application/json',
@@ -86,18 +107,12 @@ export async function onRequestPost(context) {
     return textResponse('Server misconfiguration', { status: 500 });
   }
 
-  let payload;
-  try {
-    payload = await request.json();
-  } catch (error) {
-    return jsonResponse({ error: 'Invalid JSON payload.' }, { status: 400 });
+  const supabaseUser = await getSupabaseUser(request, env);
+  if (!supabaseUser?.id) {
+    return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const userId = payload?.userId;
-  const email = payload?.email;
-  if (!userId) {
-    return jsonResponse({ error: 'userId is required.' }, { status: 400 });
-  }
+  const userId = supabaseUser.id;
+  const email = supabaseUser.email || null;
 
   try {
     const profile = await ensureProfile(env, userId, email);

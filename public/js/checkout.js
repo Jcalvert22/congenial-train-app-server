@@ -1,4 +1,4 @@
-import { getCurrentUser } from '../auth/state.js';
+import { getCurrentUser, getAccessToken } from '../auth/state.js';
 import { redirectToLogin } from '../auth/guard.js';
 
 const STORAGE_KEY = 'aaa-selected-plan';
@@ -59,10 +59,19 @@ export async function startCheckout(priceId = currentPlan) {
     return;
   }
 
+  const token = await getAccessToken();
+  if (!token) {
+    redirectToLogin();
+    return;
+  }
+
   const response = await fetch('/create-checkout-session', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ priceId: normalizedPlan })
   });
 
   let payload;

@@ -21,6 +21,27 @@ function assertEnv(env) {
   }
 }
 
+async function getSupabaseUser(request, env) {
+  const authHeader = request.headers.get('Authorization') || '';
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return null;
+  }
+  const token = authHeader.slice(7).trim();
+  if (!token) {
+    return null;
+  }
+  const response = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+}
+
 function buildSupabaseHeaders(env) {
   return {
     'Content-Type': 'application/json',
@@ -158,6 +179,12 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: error.message }, { status: 500 });
   }
 
+  const supabaseUser = await getSupabaseUser(request, env);
+  if (!supabaseUser?.id) {
+    return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const userId = supabaseUser.id;
+
   let payload;
   try {
     payload = await request.json();
@@ -166,10 +193,6 @@ export async function onRequestPost(context) {
   }
 
   const priceKey = payload?.priceId === 'yearly' ? 'yearly' : 'monthly';
-  const userId = payload?.userId;
-  if (!userId) {
-    return jsonResponse({ error: 'userId is required.' }, { status: 400 });
-  }
 
   const priceMap = {
     monthly: env.STRIPE_MONTHLY_PRICE_ID,

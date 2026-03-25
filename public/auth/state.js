@@ -70,10 +70,17 @@ async function ensureProfile(user) {
     return null;
   }
   try {
+    const token = await getAccessToken();
+    if (!token) {
+      return fetchProfile(user.id);
+    }
     const response = await fetch('/sync-profile', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, email: user.email })
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({})
     });
     if (!response.ok) {
       const errorText = await response.text();
@@ -204,3 +211,12 @@ export async function isLoggedIn() {
 }
 
 export { fetchSupabaseUser as getCurrentUser };
+
+export async function getAccessToken() {
+  const client = getOptionalClient();
+  if (!client) {
+    return null;
+  }
+  const { data } = await client.auth.getSession();
+  return data?.session?.access_token || null;
+}
