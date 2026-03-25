@@ -2,7 +2,7 @@ import { getAuth, setAuth } from '../auth/state.js';
 import { getState, setState } from '../logic/state.js';
 import { getConfidenceAlternativeDetails } from '../data/confidenceAlternativeMap.js';
 
-const USER_STORAGE_KEY = 'user';
+const BASE_USER_KEY = 'aaa-user-profile';
 const GYMXIETY_ONBOARDING_KEY = 'gymxietyIntroComplete';
 const GYMXIETY_MODE_KEY = 'gymxietyMode';
 
@@ -14,12 +14,18 @@ function hasStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 }
 
+function getUserScopedKey() {
+  const auth = getAuth();
+  const userId = auth?.user?.id;
+  return userId ? `${BASE_USER_KEY}:${userId}` : BASE_USER_KEY;
+}
+
 function readStoredUser() {
   if (!hasStorage()) {
     return null;
   }
   try {
-    const raw = window.localStorage.getItem(USER_STORAGE_KEY);
+    const raw = window.localStorage.getItem(getUserScopedKey());
     if (!raw) {
       return null;
     }
@@ -43,7 +49,7 @@ function writeStoredProfilePatch(patch = {}) {
         ...patch
       }
     };
-    window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextSnapshot));
+    window.localStorage.setItem(getUserScopedKey(), JSON.stringify(nextSnapshot));
   } catch (error) {
     console.warn('Unable to persist profile patch to user profile', error);
   }

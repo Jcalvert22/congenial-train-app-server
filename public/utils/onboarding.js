@@ -1,4 +1,6 @@
-const STORAGE_KEY = 'aaa-onboarding-prefs-v1';
+import { getAuth } from '../auth/state.js';
+
+const BASE_KEY = 'aaa-onboarding-prefs-v1';
 const DEFAULT_PREFS = {
   experienceLevel: 'brand_new',
   equipment: [],
@@ -33,16 +35,22 @@ const hasWindow = typeof window !== 'undefined';
 const hasStorage = hasWindow && typeof window.localStorage !== 'undefined';
 let memoryPrefs = { ...DEFAULT_PREFS };
 
+function getScopedKey() {
+  const auth = getAuth();
+  const userId = auth?.user?.id;
+  return userId ? `${BASE_KEY}:${userId}` : BASE_KEY;
+}
+
 function readRaw() {
   if (hasStorage) {
-    return window.localStorage.getItem(STORAGE_KEY);
+    return window.localStorage.getItem(getScopedKey());
   }
   return JSON.stringify(memoryPrefs);
 }
 
 function writeRaw(value) {
   if (hasStorage) {
-    window.localStorage.setItem(STORAGE_KEY, value);
+    window.localStorage.setItem(getScopedKey(), value);
     return;
   }
   memoryPrefs = JSON.parse(value);
@@ -121,7 +129,10 @@ function saveOnboardingPrefs(partial = {}) {
 }
 
 function clearOnboardingPrefs() {
-  writeRaw(JSON.stringify({ ...DEFAULT_PREFS }));
+  if (hasStorage) {
+    window.localStorage.removeItem(getScopedKey());
+  }
+  memoryPrefs = { ...DEFAULT_PREFS };
 }
 
 export {

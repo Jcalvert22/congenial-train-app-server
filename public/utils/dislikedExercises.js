@@ -1,19 +1,39 @@
-const STORAGE_KEY = 'dislikedExercises';
+import { getAuth } from '../auth/state.js';
+
+const BASE_KEY = 'dislikedExercises';
 const hasWindow = typeof window !== 'undefined';
 const hasStorage = hasWindow && typeof window.localStorage !== 'undefined';
 let cache = [];
 let initialized = false;
+let lastUserId = null;
+
+function getScopedKey() {
+  const auth = getAuth();
+  const userId = auth?.user?.id;
+  return userId ? `${BASE_KEY}:${userId}` : BASE_KEY;
+}
+
+function checkUserChanged() {
+  const auth = getAuth();
+  const currentUserId = auth?.user?.id || null;
+  if (currentUserId !== lastUserId) {
+    cache = [];
+    initialized = false;
+    lastUserId = currentUserId;
+  }
+}
 
 function normalizeLabel(value) {
   return value?.toString().trim() || '';
 }
 
 function readFromStorage() {
+  checkUserChanged();
   if (!hasStorage) {
     return [];
   }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(getScopedKey());
     if (!raw) {
       return [];
     }
@@ -30,7 +50,7 @@ function writeToStorage(values) {
     return;
   }
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+    window.localStorage.setItem(getScopedKey(), JSON.stringify(values));
   } catch (error) {
     console.warn('Unable to persist disliked exercises', error);
   }
@@ -55,6 +75,7 @@ function dedupe(values = []) {
 }
 
 export function initializeDislikedExercises() {
+  checkUserChanged();
   if (initialized) {
     return getDislikedExercises();
   }
@@ -64,6 +85,7 @@ export function initializeDislikedExercises() {
 }
 
 export function getDislikedExercises() {
+  checkUserChanged();
   if (!initialized) {
     initializeDislikedExercises();
   }
@@ -71,6 +93,7 @@ export function getDislikedExercises() {
 }
 
 export function setDislikedExercises(values = []) {
+  checkUserChanged();
   cache = dedupe(values);
   initialized = true;
   writeToStorage(cache);
@@ -78,9 +101,13 @@ export function setDislikedExercises(values = []) {
 }
 
 export function addDislikedExercise(name) {
+  checkUserChanged();
   const normalized = normalizeLabel(name);
   if (!normalized) {
     return getDislikedExercises();
+  }
+  if (!initialized) {
+    initializeDislikedExercises();
   }
   const exists = cache.some(entry => entry.toLowerCase() === normalized.toLowerCase());
   if (!exists) {
@@ -92,6 +119,7 @@ export function addDislikedExercise(name) {
 }
 
 export function isExerciseDisliked(name) {
+  checkUserChanged();
   const normalized = normalizeLabel(name);
   if (!normalized) {
     return false;

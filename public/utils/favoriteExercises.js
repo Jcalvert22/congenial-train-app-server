@@ -1,19 +1,39 @@
-const STORAGE_KEY = 'favoriteExercises';
+import { getAuth } from '../auth/state.js';
+
+const BASE_KEY = 'favoriteExercises';
 const hasWindow = typeof window !== 'undefined';
 const hasStorage = hasWindow && typeof window.localStorage !== 'undefined';
 let cache = [];
 let initialized = false;
+let lastUserId = null;
+
+function getScopedKey() {
+  const auth = getAuth();
+  const userId = auth?.user?.id;
+  return userId ? `${BASE_KEY}:${userId}` : BASE_KEY;
+}
+
+function checkUserChanged() {
+  const auth = getAuth();
+  const currentUserId = auth?.user?.id || null;
+  if (currentUserId !== lastUserId) {
+    cache = [];
+    initialized = false;
+    lastUserId = currentUserId;
+  }
+}
 
 function normalizeLabel(value) {
   return value?.toString().trim() || '';
 }
 
 function readFromStorage() {
+  checkUserChanged();
   if (!hasStorage) {
     return [];
   }
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(getScopedKey());
     if (!raw) {
       return [];
     }
@@ -30,7 +50,7 @@ function writeToStorage(values) {
     return;
   }
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(values));
+    window.localStorage.setItem(getScopedKey(), JSON.stringify(values));
   } catch (error) {
     console.warn('Unable to persist favorite exercises', error);
   }
@@ -55,6 +75,7 @@ function dedupe(values = []) {
 }
 
 export function initializeFavoriteExercises() {
+  checkUserChanged();
   if (initialized) {
     return getFavoriteExercises();
   }
@@ -64,6 +85,7 @@ export function initializeFavoriteExercises() {
 }
 
 export function getFavoriteExercises() {
+  checkUserChanged();
   if (!initialized) {
     initializeFavoriteExercises();
   }
@@ -71,6 +93,7 @@ export function getFavoriteExercises() {
 }
 
 export function setFavoriteExercises(values = []) {
+  checkUserChanged();
   cache = dedupe(values);
   initialized = true;
   writeToStorage(cache);
@@ -78,9 +101,13 @@ export function setFavoriteExercises(values = []) {
 }
 
 export function addFavoriteExercise(name) {
+  checkUserChanged();
   const normalized = normalizeLabel(name);
   if (!normalized) {
     return getFavoriteExercises();
+  }
+  if (!initialized) {
+    initializeFavoriteExercises();
   }
   const exists = cache.some(entry => entry.toLowerCase() === normalized.toLowerCase());
   if (!exists) {
@@ -92,6 +119,7 @@ export function addFavoriteExercise(name) {
 }
 
 export function removeFavoriteExercise(name) {
+  checkUserChanged();
   const normalized = normalizeLabel(name);
   if (!normalized) {
     return getFavoriteExercises();
@@ -107,6 +135,7 @@ export function removeFavoriteExercise(name) {
 }
 
 export function isExerciseFavorited(name) {
+  checkUserChanged();
   const normalized = normalizeLabel(name);
   if (!normalized) {
     return false;

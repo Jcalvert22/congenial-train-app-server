@@ -193,6 +193,18 @@ export async function signupWithEmail({ email, password }) {
 }
 
 export async function logout(options = {}) {
+  const userId = authState?.user?.id;
+  if (userId && typeof window !== 'undefined' && window.localStorage) {
+    [
+      `aaa-app-state-v1:${userId}`,
+      `aaa-onboarding-prefs-v1:${userId}`,
+      `aaa_history:${userId}`,
+      `aaa-user-profile:${userId}`,
+      `dislikedExercises:${userId}`,
+      `favoriteExercises:${userId}`,
+      `savedWorkouts:${userId}`
+    ].forEach(key => window.localStorage.removeItem(key));
+  }
   const client = getOptionalClient();
   const { error } = client ? await client.auth.signOut() : { error: null };
   if (error) {

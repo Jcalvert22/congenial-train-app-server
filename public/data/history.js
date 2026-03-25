@@ -1,12 +1,20 @@
-const HISTORY_KEY = 'aaa_history';
+import { getAuth } from '../auth/state.js';
+
+const BASE_KEY = 'aaa_history';
 const hasWindow = typeof window !== 'undefined';
 const hasStorage = hasWindow && typeof window.localStorage !== 'undefined';
+
+function getScopedKey() {
+  const auth = getAuth();
+  const userId = auth?.user?.id;
+  return userId ? `${BASE_KEY}:${userId}` : BASE_KEY;
+}
 
 function readRawHistory() {
   if (!hasStorage) {
     return [];
   }
-  const raw = window.localStorage.getItem(HISTORY_KEY);
+  const raw = window.localStorage.getItem(getScopedKey());
   if (!raw) {
     return [];
   }
@@ -24,7 +32,7 @@ function writeRawHistory(historyArray) {
     return;
   }
   try {
-    window.localStorage.setItem(HISTORY_KEY, JSON.stringify(historyArray));
+    window.localStorage.setItem(getScopedKey(), JSON.stringify(historyArray));
   } catch (error) {
     console.warn('Unable to save workout history', error);
   }
