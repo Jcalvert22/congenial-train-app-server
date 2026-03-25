@@ -59,7 +59,7 @@ export async function startCheckout(priceId = currentPlan) {
     return;
   }
 
-  const response = await fetch('/functions/create-checkout-session', {
+  const response = await fetch('/create-checkout-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ priceId: normalizedPlan, userId: user.id })

@@ -18,7 +18,7 @@ export async function openBillingPortal() {
     const { data } = await supabase.auth.getSession();
     const accessToken = data?.session?.access_token;
     if (!accessToken) throw new Error('Missing Supabase session');
-    const res = await fetch('/functions/create-portal-session', {
+    const res = await fetch('/create-portal-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
