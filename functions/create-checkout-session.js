@@ -66,7 +66,7 @@ async function ensureProfile(env, userId) {
     id: userId,
     stripe_customer_id: 'pending',
     subscription_status: 'inactive',
-    current_period_end: 0
+    current_period_end: null
   };
   profile = await insertProfile(env, payload);
   return profile;

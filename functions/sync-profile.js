@@ -43,7 +43,7 @@ async function insertProfile(env, userId, email) {
     id: userId,
     stripe_customer_id: 'pending',
     subscription_status: 'inactive',
-    current_period_end: 0
+    current_period_end: null
   };
   if (email) {
     payload.email = email;
