@@ -10,8 +10,8 @@ export function renderPaywall(auth) {
     <header class="landing-hero">
       <div class="landing-hero-content">
         <span class="landing-tag">Membership</span>
-        <h1>Unlock your calm tools.</h1>
-        <p class="landing-subtext lead">An active subscription is required to access workout planning, summaries, and execution helpers.</p>
+        <h1>Structure without stress, starting today.</h1>
+        <p class="landing-subtext lead">Workouts that feel safe, simple, and beginner-friendly. An active plan gives you full access to your workout generator, Gymxiety Mode, and progress tools.</p>
       </div>
     </header>
     <section class="landing-section">

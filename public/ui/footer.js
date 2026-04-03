@@ -76,7 +76,7 @@ export function renderFooter() {
               loading="lazy"
               decoding="async"
             />
-            <p class="chrome-footer-description">Gentle structure, calm cues, every rep.</p>
+            <p class="chrome-footer-description">Structure without stress. Workouts that feel safe, simple, and beginner-friendly.</p>
             <a class="chrome-footer-support" href="#/contact">Contact support</a>
             <a class="chrome-footer-email" href="mailto:useallaroundathlete@gmail.com">useallaroundathlete@gmail.com</a>
           </div>
@@ -85,7 +85,7 @@ export function renderFooter() {
           ${renderLinkGroup('Legal', LEGAL_LINKS)}
         </div>
         <div class="chrome-footer-bottom">
-          <p>&copy; ${year} AllAroundAthlete. Built for everyday consistency.</p>
+          <p>&copy; ${year} All Around Athlete. Structure without stress.</p>
           <div class="chrome-footer-meta-links">
             <a class="chrome-footer-link" href="#/contact">Contact</a>
             <a class="chrome-footer-link" href="#/contact">Support</a>

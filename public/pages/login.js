@@ -75,7 +75,7 @@ export function renderLoginPage() {
   return renderAuthShell(`
     <span class="badge">Account</span>
     <h1>Welcome back.</h1>
-    <p class="auth-subtext">Sign in to continue building calm routines.</p>
+    <p class="auth-subtext">Sign in to continue. Structure without stress, every session.</p>
     <form data-login-form autocomplete="off">
       <label>
         <span>Email</span>

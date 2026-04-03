@@ -37,9 +37,9 @@ function ensureTrialBanner() {
   banner.className = 'trial-countdown-banner';
   banner.setAttribute('role', 'status');
   banner.setAttribute('aria-live', 'polite');
-  banner.style.background = '#0f201d';
-  banner.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
-  banner.style.color = '#f5fff7';
+  banner.style.background = '#053E1D';
+  banner.style.borderBottom = '1px solid rgba(0, 255, 79, 0.25)';
+  banner.style.color = '#F9F0E1';
   banner.style.fontWeight = '600';
   banner.style.letterSpacing = '0.02em';
   banner.style.padding = '12px 18px';

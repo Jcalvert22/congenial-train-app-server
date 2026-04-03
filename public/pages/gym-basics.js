@@ -4,10 +4,10 @@ import { GYM_BASICS_MODULE, GYM_BASICS_TOPICS } from '../data/gymBasics.js';
 
 const HERO_CHIPS = ['Form confidence', 'Machine setup', 'Breathing rhythm', 'Warm-up flow'];
 const CARD_GRADIENTS = [
-  'linear-gradient(135deg, #e2fbf3, #d6f0ff)',
-  'linear-gradient(135deg, #fef9e7, #fde1e5)',
-  'linear-gradient(135deg, #f0f4ff, #e3ffe8)',
-  'linear-gradient(135deg, #fff5f2, #eaf7ff)'
+  'linear-gradient(135deg, var(--color-soft-bg), var(--color-card-bg))',
+  'linear-gradient(135deg, var(--color-card-bg), var(--color-soft-bg))',
+  'linear-gradient(135deg, var(--color-soft-bg), var(--color-surface))',
+  'linear-gradient(135deg, var(--color-card-bg), var(--color-surface))'
 ];
 
 function renderHeroChips() {
@@ -32,7 +32,7 @@ function renderTopicCard(topic, index) {
   const positionLabel = `Step ${index + 1}`;
   return `
     <article class="gb-topic-card" data-topic-id="${escapeHTML(topic.id)}">
-      <div class="gb-topic-card-inner" style="background:${gradient};">
+      <div class="gb-topic-card-inner" style="background:${gradient}; border-radius:1.25rem; color:var(--color-text); font-family:var(--font-body);">
         <div class="gb-topic-meta">
           <span class="gb-topic-step">${escapeHTML(positionLabel)}</span>
           <h3>${escapeHTML(topic.title)}</h3>

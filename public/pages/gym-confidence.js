@@ -4,7 +4,6 @@ import { getAuth } from '../auth/state.js';
 import { GYM_SITUATIONS } from '../data/gymSituations.js';
 import { EQUIPMENT_ETIQUETTE } from '../data/exercises.js';
 
-const WELCOME_COPY = "Welcome to the gym. This quick guide shows you how to move through the space with confidence. You'll learn simple etiquette and how to handle common situations.";
 const ETIQUETTE_COPY = "Most gym etiquette is simple. Wipe equipment when you're done, return attachments, and share machines when it's busy. These small habits help everyone feel comfortable.";
 const CONFIDENCE_COPY = 'Most people are focused on their own workout. Moving slowly and with control looks confident, even with light weight. You belong here.';
 const FINISH_LABEL = 'Start your workout';
@@ -88,15 +87,14 @@ export function renderGymConfidencePage() {
     <section class="landing-section">
       <div class="gym-confidence-shell" data-gym-confidence-root>
         <header class="gc-hero">
-          <p class="gc-eyebrow">Gym Confidence</p>
-          <h1>Move calmly, even on day one</h1>
-          <p>${escapeHTML(WELCOME_COPY.split(' You')[0])}</p>
-          <p>${escapeHTML('You\'ll learn simple etiquette and how to handle common situations.')}</p>
+          <p class="gc-eyebrow">Gymxiety Mode</p>
+          <h1>Remove the pressure, confusion, and intimidation of the gym.</h1>
+          <p>Gymxiety Mode removes the pressure, confusion, and intimidation of the gym. You'll learn simple etiquette and exactly how to handle common situations — calmly.</p>
           <div class="gc-chip-row">${renderChips()}</div>
         </header>
         <article class="gc-highlight-card">
-          <h2>Because confidence comes before intensity.</h2>
-          <p>Walking into a gym can feel overwhelming &mdash; the equipment, the people, the pressure to "know what you're doing." Gymxiety Mode helps you take the first step without fear. Every workout is designed to feel approachable, doable, and safe.</p>
+          <h2>Workouts that feel safe, simple, and beginner-friendly.</h2>
+          <p>Walking into a gym can feel overwhelming — the equipment, the people, the pressure to "know what you're doing." Gymxiety Mode removes all of that. Every workout is structured without stress, designed to feel approachable, doable, and safe from day one.</p>
         </article>
         <div class="gc-grid">
           <article class="gc-card">

@@ -42,26 +42,28 @@ export function renderOnboardingPage() {
   const styles = `
     <style>
       .onboarding-flow { display: flex; flex-direction: column; gap: 24px; }
-      .onboarding-hero { border-radius: 28px; border: 1px solid #dce8f8; padding: clamp(20px, 5vw, 36px); background: linear-gradient(135deg, #f4fbf7, #eef3ff); box-shadow: 0 25px 60px rgba(15, 25, 40, 0.08); }
-      .onboarding-hero h1 { margin: 8px 0 10px; font-size: clamp(1.8rem, 4vw, 2.4rem); color: #0f1a1b; }
-      .onboarding-hero p { margin: 0; color: #3f4b5c; line-height: 1.6; }
-      .onboarding-progress { font-size: 0.85rem; color: #466061; text-transform: uppercase; letter-spacing: 0.18em; }
+      .onboarding-hero { border-radius: 28px; border: none; padding: clamp(20px, 5vw, 36px); background: #053E1D; box-shadow: 0 12px 40px rgba(5, 62, 29, 0.2); }
+      .onboarding-hero h1 { margin: 8px 0 10px; font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.4rem); color: #F9F0E1; }
+      .onboarding-hero p { margin: 0; color: rgba(249, 240, 225, 0.85); line-height: 1.6; font-family: 'Roboto', sans-serif; }
+      .onboarding-progress { font-size: 0.85rem; color: #00FF4F; text-transform: uppercase; letter-spacing: 0.18em; font-family: 'Montserrat', sans-serif; font-weight: 700; }
       .onboarding-steps { display: flex; flex-direction: column; gap: 20px; }
-      .onboarding-card { border-radius: 28px; border: 1px solid #e2e8f0; padding: 24px; background: #fff; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06); }
-      .onboarding-card h2 { margin: 0 0 10px; font-size: 1.3rem; color: #0f1a1b; }
-      .onboarding-card p { margin: 0 0 16px; color: #4b5563; }
+      .onboarding-card { border-radius: 28px; border: 1px solid rgba(5, 62, 29, 0.1); padding: 24px; background: #FFFFFF; box-shadow: 0 4px 16px rgba(5, 62, 29, 0.06); }
+      .onboarding-card h2 { margin: 0 0 10px; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 1.3rem; color: #053E1D; }
+      .onboarding-card p { margin: 0 0 16px; color: #4A4A4A; font-family: 'Roboto', sans-serif; }
       .onboarding-experience-grid { display: grid; gap: 12px; }
-      .onboarding-experience-card { border: 1px solid #dbe7f5; border-radius: 20px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; background: #f8fbff; cursor: pointer; }
-      .onboarding-experience-card input { margin-top: 6px; }
-      .onboarding-card-title { margin: 0 0 4px; font-weight: 600; color: #0f1a1b; }
-      .onboarding-card-helper { margin: 0; color: #4b5b6c; font-size: 0.9rem; line-height: 1.4; }
-      .onboarding-equipment-grid { border-radius: 22px; border: 1px solid #dde6f3; padding: 18px; background: #fdfdfe; }
+      .onboarding-experience-card { border: 1px solid rgba(5, 62, 29, 0.15); border-radius: 20px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; background: #F9F0E1; cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease; }
+      .onboarding-experience-card:has(input:checked) { border-color: #053E1D; background: #E6FFDA; }
+      .onboarding-experience-card input { margin-top: 6px; accent-color: #053E1D; }
+      .onboarding-card-title { margin: 0 0 4px; font-family: 'Montserrat', sans-serif; font-weight: 700; color: #1D1D1D; }
+      .onboarding-card-helper { margin: 0; color: #4A4A4A; font-size: 0.9rem; line-height: 1.4; font-family: 'Roboto', sans-serif; }
+      .onboarding-equipment-grid { border-radius: 22px; border: 1px solid rgba(5, 62, 29, 0.1); padding: 18px; background: #F9F0E1; }
       .equipment-list-small { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: 10px; }
-      .equipment-item { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid #d9e3ef; border-radius: 14px; background: #fff; font-size: 0.9rem; color: #1f2a37; cursor: pointer; }
-      .equipment-item input { margin: 0; flex-shrink: 0; }
+      .equipment-item { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid rgba(5, 62, 29, 0.15); border-radius: 14px; background: #FFFFFF; font-size: 0.9rem; color: #1D1D1D; cursor: pointer; font-family: 'Roboto', sans-serif; transition: border-color 0.2s ease, background 0.2s ease; }
+      .equipment-item:has(input:checked) { border-color: #053E1D; background: #E6FFDA; }
+      .equipment-item input { margin: 0; flex-shrink: 0; accent-color: #053E1D; }
       .onboarding-actions { display: flex; gap: 12px; flex-wrap: wrap; }
       .onboarding-actions .landing-button { flex: 1 1 120px; }
-      .onboarding-error { color: #b45309; font-size: 0.9rem; margin-top: 12px; }
+      .onboarding-error { color: #b91c1c; font-size: 0.9rem; margin-top: 12px; font-family: 'Roboto', sans-serif; }
       @media (max-width: 480px) {
         .onboarding-card { padding: 16px; }
         .equipment-list-small { grid-template-columns: repeat(2, 1fr); }
@@ -75,8 +77,8 @@ export function renderOnboardingPage() {
     <section class="landing-section onboarding-flow" data-onboarding-root>
       <div class="onboarding-hero">
         <p class="onboarding-progress">Step <span data-onboarding-step>1</span> of 2</p>
-        <h1>Let us keep things simple.</h1>
-        <p>Two quick questions help us keep your plan calm: how new you feel and what equipment you can reach today.</p>
+        <h1>Structure without stress.</h1>
+        <p>Two quick questions help us build a plan that feels safe and simple — no pressure, no confusion.</p>
       </div>
       <article class="onboarding-card" data-onboarding-step-panel="1">
         <h2>What’s your experience level?</h2>

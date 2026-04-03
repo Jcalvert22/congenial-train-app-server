@@ -1,0 +1,10 @@
+{
+  "appId": "com.yourname.allaroundathlete",
+  "appName": "All Around Athlete",
+  "webDir": "dist",
+  "server": {
+    "url": "https://allaround-athlete.com",
+    "cleartext": false
+  }
+}
+

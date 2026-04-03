@@ -5,15 +5,19 @@
   padding: clamp(1.5rem, 4vw, 2.5rem) 0 1rem;
 }
 
+
 .summary-hero h1 {
   margin: 0;
+  font-family: var(--font-headline);
+  font-weight: 800;
   font-size: clamp(1.8rem, 5vw, 2.5rem);
+  color: var(--color-primary-action);
 }
 
 :root {
-  --swap-backdrop: rgba(15, 23, 42, 0.55);
+  --swap-backdrop: rgba(5, 62, 29, 0.5);
   --swap-card-bg: var(--color-surface, #ffffff);
-  --swap-card-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+  --swap-card-shadow: 0 24px 60px rgba(5, 62, 29, 0.15);
 }
 
 .swap-modal {
@@ -40,28 +44,31 @@
   inset: 0;
 }
 
+
 .swap-modal-card {
   position: relative;
   z-index: 1;
   width: min(35rem, 92vw);
   max-height: 90vh;
-  background: linear-gradient(180deg, var(--card-tint, rgba(20, 83, 45, 0.04)), var(--swap-card-bg));
+  background: linear-gradient(180deg, var(--color-soft-bg), var(--color-card-bg));
   border-radius: 1.5rem;
   padding: calc(var(--space-lg, 2rem) * 0.88);
   box-shadow: var(--card-shadow, var(--swap-card-shadow));
   border: 1px solid var(--card-border, #e5e7eb);
-  border-top: 4px solid var(--card-brand, #14532d);
+  border-top: 4px solid var(--color-primary-action);
   display: flex;
   flex-direction: column;
   gap: var(--space-md, 1rem);
-  color: var(--color-text, #111827);
+  color: var(--color-text);
 }
+
 
 .swap-modal-header h2 {
   position: relative;
   padding-left: 1.75rem;
   font-weight: 700;
-  color: #0f1d17;
+  font-family: var(--font-headline);
+  color: var(--color-primary-action);
 }
 
 .swap-modal-header h2::before {
@@ -90,7 +97,7 @@
 
 .swap-modal-close {
   border: none;
-  background: rgba(17, 24, 39, 0.08);
+  background: rgba(5, 62, 29, 0.08);
   color: currentColor;
   border-radius: 999px;
   width: 2.5rem;
@@ -120,15 +127,16 @@
   gap: 0.75rem;
 }
 
+
 .swap-flat-card {
-  background: var(--color-surface, #fff);
+  background: var(--color-card-bg);
   border: 1px solid var(--card-border, #e5e7eb);
   border-radius: 1rem;
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(5, 62, 29, 0.06);
 }
 
 .swap-flat-header {
@@ -142,12 +150,12 @@
   height: 2.75rem;
   flex-shrink: 0;
   border-radius: 0.75rem;
-  background: rgba(20, 83, 45, 0.08);
-  border: 1px solid rgba(20, 83, 45, 0.12);
+  background: rgba(5, 62, 29, 0.08);
+  border: 1px solid rgba(5, 62, 29, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--card-brand, #14532d);
+  color: var(--card-brand, #053E1D);
 }
 
 .swap-flat-info {
@@ -157,24 +165,27 @@
   min-width: 0;
 }
 
+
 .swap-flat-name {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 700;
-  color: #0f1d17;
+  font-family: var(--font-headline);
+  color: var(--color-primary-action);
   line-height: 1.3;
 }
 
 .swap-flat-meta {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--color-text-muted, #4b5563);
+  color: var(--color-text-muted, #4A4A4A);
 }
+
 
 .swap-flat-reps {
   margin: 0;
   font-size: 0.8rem;
-  color: #14532d;
+  color: var(--color-primary-action);
   font-weight: 600;
 }
 
@@ -188,15 +199,15 @@
   display: inline-flex;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  background: rgba(20, 83, 45, 0.1);
-  color: #14532d;
+  background: rgba(5, 62, 29, 0.1);
+  color: #053E1D;
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .swap-option-badge--calm {
-  background: rgba(14, 165, 233, 0.1);
-  color: #0369a1;
+  background: rgba(5, 62, 29, 0.08);
+  color: #053E1D;
 }
 
 .swap-flat-card .landing-button {
@@ -205,10 +216,10 @@
 }
 
 .swap-option-card {
-  background: linear-gradient(180deg, var(--card-tint, rgba(20, 83, 45, 0.04)), var(--color-surface, #ffffff));
+  background: linear-gradient(180deg, var(--card-tint, rgba(5, 62, 29, 0.04)), var(--color-surface, #ffffff));
   border: 1px solid var(--card-border, #e5e7eb);
-  border-top: 4px solid var(--card-brand, #14532d);
-  box-shadow: var(--card-shadow, 0 18px 32px rgba(15, 23, 42, 0.08));
+  border-top: 4px solid var(--card-brand, #053E1D);
+  box-shadow: var(--card-shadow, 0 18px 32px rgba(5, 62, 29, 0.08));
 }
 
 .swap-option-card .compact-card-collapsed {
@@ -220,21 +231,21 @@
   height: 3.4rem;
   border-radius: 0.875rem;
   background: #F3F4F6;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 24px rgba(5, 62, 29, 0.12);
 }
 
 .swap-option-card .compact-card-meta {
-  background: rgba(15, 23, 42, 0.06);
+  background: rgba(5, 62, 29, 0.06);
   color: var(--color-text-muted, #4B5563);
 }
 
 .swap-option-card .compact-card-badge {
-  background: rgba(17, 24, 39, 0.08);
-  color: var(--color-text, #111827);
+  background: rgba(5, 62, 29, 0.08);
+  color: var(--color-text, #1D1D1D);
 }
 
 .swap-option-empty {
-  border: 1px dashed rgba(17, 24, 39, 0.16);
+  border: 1px dashed rgba(5, 62, 29, 0.16);
   border-radius: 1.125rem;
   padding: var(--space-md, 1rem);
   text-align: center;
@@ -248,9 +259,9 @@
   gap: 0.5rem;
   padding: 0.625rem 1.125rem;
   border-radius: 999px;
-  border: 1px solid rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(5, 62, 29, 0.12);
   background: rgba(248, 250, 252, 0.9);
-  color: var(--color-text, #111827);
+  color: var(--color-text, #1D1D1D);
   font-size: 0.9rem;
   margin-top: var(--space-sm, 0.75rem);
   opacity: 0;
@@ -272,12 +283,12 @@
 }
 
 .summary-etiquette-section .landing-card {
-  background: var(--green-light, #DCFCE7);
-  border-color: rgba(34, 197, 94, 0.35);
+  background: #E6FFDA;
+  border-color: rgba(5, 62, 29, 0.2);
 }
 
 .summary-etiquette-section .supportive-text {
-  color: var(--green-dark, #166534);
+  color: #053E1D;
 }
 
 .summary-exercises-section .compact-grid {
@@ -311,9 +322,9 @@
 }
 
 .summary-overview-pill {
-  background: var(--color-bg, #F9FAFB);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  color: var(--color-text, #111827);
+  background: #E6FFDA;
+  border: 1px solid rgba(5, 62, 29, 0.2);
+  color: #053E1D;
   font-size: 0.95rem;
   gap: var(--spacing-xs, 0.25rem);
 }
@@ -364,9 +375,9 @@
 .exercise-card .compact-card-meta {
   font-size: 0.85rem;
   padding: 0.2rem 0.65rem;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  color: #14532d;
+  background: rgba(5, 62, 29, 0.08);
+  border: 1px solid rgba(5, 62, 29, 0.15);
+  color: #053E1D;
 }
 
 .exercise-card .compact-card-aside {
@@ -418,7 +429,7 @@
     width: 100%;
     max-height: 92dvh;
     border-radius: 1.5rem 1.5rem 0 0;
-    border-top: 4px solid var(--card-brand, #14532d);
+    border-top: 4px solid var(--card-brand, #053E1D);
     border-left: none;
     border-right: none;
     border-bottom: none;

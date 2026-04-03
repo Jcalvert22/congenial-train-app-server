@@ -8,10 +8,9 @@ const SUBSCRIPTIONS_ENABLED = areSubscriptionsEnabled();
 const SUBSCRIPTION_PILL_TEXT = 'Subscriptions coming soon';
 
 const CORE_APP_LINKS = [
-  { label: 'Dashboard', href: '#/dashboard' },
-  { label: 'Generate', href: '#/generate' },
-  { label: 'Gym Confidence', href: '#/gym-confidence' },
-  { label: 'History', href: '#/history' },
+  { label: 'Home', href: '#/dashboard' },
+  { label: 'Workouts', href: '#/generate' },
+  { label: 'Gymxiety Mode', href: '#/gym-confidence' },
   { label: 'Profile', href: '#/profile' }
 ];
 
@@ -133,7 +132,7 @@ export function renderPublicNavbar() {
       </button>
     `;
   const html = renderNavbarMarkup({
-    tagline: 'Structure without stress',
+    tagline: 'Structure without stress.',
     links: PUBLIC_LINKS,
     secondaryAction: `<a class="chrome-button ghost" href="#/pricing">View plans</a>`,
     primaryAction: `
@@ -153,9 +152,9 @@ export function renderPublicNavbar() {
 
 export function renderAppNavbar() {
   const html = renderNavbarMarkup({
-    tagline: 'Calm guidance, every day',
+    tagline: 'Structure without stress.',
     links: APP_LINKS,
-    secondaryAction: `<a class="chrome-button ghost" href="#/generate">Create plan</a>`,
+    secondaryAction: `<a class="chrome-button ghost" href="#/generate">New workout</a>`,
     primaryAction: `<button class="chrome-button" type="button" data-nav-logout>Logout</button>`
   });
   mountNavbar(html, container => {
