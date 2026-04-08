@@ -121,6 +121,25 @@ function prioritizeComfort(list = [], comfortLevel = DEFAULT_COMFORT_LEVEL) {
   return sorted;
 }
 
+// Extends prioritizeComfort with explicit barbell placement based on confidence.
+// LOW  → barbell exercises move to the back of the pool.
+// HIGH → barbell/compound exercises move to the front.
+// MEDIUM → defers entirely to existing comfort scoring.
+function applyConfidenceDifficultyBias(list = [], confidenceLevel = DEFAULT_COMFORT_LEVEL) {
+  const sorted = prioritizeComfort(list, confidenceLevel);
+  if (confidenceLevel === 'low') {
+    const nonBarbell = sorted.filter(ex => !getEquipmentTokens(ex).some(t => t.includes('barbell')));
+    const barbell = sorted.filter(ex => getEquipmentTokens(ex).some(t => t.includes('barbell')));
+    return nonBarbell.concat(barbell);
+  }
+  if (confidenceLevel === 'high') {
+    const barbell = sorted.filter(ex => getEquipmentTokens(ex).some(t => t.includes('barbell')));
+    const rest = sorted.filter(ex => !getEquipmentTokens(ex).some(t => t.includes('barbell')));
+    return barbell.concat(rest);
+  }
+  return sorted;
+}
+
 function applyExperiencePreferences(list = [], experienceLevel = 'brand_new') {
   if (!list.length) {
     return list;
@@ -234,6 +253,15 @@ function preferGymxiety(list = [], gymxietyMode = false) {
   return safeList.length ? safeList : list;
 }
 
+function shuffleArray(list = []) {
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function pickDeterministic(list = []) {
   if (!list.length) {
     return [];
@@ -267,6 +295,20 @@ function filterDisliked(list = [], dislikedSet) {
   });
 }
 
+// Removes exercises that appeared in the user's last workout.
+// Falls back to the full list when every candidate was already used,
+// so the pool never goes empty due to repeat-avoidance alone.
+function filterOutLastWorkout(list = [], lastWorkoutSet) {
+  if (!lastWorkoutSet || !lastWorkoutSet.size) {
+    return list;
+  }
+  const fresh = list.filter(item => {
+    const key = normalizeNameKey(item?.name || item?.exercise);
+    return key && !lastWorkoutSet.has(key);
+  });
+  return fresh.length ? fresh : list;
+}
+
 export function generateWorkout({
   selectedEquipment = [],
   selectedMuscleGroups = [],
@@ -274,7 +316,8 @@ export function generateWorkout({
   comfortLevel = DEFAULT_COMFORT_LEVEL,
   experienceLevel = 'brand_new',
   gymxietyMode = false,
-  dislikedExercises = []
+  dislikedExercises = [],
+  lastWorkoutExercises = []
 } = {}) {
   const equipment = sanitizeSelection(selectedEquipment);
   const muscles = sanitizeSelection(selectedMuscleGroups);
@@ -283,6 +326,9 @@ export function generateWorkout({
   const fallbackComfort = deriveComfortFromExperience(normalizedExperience);
   const normalizedComfort = normalizeComfortLevel(comfortLevel || fallbackComfort);
   const dislikedSet = buildNameSet(dislikedExercises);
+  const lastWorkoutSet = buildNameSet(
+    lastWorkoutExercises.map(ex => (typeof ex === 'string' ? ex : ex?.name || ex?.exercise || ''))
+  );
 
   const strictPool = EXERCISES.filter(exercise =>
     exercise.equipment.length > 0 &&
@@ -304,7 +350,7 @@ export function generateWorkout({
     );
 
     let chosenPool = pickDeterministic(
-      applyExperiencePreferences(prioritizeComfort(strictMatches, normalizedComfort), normalizedExperience)
+      shuffleArray(applyExperiencePreferences(applyConfidenceDifficultyBias(filterOutLastWorkout(strictMatches, lastWorkoutSet), normalizedComfort), normalizedExperience))
     );
 
     if (!chosenPool.length) {
@@ -316,7 +362,7 @@ export function generateWorkout({
         dislikedSet
       );
       chosenPool = pickDeterministic(
-        applyExperiencePreferences(prioritizeComfort(fallbackMatches, normalizedComfort), normalizedExperience)
+        shuffleArray(applyExperiencePreferences(applyConfidenceDifficultyBias(filterOutLastWorkout(fallbackMatches, lastWorkoutSet), normalizedComfort), normalizedExperience))
       );
     }
 
@@ -329,7 +375,7 @@ export function generateWorkout({
         dislikedSet
       );
       chosenPool = pickDeterministic(
-        applyExperiencePreferences(prioritizeComfort(defaultMatches, normalizedComfort), normalizedExperience)
+        shuffleArray(applyExperiencePreferences(applyConfidenceDifficultyBias(filterOutLastWorkout(defaultMatches, lastWorkoutSet), normalizedComfort), normalizedExperience))
       );
     }
 
@@ -339,7 +385,7 @@ export function generateWorkout({
         dislikedSet
       );
       chosenPool = pickDeterministic(
-        applyExperiencePreferences(prioritizeComfort(finalFallback, normalizedComfort), normalizedExperience)
+        shuffleArray(applyExperiencePreferences(applyConfidenceDifficultyBias(filterOutLastWorkout(finalFallback, lastWorkoutSet), normalizedComfort), normalizedExperience))
       );
     }
 
@@ -353,7 +399,7 @@ export function generateWorkout({
     );
     finalExercises.push(
       ...pickDeterministic(
-        applyExperiencePreferences(prioritizeComfort(fallbackPool, normalizedComfort), normalizedExperience)
+        shuffleArray(applyExperiencePreferences(applyConfidenceDifficultyBias(filterOutLastWorkout(fallbackPool, lastWorkoutSet), normalizedComfort), normalizedExperience))
       )
     );
   }

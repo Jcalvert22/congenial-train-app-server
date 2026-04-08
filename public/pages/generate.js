@@ -451,6 +451,7 @@ export function attachGeneratePageEvents(root) {
     setFormBusy(true);
 
     try {
+      const currentState = getState();
       const plan = generateWorkout({
         selectedEquipment,
         selectedMuscleGroups: selectedMuscles,
@@ -458,7 +459,8 @@ export function attachGeneratePageEvents(root) {
         comfortLevel,
         experienceLevel,
         gymxietyMode,
-        dislikedExercises: getDislikedExercises()
+        dislikedExercises: getDislikedExercises(),
+        lastWorkoutExercises: currentState.ui?.plannerResult?.exercises || []
       });
       if (!Array.isArray(plan.exercises) || !plan.exercises.length) {
         setFormBusy(false);

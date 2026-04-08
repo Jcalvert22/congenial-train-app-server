@@ -3,7 +3,7 @@
     "chest": [
       {
         "name": "barbell bench press",
-        "machine": "chest_press",
+        "machine": "barbell_bench_press",
         "primary_muscle": "chest",
         "secondary_muscles": ["triceps", "shoulders"],
         "equipment": "barbell",
@@ -13,7 +13,7 @@
       },
       {
         "name": "barbell incline bench press",
-        "machine": "chest_press",
+        "machine": "barbell_incline_bench_press",
         "primary_muscle": "chest",
         "secondary_muscles": ["triceps", "shoulders"],
         "equipment": "barbell",

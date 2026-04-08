@@ -1,6 +1,8 @@
 const MACHINE_ICON_FILENAMES = {
   ab_crunch: 'ab-crunch.svg',
   barbell: 'barbell.svg',
+  barbell_bench_press: 'barbell.svg',
+  barbell_incline_bench_press: 'barbell.svg',
   barbell_bent_over_row: 'barbell-bent-over-row.svg',
   barbell_curl: 'barbell-curl.svg',
   'barbell curl': 'barbell-curl.svg',
