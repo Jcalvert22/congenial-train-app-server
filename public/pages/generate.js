@@ -130,14 +130,12 @@ function renderMuscleChecklist(list, selectedValues = [], disabled = false) {
           const pairingLabel = hasPairings ? formatPairingText(pairings) : '';
           const shouldShowPairing = isChecked && !disabled;
           const pairingMarkup = hasPairings
-            ? `<p class="muscle-pairing-hint" data-muscle-pairing="${escapeHTML(normalized)}"${shouldShowPairing ? '' : ' hidden'}>
-                Recommended pairing: ${escapeHTML(pairingLabel)}
-              </p>`
+            ? `<span class="muscle-pairing-footer" data-muscle-pairing="${escapeHTML(normalized)}"${shouldShowPairing ? '' : ' hidden'}>Recommended: ${escapeHTML(pairingLabel)}</span>`
             : '';
           return `
-            <label class="equipment-item" data-muscle-card="${escapeHTML(normalized)}">
+            <label class="equipment-item muscle-card" data-muscle-card="${escapeHTML(normalized)}">
               <input type="checkbox" name="muscles" value="${escapeHTML(item)}" ${checked} ${lock}>
-              <span>${escapeHTML(item)}</span>
+              <span class="muscle-card-name">${escapeHTML(item)}</span>
               ${pairingMarkup}
             </label>
           `;
@@ -171,16 +169,14 @@ function renderComfortSelector(selectedComfort = DEFAULT_COMFORT_LEVEL) {
   const normalized = normalizeComfortSelection(selectedComfort);
   return `
     <fieldset class="generate-step" data-comfort-step>
-      <legend class="landing-subtext">How confident do you feel today?</legend>
-      <p class="landing-subtext">Pick the tone that feels safest right now.</p>
-      <div class="goal-selector comfort-selector" role="radiogroup">
+      <legend class="landing-subtext">Confidence level</legend>
+      <div class="confidence-pill-row" role="radiogroup">
         ${COMFORT_OPTIONS.map(option => {
           const checked = option.value === normalized ? 'checked' : '';
           return `
-            <label class="goal-chip" data-comfort-option="${escapeHTML(option.value)}">
+            <label class="confidence-pill" data-comfort-option="${escapeHTML(option.value)}">
               <input type="radio" name="comfort-level" value="${escapeHTML(option.value)}" ${checked}>
               <span>${escapeHTML(option.label)}</span>
-              <small class="landing-subtext">${escapeHTML(option.helper)}</small>
             </label>
           `;
         }).join('')}
